@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 290" width="100%" height="290" font-family="'Segoe UI', system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="vibe-card1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <linearGradient id="vibe-card2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#5b21b6"/>
+    </linearGradient>
+    <linearGradient id="vibe-card3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+    <linearGradient id="vibe-card4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ea580c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+    <marker id="arrow-v" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#38bdf8"/>
+    </marker>
+  </defs>
+
+  <rect width="900" height="290" rx="14" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+
+  <!-- Title Banner -->
+  <rect x="25" y="18" width="850" height="34" rx="8" fill="#1e293b"/>
+  <text x="450" y="41" fill="#38bdf8" font-size="15" font-weight="bold" text-anchor="middle">🔮 VIBEFORGE: MULTI-AGENT LIFE SIMULATION PIPELINE (COLOR BLOCK DIAGRAM)</text>
+
+  <!-- Block 1: User Form Ingestion -->
+  <rect x="25" y="68" width="190" height="195" rx="10" fill="url(#vibe-card1)" stroke="#38bdf8" stroke-width="2"/>
+  <rect x="35" y="78" width="170" height="30" rx="6" fill="#075985"/>
+  <text x="120" y="98" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">1. User Trajectory</text>
+  <text x="42" y="132" fill="#e0f2fe" font-size="12" font-weight="600">• 4-Step Form Wizard</text>
+  <text x="42" y="157" fill="#e0f2fe" font-size="12">• Life Goals &amp; Fears</text>
+  <text x="42" y="182" fill="#e0f2fe" font-size="12">• Next.js 14 App Router</text>
+  <text x="42" y="207" fill="#e0f2fe" font-size="12">• Edge API Validation</text>
+  <text x="42" y="232" fill="#e0f2fe" font-size="12">• Supabase Auth State</text>
+
+  <!-- Arrow 1 -->
+  <line x1="215" y1="165" x2="242" y2="165" stroke="#38bdf8" stroke-width="3" marker-end="url(#arrow-v)"/>
+
+  <!-- Block 2: LangGraph Orchestration -->
+  <rect x="250" y="68" width="205" height="195" rx="10" fill="url(#vibe-card2)" stroke="#a855f7" stroke-width="2"/>
+  <rect x="260" y="78" width="185" height="30" rx="6" fill="#4c1d95"/>
+  <text x="352" y="98" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">2. LangGraph Agents</text>
+  <text x="268" y="132" fill="#f3e8ff" font-size="12" font-weight="600">• Researcher Agent</text>
+  <text x="268" y="157" fill="#f3e8ff" font-size="12">• Simulator Agent</text>
+  <text x="268" y="182" fill="#f3e8ff" font-size="12">• Obstacle Loop (&gt;70%)</text>
+  <text x="268" y="207" fill="#f3e8ff" font-size="12">• Deployer Agent</text>
+  <text x="268" y="232" fill="#f3e8ff" font-size="12">• StateGraph Routing</text>
+
+  <!-- Arrow 2 -->
+  <line x1="455" y1="165" x2="482" y2="165" stroke="#38bdf8" stroke-width="3" marker-end="url(#arrow-v)"/>
+
+  <!-- Block 3: Vector Knowledge & Memory -->
+  <rect x="490" y="68" width="180" height="195" rx="10" fill="url(#vibe-card4)" stroke="#fb923c" stroke-width="2"/>
+  <rect x="500" y="78" width="160" height="30" rx="6" fill="#9a3412"/>
+  <text x="580" y="98" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">3. Memory &amp; DB</text>
+  <text x="508" y="132" fill="#ffedd5" font-size="12" font-weight="600">• Supabase PostgreSQL</text>
+  <text x="508" y="157" fill="#ffedd5" font-size="12">• pgvector Embeddings</text>
+  <text x="508" y="182" fill="#ffedd5" font-size="12">• Simulation JSONB</text>
+  <text x="508" y="207" fill="#ffedd5" font-size="12">• Stripe Checkout Hub</text>
+  <text x="508" y="232" fill="#ffedd5" font-size="12">• Vector Similarity</text>
+
+  <!-- Arrow 3 -->
+  <line x1="670" y1="165" x2="697" y2="165" stroke="#38bdf8" stroke-width="3" marker-end="url(#arrow-v)"/>
+
+  <!-- Block 4: Multi-Modal Output -->
+  <rect x="705" y="68" width="170" height="195" rx="10" fill="url(#vibe-card3)" stroke="#34d399" stroke-width="2"/>
+  <rect x="715" y="78" width="150" height="30" rx="6" fill="#065f46"/>
+  <text x="790" y="98" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">4. Dynamic UI</text>
+  <text x="720" y="132" fill="#d1fae5" font-size="12" font-weight="600">• 🎨 DALL-E 3 Images</text>
+  <text x="720" y="157" fill="#d1fae5" font-size="12">• 🎙️ ElevenLabs Voice</text>
+  <text x="720" y="182" fill="#d1fae5" font-size="12">• 📊 3D Particle Orbit</text>
+  <text x="720" y="207" fill="#d1fae5" font-size="12">• 📋 12-Week Roadmap</text>
+  <text x="720" y="232" fill="#d1fae5" font-size="12">• 📅 Calendar Export</text>
+</svg>
