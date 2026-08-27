@@ -184,50 +184,91 @@ export default function NarrativePage() {
     }
   };
 
-  // High-Definition Speech Synthesizer
-  const speakText = useCallback((textToSpeak: string) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
-    window.speechSynthesis.cancel();
+  // Studio-Quality Human Voice Engine (ElevenLabs Stream with Web Speech Fallback)
+  const speakText = useCallback(async (textToSpeak: string) => {
+    if (!textToSpeak || typeof window === "undefined") return;
 
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-
-    const voices = window.speechSynthesis.getVoices();
-    const naturalVoice = voices.find(
-      (v) =>
-        v.name.includes("Natural") ||
-        v.name.includes("Google US") ||
-        v.name.includes("Daniel") ||
-        v.name.includes("Samantha") ||
-        v.lang.startsWith("en")
-    );
-    if (naturalVoice) {
-      utterance.voice = naturalVoice;
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+    }
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
     }
 
-    utterance.onstart = () => {
-      setIsPlaying(true);
-    };
+    setIsPlaying(true);
 
-    utterance.onend = () => {
+    try {
+      // 1. ElevenLabs Studio-Grade Text-to-Speech API
+      const res = await fetch("/api/voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: textToSpeak.slice(0, 1500) }),
+      });
+
+      if (res.ok) {
+        const blob = await res.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+        currentAudioRef.current = audio;
+
+        audio.onended = () => {
+          setIsPlaying(false);
+          URL.revokeObjectURL(audioUrl);
+        };
+        audio.onerror = () => {
+          setIsPlaying(false);
+          URL.revokeObjectURL(audioUrl);
+        };
+
+        await audio.play();
+        return;
+      }
+    } catch (e) {
+      console.warn("ElevenLabs audio notice, using browser speech fallback:", e);
+    }
+
+    // 2. Fallback: High-Definition Web Speech Synthesizer
+    if ("speechSynthesis" in window) {
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+
+      const voices = window.speechSynthesis.getVoices();
+      const naturalVoice = voices.find(
+        (v) =>
+          v.name.includes("Natural") ||
+          v.name.includes("Google US") ||
+          v.name.includes("Daniel") ||
+          v.name.includes("Samantha") ||
+          v.lang.startsWith("en")
+      );
+      if (naturalVoice) {
+        utterance.voice = naturalVoice;
+      }
+
+      utterance.onstart = () => setIsPlaying(true);
+      utterance.onend = () => setIsPlaying(false);
+      utterance.onerror = () => setIsPlaying(false);
+
+      window.speechSynthesis.speak(utterance);
+    } else {
       setIsPlaying(false);
-    };
-
-    utterance.onerror = () => {
-      setIsPlaying(false);
-    };
-
-    window.speechSynthesis.speak(utterance);
+    }
   }, []);
 
-  const stopSpeech = () => {
+  const stopSpeech = useCallback(() => {
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+    }
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel();
     }
     setIsPlaying(false);
-  };
+  }, []);
 
   // Trigger Voice Input
   const toggleSpeechRecognition = () => {
