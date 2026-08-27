@@ -5,7 +5,8 @@
 // ============================================================================
 
 import { SimulationAnnotation } from './state';
-import type { FuturePath, Obstacle, UserInput } from '@/types/agents';
+import type { FuturePath, Obstacle } from '@/types/agents';
+import { getTimeHorizonMonths } from '@/types/agents';
 import { callOpenRouterWithFallback, extractJsonFromResponse } from '@/lib/openrouterClient';
 
 const SIMULATOR_SYSTEM_PROMPT = `You are an elite predictive futures engine and career scenario simulator.
@@ -49,13 +50,13 @@ JSON SCHEMA:
 }`;
 
 function buildUserPrompt(state: typeof SimulationAnnotation.State): string {
-  const { userInput, researchInsights, feedbackLoopCount, obstacles: prevObstacles } = state;
-  const months = userInput.timeHorizon === '1_year' ? 12 : userInput.timeHorizon === '3_years' ? 36 : userInput.timeHorizon === '5_years' ? 60 : 120;
+  const { userInput, feedbackLoopCount, obstacles: prevObstacles } = state;
+  const months = getTimeHorizonMonths(userInput);
 
   let prompt = `## USER PROFILE & GOALS
 **Current Situation:** ${userInput.currentSituation}
 **Goals:** ${userInput.goals}
-**Time Horizon:** ${userInput.timeHorizon.replace('_', ' ')} (${months} months)
+**Time Horizon:** ${userInput.targetDate ? `Until ${userInput.targetDate}` : userInput.timeHorizon.replace('_', ' ')} (${months} months)
 **Risk Tolerance:** ${userInput.riskTolerance}
 
 Generate milestones at 3-month intervals up to month ${months}. Provide 4-6 daily routine items per path. Generate 4-8 obstacles total across all paths.`;

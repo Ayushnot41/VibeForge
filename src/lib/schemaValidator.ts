@@ -6,6 +6,8 @@ export const UserInputSchema = z.object({
   timeHorizon: z.enum(["1_year", "3_years", "5_years", "10_years"]),
   riskTolerance: z.enum(["conservative", "moderate", "aggressive"]).or(z.enum(["low", "medium", "high"])),
   additionalContext: z.string().optional(),
+  targetDate: z.string().optional(),
+  timeHorizonMonths: z.number().optional(),
 });
 
 export const ResearchInsightSchema = z.object({
