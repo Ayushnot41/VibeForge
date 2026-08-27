@@ -173,6 +173,28 @@ export default function ActionPlanPage() {
   // Weekly Check-In data for Success Forecast (loaded from localStorage)
   const [checkIns, setCheckIns] = useState<{ weekNumber: number; completionPercent: number }[]>([]);
 
+  // Ego-Hurt & Massive Risk Gauntlet State
+  const [massiveRiskModal, setMassiveRiskModal] = useState(false);
+  const [gauntletActive, setGauntletActive] = useState(false);
+  const [egoSprintActive, setEgoSprintActive] = useState(false);
+  const [egoSprintSeconds, setEgoSprintSeconds] = useState(1500); // 25 minutes
+  const [rivalTauntIndex, setRivalTauntIndex] = useState(0);
+  const [rivalDrawerOpen, setRivalDrawerOpen] = useState(false);
+
+  // Ego sprint timer tick
+  useEffect(() => {
+    let timer: any = null;
+    if (egoSprintActive && egoSprintSeconds > 0) {
+      timer = setInterval(() => {
+        setEgoSprintSeconds((prev) => prev - 1);
+      }, 1000);
+    } else if (egoSprintSeconds === 0) {
+      setEgoSprintActive(false);
+      alert("⚔️ Focus Sprint Complete! Your adversary's lead has been reduced by 1 day!");
+    }
+    return () => clearInterval(timer);
+  }, [egoSprintActive, egoSprintSeconds]);
+
   useEffect(() => {
     async function fetchSim() {
       try {
@@ -315,12 +337,23 @@ export default function ActionPlanPage() {
     window.print();
   };
 
-  // Filtered weeks
+  // Dynamic Phase Filtering based on actual total weeks count
+  const totalWeeksCount = weeks.length;
+  const phaseSize = Math.max(3, Math.ceil(totalWeeksCount / 3));
+
+  const filterTabs = [
+    { id: "all", label: `All Sprints (${totalWeeksCount}W)` },
+    { id: "p1", label: `Phase 1 (W1-${Math.min(phaseSize, totalWeeksCount)})` },
+    ...(totalWeeksCount > phaseSize ? [{ id: "p2", label: `Phase 2 (W${phaseSize + 1}-${Math.min(phaseSize * 2, totalWeeksCount)})` }] : []),
+    ...(totalWeeksCount > phaseSize * 2 ? [{ id: "p3", label: `Phase 3 (W${phaseSize * 2 + 1}-${totalWeeksCount})` }] : []),
+    { id: "milestones", label: "🎯 Key Milestones" },
+  ];
+
   const filteredWeeks = weeks.filter((w) => {
     if (activeFilter === "all") return true;
-    if (activeFilter === "p1") return w.week <= 4;
-    if (activeFilter === "p2") return w.week >= 5 && w.week <= 8;
-    if (activeFilter === "p3") return w.week >= 9;
+    if (activeFilter === "p1") return w.week <= phaseSize;
+    if (activeFilter === "p2") return w.week > phaseSize && w.week <= phaseSize * 2;
+    if (activeFilter === "p3") return w.week > phaseSize * 2;
     if (activeFilter === "milestones") return !!w.milestone;
     return true;
   });
@@ -394,15 +427,9 @@ export default function ActionPlanPage() {
         </div>
       </div>
 
-      {/* Filter Navigation Bar */}
+      {/* Dynamic Filter Navigation Bar */}
       <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 p-1 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 no-print shadow-xl">
-        {[
-          { id: "all", label: "All Sprints" },
-          { id: "p1", label: "Phase 1 (W1-4)" },
-          { id: "p2", label: "Phase 2 (W5-8)" },
-          { id: "p3", label: "Phase 3 (W9+)" },
-          { id: "milestones", label: "🎯 Key Milestones" },
-        ].map((tab) => (
+        {filterTabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveFilter(tab.id as any)}
@@ -557,27 +584,237 @@ export default function ActionPlanPage() {
         )}
       </AnimatePresence>
 
-      {/* AI Rival Tracker */}
+      {/* AI Adversary Rival & Ego-Hurt Matrix — Desktop Dock */}
       {state.actionPlan.rival && (
-        <div className="fixed bottom-10 left-10 w-80 z-30 pointer-events-auto no-print">
-          <div className={`p-4 rounded-2xl backdrop-blur-md border ${health < 0.5 ? 'bg-red-900/40 border-red-500/50' : 'bg-black/60 border-white/10'}`}>
+        <div className="hidden md:block fixed bottom-6 left-6 w-[320px] z-30 pointer-events-auto no-print">
+          <div className="p-4 rounded-2xl bg-zinc-950/90 backdrop-blur-xl border border-zinc-800 shadow-2xl relative overflow-hidden">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="text-white font-bold text-sm flex items-center gap-2">
-                <span>⚠️</span> Adversary Rival Matrix
-              </h3>
-              <span className="text-xs bg-red-600 px-2 py-0.5 rounded-full text-white font-bold">
-                +{state.actionPlan.rival.progressOffset} Days Ahead
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <h3 className="text-white font-bold text-xs uppercase tracking-wider">
+                  Adversary Rival Matrix
+                </h3>
+              </div>
+              <span className="text-[10px] bg-red-500/10 border border-red-500/30 px-2 py-0.5 rounded-full text-red-400 font-bold font-mono">
+                +{state.actionPlan.rival.progressOffset || 7}d Lead
               </span>
             </div>
-            <p className="text-white/80 text-xs mb-2"><strong>{state.actionPlan.rival.name}</strong> - {state.actionPlan.rival.bio}</p>
-            <div className="bg-black/50 p-2.5 rounded-lg border border-red-500/30">
-              <p className="text-red-400 text-xs italic font-mono">
-                "{state.actionPlan.rival.taunts?.[0] || 'They are outworking you right now.'}"
+
+            <p className="text-zinc-400 text-xs mb-2 leading-relaxed">
+              <strong className="text-zinc-200">{state.actionPlan.rival.name}</strong> is relentlessly executing.
+            </p>
+
+            {/* Dynamic Ego-Hurt Psychological Taunt */}
+            <div 
+              onClick={() => {
+                const taunts = state.actionPlan?.rival?.taunts || [];
+                if (taunts.length > 0) {
+                  setRivalTauntIndex((prev) => (prev + 1) % taunts.length);
+                }
+              }}
+              className="bg-black/60 p-2.5 rounded-xl border border-zinc-800 mb-2.5 cursor-pointer hover:border-zinc-700 transition-all group"
+              title="Click to cycle adversary taunts"
+            >
+              <div className="flex items-center justify-between text-[10px] text-red-400 font-mono mb-1">
+                <span>⚔️ EGO CHECK</span>
+                <span className="text-zinc-500 group-hover:text-zinc-300">Tap ↻</span>
+              </div>
+              <p className="text-zinc-300 text-xs italic font-medium leading-snug">
+                "{state.actionPlan.rival.taunts?.[rivalTauntIndex % (state.actionPlan.rival.taunts.length || 1)] || 'While you make excuses, your competition is executing.'}"
               </p>
+            </div>
+
+            {/* Estimated Laziness Slippage Loss */}
+            <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 bg-white/[0.02] px-2.5 py-1.5 rounded-lg mb-2.5 border border-white/5">
+              <span>Opportunity Loss:</span>
+              <span className="text-red-400 font-bold">
+                ₹{((state.actionPlan.rival.progressOffset || 7) * 12500).toLocaleString('en-IN')}
+              </span>
+            </div>
+
+            {/* Interactive Actions */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setEgoSprintActive(!egoSprintActive);
+                  if (!egoSprintActive && egoSprintSeconds === 0) {
+                    setEgoSprintSeconds(1500);
+                  }
+                }}
+                className={`flex-1 py-1.5 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                  egoSprintActive
+                    ? "bg-red-600 text-white animate-pulse"
+                    : "bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700"
+                }`}
+              >
+                {egoSprintActive ? (
+                  <>
+                    <span>⏱️</span>
+                    <span>
+                      {Math.floor(egoSprintSeconds / 60)}:
+                      {(egoSprintSeconds % 60).toString().padStart(2, "0")}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span>🔥</span>
+                    <span>25m Sprint</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => setMassiveRiskModal(true)}
+                className="py-1.5 px-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-500 hover:to-red-500 text-white shadow-md transition-all"
+              >
+                ⚡ Massive Risk
+              </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* AI Adversary Rival — Mobile Pill Button */}
+      {state.actionPlan.rival && (
+        <div className="md:hidden fixed bottom-6 left-6 z-30 pointer-events-auto no-print">
+          <button
+            onClick={() => setRivalDrawerOpen(true)}
+            className="px-3.5 py-2 rounded-full bg-zinc-950/90 backdrop-blur-md border border-red-500/40 text-xs font-bold text-white shadow-xl flex items-center gap-2"
+          >
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+            <span>⚔️ Rival (+{state.actionPlan.rival.progressOffset || 7}d)</span>
+          </button>
+        </div>
+      )}
+
+      {/* AI Adversary Rival — Mobile Bottom Sheet Drawer */}
+      <AnimatePresence>
+        {rivalDrawerOpen && state.actionPlan.rival && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="md:hidden fixed inset-0 z-50 flex items-end bg-black/80 backdrop-blur-sm pointer-events-auto"
+            onClick={() => setRivalDrawerOpen(false)}
+          >
+            <motion.div
+              initial={{ y: 200 }}
+              animate={{ y: 0 }}
+              exit={{ y: 200 }}
+              className="w-full bg-zinc-950 border-t border-zinc-800 p-6 rounded-t-3xl space-y-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <span>⚔️</span> Adversary Rival Matrix
+                </h3>
+                <button
+                  onClick={() => setRivalDrawerOpen(false)}
+                  className="text-zinc-400 hover:text-white text-lg font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <p className="text-zinc-400 text-xs">
+                <strong className="text-zinc-200">{state.actionPlan.rival.name}</strong> is outworking you by +{state.actionPlan.rival.progressOffset || 7} days.
+              </p>
+
+              <div className="bg-black/60 p-3 rounded-xl border border-zinc-800">
+                <p className="text-zinc-300 text-xs italic">
+                  "{state.actionPlan.rival.taunts?.[rivalTauntIndex % (state.actionPlan.rival.taunts.length || 1)] || 'While you make excuses, your competition is executing.'}"
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  onClick={() => {
+                    setEgoSprintActive(!egoSprintActive);
+                    if (!egoSprintActive && egoSprintSeconds === 0) {
+                      setEgoSprintSeconds(1500);
+                    }
+                  }}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                    egoSprintActive ? "bg-red-600 text-white" : "bg-zinc-800 text-zinc-200"
+                  }`}
+                >
+                  {egoSprintActive ? `⏱️ ${Math.floor(egoSprintSeconds / 60)}m Left` : "🔥 25m Focus Sprint"}
+                </button>
+                <button
+                  onClick={() => {
+                    setRivalDrawerOpen(false);
+                    setMassiveRiskModal(true);
+                  }}
+                  className="py-2.5 px-4 rounded-xl text-xs font-bold bg-red-600 text-white"
+                >
+                  ⚡ Massive Risk
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Massive Risk Asymmetric Gauntlet Modal */}
+      <AnimatePresence>
+        {massiveRiskModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-2xl p-4 pointer-events-auto no-print"
+            onClick={() => setMassiveRiskModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-[#0e0712] border border-amber-500/50 p-6 sm:p-8 rounded-3xl max-w-lg w-full shadow-[0_0_100px_rgba(245,158,11,0.3)] relative overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <span className="text-xs uppercase font-black text-amber-400 tracking-widest bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-full">
+                    ⚡ Asymmetric Gauntlet Protocol
+                  </span>
+                  <h2 className="text-2xl sm:text-3xl font-black text-white mt-2 tracking-tight">
+                    Take a Massive Risk 🔥
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setMassiveRiskModal(false)}
+                  className="text-white/40 hover:text-white text-xl font-bold w-8 h-8 rounded-full bg-white/5 flex items-center justify-center"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-4 mb-6 text-sm text-white/80 leading-relaxed">
+                <p>
+                  You are activating <strong className="text-amber-300">Relentless Double-Velocity Mode</strong>. For the next 7 days, your task progress multiplier doubles (2x XP).
+                </p>
+                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200">
+                  ⚠️ <strong>The High-Stakes Penalty:</strong> If you miss 2 consecutive daily actions, your adversary lead increases by +5 days, and your ego integrity drops to zero.
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    setGauntletActive(true);
+                    setMassiveRiskModal(false);
+                    alert("🔥 MASSIVE RISK GAUNTLET ACTIVATED! 2X XP & Zero-Excuses Mode is LIVE for the next 7 days!");
+                  }}
+                  className="w-full bg-gradient-to-r from-amber-500 via-orange-600 to-red-600 hover:opacity-90 border-0 font-bold py-3 text-sm uppercase tracking-wider"
+                >
+                  {gauntletActive ? "✓ Gauntlet Active (7 Days)" : "⚔️ I Accept the Asymmetric Risk"}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Reality Glitch Modal */}
       <AnimatePresence>
