@@ -32,10 +32,10 @@ function getApiKeys(): string[] {
 }
 
 const DEFAULT_MODEL_CASCADE = [
-  'anthropic/claude-opus-5',
-  'x-ai/grok-4.6',
   'meta-llama/llama-3.3-70b-instruct',
   'openai/gpt-4o-mini',
+  'x-ai/grok-4.6',
+  'anthropic/claude-opus-5',
   'meta-llama/llama-3.1-8b-instruct',
 ];
 
@@ -78,7 +78,7 @@ export async function callOpenRouterWithFallback(options: OpenRouterRequestOptio
           model,
           messages: options.messages,
           temperature: options.temperature ?? 0.7,
-          max_tokens: options.maxTokens ?? 8192,
+          max_tokens: options.maxTokens ?? 3500,
           ...(options.responseFormatJson ? { response_format: { type: 'json_object' } } : {}),
         });
 

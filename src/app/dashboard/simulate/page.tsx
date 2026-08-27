@@ -86,7 +86,7 @@ function Step1({
 
       <Textarea
         label="Current Situation & Background"
-        placeholder="e.g. 23-year-old AI/software engineer building full-stack applications. Strong in TypeScript, React, Python, and LLM orchestration. Completed 2 startup internships and shipping side projects..."
+        placeholder="e.g. 21-year-old student living in Kolkata with strong communication skills and analytical mindset, looking to start my career journey..."
         value={data.situation}
         onChange={(e) => onChange({ situation: e.target.value })}
         className="min-h-[140px]"
@@ -94,7 +94,7 @@ function Step1({
 
       <Textarea
         label="Core Skills & Superpowers"
-        placeholder="e.g. Next.js, Python, LangGraph, WebGL, UI/UX Design, Public Speaking, Systems Architecture"
+        placeholder="e.g. Communication, Analytical Thinking, Fast Learner, Discipline, Problem Solving, Market Awareness"
         value={data.skills.join(", ")}
         onChange={(e) =>
           onChange({
@@ -106,7 +106,7 @@ function Step1({
 
       <TextInput
         label="Location / Target Market"
-        placeholder="e.g. San Francisco / Remote Global"
+        placeholder="e.g. Kolkata, India / Mumbai / Remote"
         value={data.location}
         onChange={(e) => onChange({ location: e.target.value })}
       />
@@ -131,8 +131,8 @@ function Step2({
       </div>
 
       <Textarea
-        label="What are your high-agency goals?"
-        placeholder="e.g. Build an AI-first developer tooling company to $50,000 MRR, secure pre-seed backing from tier-1 angel investors, master autonomous agent infrastructure, and achieve complete financial sovereignty..."
+        label="What is your primary career or life goal?"
+        placeholder="e.g. Become a full-time profitable trader within 3 years, mastering price action, risk management, and capital scaling from student baseline..."
         value={data.goals}
         onChange={(e) => onChange({ goals: e.target.value })}
         className="min-h-[180px]"
@@ -240,15 +240,15 @@ function Step4({ data }: { data: FormData }) {
       </div>
 
       <Card elevated className="space-y-4 p-6 border border-white/10">
-        <ReviewRow label="Situation" value={data.situation || "CS & Full-Stack AI Engineer"} />
+        <ReviewRow label="Situation" value={data.situation || "Student / Early Career"} />
         <ReviewRow
           label="Skills"
           value={
-            data.skills.length > 0 ? data.skills.join(", ") : "AI Systems, React, Python, Architecture"
+            data.skills.length > 0 ? data.skills.join(", ") : "Communication, Analysis"
           }
         />
-        <ReviewRow label="Location" value={data.location || "Global Remote"} />
-        <ReviewRow label="Goals" value={data.goals || "Build $50k MRR AI SaaS & master agentic architectures"} />
+        <ReviewRow label="Location" value={data.location || "India"} />
+        <ReviewRow label="Goals" value={data.goals || "Career Mastery"} />
         <ReviewRow label="Horizon" value={horizonLabel || "3 Years"} />
         <ReviewRow label="Risk Profile" value={riskLabel} />
       </Card>
@@ -355,13 +355,16 @@ export default function SimulatePage() {
 
     try {
       // 1. Attempt Enterprise Server-Sent Events (SSE) stream
+      const currentSit = data.situation.trim() || "Student in Kolkata";
+      const targetGoal = data.goals.trim() || "Become a profitable trader";
+
       const response = await fetch("/api/simulation/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userInput: {
-            currentSituation: data.situation || "Senior developer building high-growth AI startup.",
-            goals: data.goals || "Build $50k MRR AI SaaS & reach staff architect velocity.",
+            currentSituation: currentSit,
+            goals: targetGoal,
             timeHorizon: data.timeHorizon,
             riskTolerance: riskLabel,
             additionalContext: [
@@ -416,8 +419,8 @@ export default function SimulatePage() {
       const fallbackData = {
         ...DEMO_SIMULATION,
         userInput: {
-          currentSituation: data.situation || DEMO_SIMULATION.userInput.currentSituation,
-          goals: data.goals || DEMO_SIMULATION.userInput.goals,
+          currentSituation: currentSit,
+          goals: targetGoal,
           timeHorizon: data.timeHorizon,
           riskTolerance: riskLabel,
         },
@@ -427,12 +430,13 @@ export default function SimulatePage() {
       router.push(`/dashboard/results/${id}`);
     } catch (err: unknown) {
       console.error(err);
-      // Resilient local fallback
+      const currentSit = data.situation.trim() || "Student in Kolkata";
+      const targetGoal = data.goals.trim() || "Become a profitable trader";
       const fallbackData = {
         ...DEMO_SIMULATION,
         userInput: {
-          currentSituation: data.situation || DEMO_SIMULATION.userInput.currentSituation,
-          goals: data.goals || DEMO_SIMULATION.userInput.goals,
+          currentSituation: currentSit,
+          goals: targetGoal,
           timeHorizon: data.timeHorizon,
           riskTolerance: riskLabel,
         },

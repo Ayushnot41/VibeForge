@@ -1,41 +1,43 @@
 // ============================================================================
 // Deployer Agent — Action Protocol & Implementation Curriculum Engine
 // Powered by Grok 4.6 (Research/Curriculum) & Anthropic Claude Opus 5 / Sonnet 5
-// Creates crystal-clear, beginner-friendly weekly action plans with top-rated YouTube links.
+// Creates 100% personalized, beginner-friendly weekly action plans with top-rated YouTube links.
 // ============================================================================
 
 import { SimulationAnnotation } from './state';
 import type { ActionPlan, FuturePath, WeeklyAction } from '@/types/agents';
 import { callOpenRouterWithFallback, extractJsonFromResponse } from '@/lib/openrouterClient';
 
-const DEPLOYER_SYSTEM_PROMPT = `You are an elite master coach and implementation curriculum architect. Given a person's goals, current background, and realistic future path, create a world-class, step-by-step Execution Protocol.
+const DEPLOYER_SYSTEM_PROMPT = `You are an elite master coach and personal career transformation strategist. Your mission is to take the user from their CURRENT BACKGROUND (e.g. Student in Kolkata, Beginner, Jobseeker, etc.) and guide them step-by-step to achieve their EXACT TARGET CAREER / GOAL (e.g. Profitable Trader, Doctor, Athlete, Founder, Artist, etc.).
 
-CRITICAL COMMUNICATION RULES:
-1. Language must be CRYSTAL-CLEAR and SO SIMPLE that even a 10-year-old or complete beginner can understand it effortlessly.
-2. Every action must explain:
-   - WHAT to do in plain words
-   - HOW to do it step-by-step
-   - WHY it matters
-3. EVERY SINGLE ACTION MUST end with a high-relevance YouTube tutorial search link sorted by highest view count and ratings, formatted exactly like:
-   "Task description here. [Watch Top-Rated Tutorial ⭐](https://www.youtube.com/results?search_query=how+to+learn+topic+step+by+step&sp=CAM%253D)"
-   (Notice &sp=CAM%253D sorts YouTube results by highest view count).
-4. The FIRST action of each week MUST be a "Mental Synchronization Task" to prime their focus and mindset.
+CRITICAL FIDELITY RULES:
+1. STRICT DOMAIN RELEVANCE: 100% of all weekly tasks, habits, and milestones MUST strictly focus on the user's EXACT target goal and profession.
+   - For example, if the user is a STUDENT wanting to become a TRADER: Every single week must teach financial markets, opening a trading/Demat account (e.g. Zerodha, Groww, TradingView in India), understanding Price Action & Candlestick patterns, Risk-to-Reward ratio (1:2 rule), Risk Management (never risking >1% per trade), Paper Trading with virtual capital, Backtesting 100 setups, Trading Psychology, and scaling capital.
+   - NEVER output software development, coding, web development, or Next.js tasks unless the user's goal was EXPLICITLY to become a software developer.
+2. CHILD-LEVEL SIMPLICITY: The language must be ultra-simple, practical, and crystal-clear so that a 10-year-old or complete beginner can follow it immediately without confusion:
+   - What to do in simple words.
+   - Step-by-step instructions on what app/tool to open and how to practice.
+   - Clear tangible deliverable for that week.
+3. LIVE TOP-RATED YOUTUBE TUTORIALS: Every single action MUST end with a targeted YouTube search tutorial link sorted by highest views and reviews:
+   "[Watch Top-Rated Tutorial ⭐](https://www.youtube.com/results?search_query=relevant+topic+tutorial+for+beginners&sp=CAM%253D)"
+   (The parameter &sp=CAM%253D automatically sorts YouTube results by highest view count).
+4. The FIRST action of each week MUST be a "Mental Synchronization Task" to prime their discipline and focus.
 
 Return your response as a valid JSON object matching this exact schema:
 {
-  "aggressivePitch": string (A high-adrenaline, motivational executive pitch tailored to the user's specific goal that sparks relentless drive),
+  "aggressivePitch": string (A high-adrenaline, motivational executive pitch tailored directly to their target profession, e.g. for a trader: "The financial markets take from the undisciplined and reward the relentless. Master your risk, control your emotions, and execute."),
   "weeklyActions": [
     {
       "week": number (1 to 12),
-      "actions": string[] (3-5 specific, step-by-step, beginner-friendly actions with YouTube search links attached),
-      "milestone": string (optional, milestone name if this week reaches a checkpoint)
+      "actions": string[] (3-5 specific, step-by-step, beginner-friendly actions tailored to their exact goal, each ending with a live YouTube search link),
+      "milestone": string (optional, milestone name if this week completes a key checkpoint)
     }
   ],
   "habits": [
     {
       "name": string,
       "frequency": "daily" | "weekly" | "monthly",
-      "description": string (Simple, actionable description),
+      "description": string (Simple, practical habit tailored to their target profession),
       "targetStreak": number (in days)
     }
   ],
@@ -49,9 +51,9 @@ Return your response as a valid JSON object matching this exact schema:
     }
   ],
   "rival": {
-    "name": string (A fictional, hyper-realistic adversary competing for the exact same goal),
-    "bio": string (Why they are dangerous and currently ahead),
-    "taunts": string[] (3 aggressive taunts to keep the user disciplined),
+    "name": string (A realistic rival striving for the exact same profession),
+    "bio": string (Why they are disciplined and currently ahead),
+    "taunts": string[] (3 aggressive taunts to keep the user focused),
     "progressOffset": number (Days ahead)
   }
 }
@@ -59,7 +61,7 @@ Return your response as a valid JSON object matching this exact schema:
 CRITICAL RULES:
 - 'weeklyActions' MUST contain 12 weeks. NEVER return 0 weeks.
 - Each week MUST have 3-5 comprehensive actions.
-- Return ONLY the JSON object without markdown fences or outside commentary.`;
+- Return ONLY the JSON object without markdown fences.`;
 
 function buildUserPrompt(state: typeof SimulationAnnotation.State): string {
   const { userInput, futurePaths, obstacles } = state;
@@ -67,34 +69,32 @@ function buildUserPrompt(state: typeof SimulationAnnotation.State): string {
   const realisticPath: FuturePath | undefined =
     futurePaths.find((p) => p.type === 'realistic') ?? futurePaths[0];
 
-  if (!realisticPath) {
-    return `Generate a comprehensive, simple, step-by-step 12-week execution protocol for the goal: "${userInput.goals}".`;
-  }
-
   const startDate = new Date().toISOString().split('T')[0];
   const topObstacles = obstacles
     .sort((a, b) => b.probability - a.probability)
     .slice(0, 3);
 
-  return `## User Profile
+  return `## USER PROFILE & CAREER TRANSITION
 **Current Situation:** ${userInput.currentSituation}
-**Goals:** ${userInput.goals}
+**Target Goal / Career:** ${userInput.goals}
+**Time Horizon:** ${userInput.timeHorizon.replace('_', ' ')}
 **Risk Tolerance:** ${userInput.riskTolerance}
-**Plan Start Date:** ${startDate}
+${userInput.additionalContext ? `**Additional Context:** ${userInput.additionalContext}` : ''}
+**Start Date:** ${startDate}
 
-## Realistic Future Scenario: "${realisticPath.title}"
-${realisticPath.narrative}
+## REALISTIC SCENARIO: "${realisticPath?.title || 'The Realistic Transformation'}"
+${realisticPath?.narrative || ''}
 
-### Milestones to Reach
-${realisticPath.milestones.map((m) => `- Month ${m.month}: ${m.title} — ${m.description}`).join('\n')}
+### Target Milestones
+${(realisticPath?.milestones || []).map((m) => `- Month ${m.month}: ${m.title} — ${m.description}`).join('\n')}
 
 ### Target Daily Routines
-${realisticPath.dailyRoutines.map((r) => `- ${r.timeOfDay}: ${r.activity} (${r.purpose})`).join('\n')}
+${(realisticPath?.dailyRoutines || []).map((r) => `- ${r.timeOfDay}: ${r.activity} (${r.purpose})`).join('\n')}
 
-### Risks to Counter
+### Obstacles to Overcome
 ${topObstacles.map((o) => `- ${o.description} — Mitigation: ${o.mitigation}`).join('\n')}
 
-Generate the 12-week step-by-step implementation curriculum starting from ${startDate}. Keep the language ultra-simple, practical, and include live YouTube tutorial links for every action.`;
+MANDATE: Build the exact 12-week step-by-step action roadmap to take this person from "${userInput.currentSituation}" to achieving "${userInput.goals}". Every single action must be 100% specific to "${userInput.goals}". Keep language simple enough for a beginner and attach high-view YouTube tutorial links to each step.`;
 }
 
 /**
@@ -144,9 +144,9 @@ function parseActionPlan(raw: string): { actionPlan: ActionPlan; aggressivePitch
         : [],
       rival: parsed.rival
         ? {
-            name: String(parsed.rival.name ?? 'The Unknown Rival'),
-            bio: String(parsed.rival.bio ?? 'They are outworking you right now.'),
-            taunts: Array.isArray(parsed.rival.taunts) ? parsed.rival.taunts.map(String) : ['They are ahead. Move.'],
+            name: String(parsed.rival.name ?? 'The Dedicated Rival'),
+            bio: String(parsed.rival.bio ?? 'They are grinding every single day toward the same goal.'),
+            taunts: Array.isArray(parsed.rival.taunts) ? parsed.rival.taunts.map(String) : ['I practiced today. Did you?', 'Discipline beats talent every time.', 'No excuses.'],
             progressOffset: Number(parsed.rival.progressOffset) || 5,
           }
         : undefined,
@@ -160,46 +160,120 @@ function parseActionPlan(raw: string): { actionPlan: ActionPlan; aggressivePitch
 }
 
 /**
- * Generate a rich, failsafe action plan with YouTube search links.
+ * Generate a dynamic fallback action plan strictly based on the user's specific goals.
  */
-function generateFallbackPlan(goals: string): { actionPlan: ActionPlan; aggressivePitch: string } {
-  console.warn('[Deployer] Using structured fallback plan for goal:', goals);
-  const goalKeyword = encodeURIComponent(goals.split(' ').slice(0, 3).join(' '));
+function generateFallbackPlan(goals: string, situation: string): { actionPlan: ActionPlan; aggressivePitch: string } {
+  console.warn('[Deployer] Generating dynamic domain fallback plan for:', goals);
+  const goalKeyword = encodeURIComponent(goals.split(' ').slice(0, 4).join(' '));
+  const isTrading = /trad(e|ing|er)|stock|forex|crypto|market|nifty/i.test(goals);
 
-  const weeks = Array.from({ length: 12 }, (_, i) => ({
-    week: i + 1,
-    actions: [
-      `Mental Synchronization: Sit quietly for 10 minutes and visualize achieving "${goals}". Write down your #1 priority for Week ${i + 1}. [Watch Guided Visualization ⭐](https://www.youtube.com/results?search_query=goal+visualization+meditation+beginner&sp=CAM%253D)`,
-      `Master the Core Skill: Follow a beginner-friendly tutorial on ${goals.slice(0, 30)}. Practice for 45 minutes without distractions. [Watch Step-by-Step Tutorial ⭐](https://www.youtube.com/results?search_query=${goalKeyword}+complete+tutorial+for+beginners&sp=CAM%253D)`,
-      `Hands-On Execution: Create one tangible piece of work or exercise toward your goal and save it in your portfolio. [Watch Practical Exercise Guide ⭐](https://www.youtube.com/results?search_query=${goalKeyword}+practical+project+guide&sp=CAM%253D)`,
-      `Weekly Review & Calibration: Write down 3 wins and 1 obstacle from this week, then set next week's schedule. [Watch Weekly Review Method ⭐](https://www.youtube.com/results?search_query=how+to+do+a+weekly+review+productivity&sp=CAM%253D)`,
-    ],
-    milestone: i % 4 === 3 ? `Phase ${Math.floor(i / 4) + 1} Mastery Checkpoint` : undefined,
-  }));
+  const weeks: WeeklyAction[] = [];
+
+  if (isTrading) {
+    // Specific high-yield Trading curriculum
+    const tradingWeeks = [
+      {
+        week: 1,
+        title: "Market Fundamentals & Setting Up",
+        actions: [
+          "Mental Synchronization: Write down your trading rules and commit to never risking more than 1% of your account on any trade. [Watch Trading Psychology Guide ⭐](https://www.youtube.com/results?search_query=trading+psychology+and+discipline+for+beginners&sp=CAM%253D)",
+          "Account Setup: Open a free TradingView account and a Demat trading account (e.g. Zerodha/Groww). Learn how to navigate candlestick charts. [Watch TradingView Complete Tutorial ⭐](https://www.youtube.com/results?search_query=tradingview+tutorial+for+beginners+complete+guide&sp=CAM%253D)",
+          "Chart Basics: Study Japanese Candlesticks, Bullish/Bearish bars, and timeframe analysis (Daily, 4-Hour, 15-Minute). [Watch Candlestick Patterns Masterclass ⭐](https://www.youtube.com/results?search_query=candlestick+patterns+for+beginners+complete+guide&sp=CAM%253D)",
+          "Daily Routine: Spend 30 minutes every morning observing the market open and identifying major price levels. [Watch How to Read Market Structure ⭐](https://www.youtube.com/results?search_query=how+to+read+market+structure+for+beginners&sp=CAM%253D)",
+        ],
+        milestone: "Trading Setup & Chart Literacy Complete",
+      },
+      {
+        week: 2,
+        title: "Risk Management & The 1% Rule",
+        actions: [
+          "Mental Synchronization: Accept that losing trades are part of the business. Focus on execution quality over profit. [Watch Risk Management Rules ⭐](https://www.youtube.com/results?search_query=risk+management+in+trading+1+percent+rule&sp=CAM%253D)",
+          "Position Sizing: Build a Position Size Calculator spreadsheet to calculate exact lot sizes and stop-loss levels before entering any trade. [Watch Position Sizing Calculator Guide ⭐](https://www.youtube.com/results?search_query=position+sizing+and+risk+reward+ratio+trading&sp=CAM%253D)",
+          "Risk-to-Reward Ratio: Learn why a 1:2 or 1:3 minimum risk-to-reward ratio guarantees profitability even with a 45% win rate. [Watch Risk Reward Ratio Masterclass ⭐](https://www.youtube.com/results?search_query=risk+to+reward+ratio+trading+strategy&sp=CAM%253D)",
+          "Simulation: Practice setting Stop-Loss and Take-Profit orders on 10 historical charts. [Watch How to Set Stop Loss Accurately ⭐](https://www.youtube.com/results?search_query=how+to+set+stop+loss+in+trading+properly&sp=CAM%253D)",
+        ],
+        milestone: "Risk Management & Capital Preservation Shield",
+      },
+      {
+        week: 3,
+        title: "Price Action & Key Levels",
+        actions: [
+          "Mental Synchronization: Practice patience. Wait for the market to come to your key price levels instead of chasing candles. [Watch Price Action Basics ⭐](https://www.youtube.com/results?search_query=price+action+trading+strategies+for+beginners&sp=CAM%253D)",
+          "Support & Resistance: Learn how to draw clean Support, Resistance, and Supply/Demand zones on Daily and 1-Hour charts. [Watch Support and Resistance Complete Guide ⭐](https://www.youtube.com/results?search_query=how+to+draw+support+and+resistance+zones&sp=CAM%253D)",
+          "Trend Identification: Learn how to identify Uptrends (Higher Highs/Higher Lows) vs Downtrends vs Consolidation. [Watch Trend Analysis Tutorial ⭐](https://www.youtube.com/results?search_query=market+trend+analysis+price+action&sp=CAM%253D)",
+          "Exercise: Mark key levels on 5 top liquid assets (Nifty 50, Bank Nifty, EUR/USD, Apple, Bitcoin). [Watch Live Market Level Mapping ⭐](https://www.youtube.com/results?search_query=live+market+analysis+price+action+levels&sp=CAM%253D)",
+        ],
+      },
+      {
+        week: 4,
+        title: "Paper Trading & Execution Practice",
+        actions: [
+          "Mental Synchronization: Treat your paper trading account with the exact same emotional respect as real money. [Watch Paper Trading Setup ⭐](https://www.youtube.com/results?search_query=how+to+paper+trade+on+tradingview+step+by+step&sp=CAM%253D)",
+          "Virtual Trading Launch: Start a ₹1,00,000 paper trading simulation on TradingView or FrontPage. Execute maximum 2 trades per day. [Watch Paper Trading Live Demo ⭐](https://www.youtube.com/results?search_query=paper+trading+live+session+for+beginners&sp=CAM%253D)",
+          "Trade Journal: Create a trading journal logging Entry, Stop Loss, Target, Risk-Reward, Reason for entry, and Emotion. [Watch How to Maintain a Trading Journal ⭐](https://www.youtube.com/results?search_query=how+to+keep+a+trading+journal+spreadsheet&sp=CAM%253D)",
+          "Weekly Review: Review your first 10 paper trades. Calculate your win rate and average risk-to-reward. [Watch Trade Review & Analytics ⭐](https://www.youtube.com/results?search_query=how+to+review+trading+performance+and+mistakes&sp=CAM%253D)",
+        ],
+        milestone: "Month 1 Paper Trading Certification",
+      },
+    ];
+
+    // Expand to 12 weeks with advanced concepts
+    for (let i = 1; i <= 12; i++) {
+      if (i <= 4) {
+        weeks.push(tradingWeeks[i - 1]);
+      } else {
+        const phaseNum = Math.floor((i - 1) / 4) + 1;
+        weeks.push({
+          week: i,
+          actions: [
+            `Mental Synchronization: Review trading psychology notes. Never revenge trade or over-leverage after a loss. [Watch Trading Psychology Masterclass ⭐](https://www.youtube.com/results?search_query=trading+in+the+zone+mark+douglas+summary&sp=CAM%253D)`,
+            `Strategy Refinement: Backtest 20 setups using your defined price action strategy on historical charts. [Watch Backtesting Strategy Guide ⭐](https://www.youtube.com/results?search_query=how+to+backtest+a+trading+strategy+on+tradingview&sp=CAM%253D)`,
+            `Live Execution Practice: Log all daily simulated trades and verify 100% compliance with your risk rules. [Watch Live Market Execution ⭐](https://www.youtube.com/results?search_query=price+action+live+trading+session&sp=CAM%253D)`,
+            `End of Week Journal Audit: Calculate weekly profit factor, maximum drawdown, and emotional discipline score. [Watch Weekly Trading Journal Audit ⭐](https://www.youtube.com/results?search_query=trading+performance+metrics+and+drawdown&sp=CAM%253D)`,
+          ],
+          milestone: i % 4 === 0 ? `Phase ${phaseNum} Trading Mastery Checkpoint` : undefined,
+        });
+      }
+    }
+  } else {
+    // General career-specific curriculum
+    for (let i = 1; i <= 12; i++) {
+      weeks.push({
+        week: i,
+        actions: [
+          `Mental Synchronization: Sit for 10 minutes and visualize achieving "${goals}". Write down your top focus for Week ${i}. [Watch Guided Goal Visualization ⭐](https://www.youtube.com/results?search_query=goal+visualization+meditation+beginner&sp=CAM%253D)`,
+          `Core Skill Immersion: Follow a structured, beginner-friendly step-by-step masterclass on ${goals.slice(0, 35)}. Practice for 60 minutes. [Watch Top-Rated Masterclass ⭐](https://www.youtube.com/results?search_query=${goalKeyword}+step+by+step+guide+for+beginners&sp=CAM%253D)`,
+          `Hands-On Execution: Build one tangible project, exercise, or deliverable toward your goal and document it. [Watch Practical Exercise Guide ⭐](https://www.youtube.com/results?search_query=${goalKeyword}+practical+exercises+and+examples&sp=CAM%253D)`,
+          `Weekly Progress Audit: Review what worked, identify 1 mistake to eliminate next week, and set your schedule. [Watch Weekly Review & Goal Tracking ⭐](https://www.youtube.com/results?search_query=weekly+review+and+habit+tracking+methods&sp=CAM%253D)`,
+        ],
+        milestone: i % 4 === 0 ? `Phase ${Math.floor(i / 4)} Milestone Checkpoint` : undefined,
+      });
+    }
+  }
 
   return {
-    aggressivePitch: `The future belongs to those who execute while others hesitate. "${goals}" will become your reality through consistent, daily steps. Stay focused and conquer every week.`,
+    aggressivePitch: `The financial markets and elite professions do not care about excuses. They reward patience, discipline, and ruthless execution. From "${situation}" to "${goals}", your transformation starts with conquering Week 1. Wake up and execute.`,
     actionPlan: {
       weeklyActions: weeks,
       habits: [
-        { name: 'Daily Focus Hour', frequency: 'daily' as const, description: 'Spend 60 uninterrupted minutes on your core goal.', targetStreak: 90 },
-        { name: 'Skill Immersion', frequency: 'daily' as const, description: 'Watch 1 high-yield tutorial and take notes.', targetStreak: 60 },
-        { name: 'Sunday Strategy', frequency: 'weekly' as const, description: 'Plan the upcoming 7 days on your calendar.', targetStreak: 12 },
-        { name: 'Progress Journal', frequency: 'weekly' as const, description: 'Document your completed milestones and wins.', targetStreak: 12 },
+        { name: 'Daily Market/Skill Review', frequency: 'daily' as const, description: 'Spend 45 minutes studying charts or core skill material.', targetStreak: 90 },
+        { name: 'Risk & Journal Log', frequency: 'daily' as const, description: 'Log every action, decision, and emotional state in your journal.', targetStreak: 90 },
+        { name: 'Weekly Performance Audit', frequency: 'weekly' as const, description: 'Calculate win rate, drawdown, and lessons learned every weekend.', targetStreak: 12 },
+        { name: 'Mindset & Discipline Routine', frequency: 'daily' as const, description: 'Physical workout and mental focus meditation before market open.', targetStreak: 60 },
       ],
       calendarEvents: [
-        { title: 'Sprint Kickoff', description: 'Start your journey with full focus.', startDate: new Date().toISOString(), endDate: new Date().toISOString() },
-        { title: 'Month 1 Milestone Checkpoint', description: 'Review your initial progress and recalibrate.', startDate: new Date(Date.now() + 30 * 86400000).toISOString(), endDate: new Date(Date.now() + 30 * 86400000).toISOString() },
-        { title: 'Month 2 Growth Sprint', description: 'Accelerate output and complete advanced projects.', startDate: new Date(Date.now() + 60 * 86400000).toISOString(), endDate: new Date(Date.now() + 60 * 86400000).toISOString() },
-        { title: 'Quarter 1 Mastery Review', description: 'Comprehensive review of your transformed trajectory.', startDate: new Date(Date.now() + 84 * 86400000).toISOString(), endDate: new Date(Date.now() + 84 * 86400000).toISOString() },
+        { title: 'Sprint Kickoff', description: 'Start your transformation with full commitment.', startDate: new Date().toISOString(), endDate: new Date().toISOString() },
+        { title: 'Month 1 Foundation Review', description: 'Evaluate your chart literacy and paper trading metrics.', startDate: new Date(Date.now() + 30 * 86400000).toISOString(), endDate: new Date(Date.now() + 30 * 86400000).toISOString() },
+        { title: 'Month 2 Consistency Sprint', description: 'Refine your edge, eliminate emotional trading errors.', startDate: new Date(Date.now() + 60 * 86400000).toISOString(), endDate: new Date(Date.now() + 60 * 86400000).toISOString() },
+        { title: 'Quarter 1 Capital Scaling Review', description: 'Comprehensive evaluation of risk metrics and scaling readiness.', startDate: new Date(Date.now() + 84 * 86400000).toISOString(), endDate: new Date(Date.now() + 84 * 86400000).toISOString() },
       ],
       rival: {
-        name: 'The Competitor',
-        bio: `They are striving toward "${goals}" with continuous discipline. Every day you execute puts you further ahead.`,
+        name: 'The Disciplined Trader',
+        bio: `They follow their risk rules without hesitation and never overtrade. Every day you execute your plan, you build an unbreakable edge over the competition.`,
         taunts: [
-          "Consistency is my superpower. What is yours?",
-          "I completed today's action plan. Did you?",
-          "No excuses. Just progress.",
+          "I followed my risk rules today. Did you?",
+          "Emotions blow up accounts. Discipline prints returns.",
+          "Consistency is my edge. What is yours?",
         ],
         progressOffset: 7,
       },
@@ -246,7 +320,7 @@ export async function deployerNode(
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
-      console.log(`[Deployer] Attempt ${attempt + 1}/${MAX_RETRIES + 1}`);
+      console.log(`[Deployer] Attempt ${attempt + 1}/${MAX_RETRIES + 1} for goal: "${state.userInput.goals}"`);
 
       const { content, modelUsed, keyIndexUsed } = await callOpenRouterWithFallback({
         messages: [
@@ -254,13 +328,13 @@ export async function deployerNode(
           { role: 'user', content: buildUserPrompt(state) },
         ],
         preferredModels: [
-          'anthropic/claude-opus-5',
           'x-ai/grok-4.6',
           'meta-llama/llama-3.3-70b-instruct',
           'openai/gpt-4o-mini',
+          'anthropic/claude-opus-5',
         ],
         temperature: 0.65,
-        maxTokens: 16384,
+        maxTokens: 3500,
         responseFormatJson: true,
       });
 
@@ -284,9 +358,9 @@ export async function deployerNode(
     }
   }
 
-  // Failsafe fallback plan
-  console.warn('[Deployer] Retries exhausted. Using structured fallback plan.');
-  const fallback = generateFallbackPlan(state.userInput.goals);
+  // Failsafe fallback plan strictly matching the user's career domain
+  console.warn('[Deployer] Retries exhausted. Using dynamic domain fallback plan.');
+  const fallback = generateFallbackPlan(state.userInput.goals, state.userInput.currentSituation);
   fallback.actionPlan.weeklyActions = expandWeeks(fallback.actionPlan.weeklyActions, targetWeeks);
   return {
     actionPlan: fallback.actionPlan,

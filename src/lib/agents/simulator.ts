@@ -9,10 +9,14 @@ import type { FuturePath, Obstacle } from '@/types/agents';
 import { TIME_HORIZON_MONTHS } from '@/types/agents';
 import { callOpenRouterWithFallback, extractJsonFromResponse } from '@/lib/openrouterClient';
 
-const SIMULATOR_SYSTEM_PROMPT = `You are a master life strategist and future scenario planner. Given research insights about a person's goals and situation, generate three detailed parallel future scenarios. For each scenario, provide:
-- A compelling narrative
+const SIMULATOR_SYSTEM_PROMPT = `You are a master life strategist and personal trajectory planner. Given a person's current situation and specific career goal (e.g. Student in Kolkata transitioning into a Profitable Trader, or any other career), generate three detailed parallel future scenarios tailored 100% to their specific profession.
+
+CRITICAL MANDATE: Never assume tech or software engineering unless requested. For a Trader, describe chart analysis, risk control, trading sessions, profit consistency, account drawdowns, and capital scaling.
+
+For each scenario, provide:
+- A compelling narrative of their life in that field
 - Milestones at 3-month intervals
-- Sample daily routines
+- Sample daily routines relevant to that exact career
 - Potential obstacles with probability scores
 
 Think deeply about cause-and-effect chains.
@@ -86,13 +90,13 @@ export async function simulatorNode(
         { role: 'user', content: buildUserPrompt(state) },
       ],
       preferredModels: [
-        'anthropic/claude-opus-5',
         'x-ai/grok-4.6',
         'meta-llama/llama-3.3-70b-instruct',
         'openai/gpt-4o-mini',
+        'anthropic/claude-opus-5',
       ],
       temperature: 0.8,
-      maxTokens: 8192,
+      maxTokens: 3000,
       responseFormatJson: true,
     });
 
