@@ -2,12 +2,13 @@ import { type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
 /**
- * Root middleware — refreshes the Supabase auth session on every
- * matched request and enforces route-level auth guards.
+ * Next.js proxy handler (successor to middleware in Next.js 16+)
  */
-export default async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   return await updateSession(request)
 }
+
+export default proxy
 
 export const config = {
   matcher: [
