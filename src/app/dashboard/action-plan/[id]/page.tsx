@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { ScrollControls, Scroll, useScroll, Float, Stars, Sparkles, MeshDistortMaterial } from "@react-three/drei";
+import { Float, Stars, Sparkles, MeshDistortMaterial } from "@react-three/drei";
 import { motion, AnimatePresence } from "framer-motion";
 import { SimulationState } from "@/types/agents";
 import * as THREE from "three";
@@ -74,12 +74,12 @@ function GalaxyStone() {
 
 function PremiumBackground({ progress }: { progress: number }) {
   const group = useRef<THREE.Group>(null);
-  const scroll = useScroll();
 
-  useFrame(() => {
+  useFrame((state) => {
     if (group.current) {
-      group.current.position.y = scroll.offset * 10;
-      group.current.rotation.y = scroll.offset * Math.PI;
+      const t = state.clock.elapsedTime;
+      group.current.rotation.y = t * 0.05;
+      group.current.position.y = Math.sin(t * 0.4) * 0.3;
     }
   });
 
@@ -88,15 +88,15 @@ function PremiumBackground({ progress }: { progress: number }) {
       <Stars radius={100} depth={50} count={1000} factor={4} saturation={0} fade speed={0.5} />
       {/* Ambient floating geometry */}
       {Array.from({ length: 8 }).map((_, i) => (
-        <Float key={i} speed={0.5} rotationIntensity={0.5} floatIntensity={1} position={[(Math.random() - 0.5) * 20, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 20 - 10]}>
+        <Float key={i} speed={0.5} rotationIntensity={0.5} floatIntensity={1} position={[(Math.sin(i * 1.5)) * 10, (Math.cos(i * 1.2)) * 15, -5 - i]}>
           <mesh>
-            <tetrahedronGeometry args={[Math.random() * 0.5 + 0.1]} />
-            <meshStandardMaterial color="#4c1d95" emissive="#2e1065" emissiveIntensity={0.5} wireframe={Math.random() > 0.5} />
+            <tetrahedronGeometry args={[0.3 + (i % 3) * 0.15]} />
+            <meshStandardMaterial color="#4c1d95" emissive="#2e1065" emissiveIntensity={0.5} wireframe={i % 2 === 0} />
           </mesh>
         </Float>
       ))}
       {/* Mindset Alignment Stone */}
-      <Float speed={1.5} rotationIntensity={1} floatIntensity={0.5} position={[0, -2, -6]}>
+      <Float speed={1.5} rotationIntensity={1} floatIntensity={0.5} position={[0, -1, -6]}>
         <mesh castShadow receiveShadow>
           <icosahedronGeometry args={[1.5, 0]} />
           <meshStandardMaterial color="#3b82f6" emissive="#1d4ed8" emissiveIntensity={0.3} wireframe />
@@ -594,146 +594,144 @@ export default function ActionPlanPage() {
         )}
       </div>
 
-      {/* Main 3D Canvas with Scrollable Weekly Action Staircase */}
-      <div className="w-full h-full relative">
+      {/* Background 3D Canvas */}
+      <div className="fixed inset-0 pointer-events-none z-0">
         <Canvas shadows camera={{ position: [0, 0, 10], fov: 60 }} dpr={[1, 2]}>
           <color attach="background" args={["#030305"]} />
           <fog attach="fog" args={["#030305", 5, 30]} />
           <ambientLight intensity={0.5} />
-          <directionalLight position={[10, 20, 10]} intensity={2} castShadow shadow-mapSize={2048} />
+          <directionalLight position={[10, 20, 10]} intensity={2} />
           <pointLight position={[-10, -10, -10]} color="#8b5cf6" intensity={5} distance={50} />
           <pointLight position={[10, 0, 10]} color="#3b82f6" intensity={3} distance={50} />
           
           <Suspense fallback={null}>
-            <ScrollControls pages={pages} damping={0.2}>
-              <PremiumBackground progress={progress} />
-              
-              <Scroll html style={{ width: "100%", height: "100%" }}>
-                {progress < 1 && (
-                  <div className="flex flex-col items-center px-4 sm:px-6 pt-36 pb-64 gap-12 sm:gap-16 pointer-events-none no-print max-w-3xl mx-auto">
+            <PremiumBackground progress={progress} />
+          </Suspense>
+        </Canvas>
+      </div>
+
+      {/* Main Native Scrollable Weekly Action Plan Protocol */}
+      <div className="relative z-10 w-full h-full overflow-y-auto overflow-x-hidden pt-36 pb-64 px-4 sm:px-6">
+        {progress < 1 && (
+          <div className="flex flex-col items-center gap-12 sm:gap-16 max-w-3xl mx-auto no-print">
+            
+            {/* Aggressive Motivation Pitch Header */}
+            {state.aggressivePitch && (
+              <div className="w-full">
+                <div className="p-6 rounded-3xl bg-gradient-to-r from-red-950/40 via-purple-950/40 to-black border border-red-500/30 backdrop-blur-xl shadow-[0_0_40px_rgba(220,38,38,0.15)]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-red-400 text-sm">🔥</span>
+                    <span className="text-xs uppercase font-bold text-red-400 tracking-wider">
+                      Executive Mandate
+                    </span>
+                  </div>
+                  <p className="text-sm sm:text-base text-white/90 font-medium leading-relaxed italic">
+                    "{state.aggressivePitch}"
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Weekly Sprints List */}
+            {filteredWeeks.map((week, index) => (
+              <div key={index} className="w-full">
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0.8 }}
+                  whileInView={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                  whileHover={{ scale: 1.02, y: -4 }}
+                  className="will-change-transform"
+                >
+                  <div
+                    className="bg-black/50 backdrop-blur-2xl border border-white/15 p-6 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden group hover:border-purple-500/40 transition-all duration-500"
+                  >
+                    {/* Inner ambient glow */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                     
-                    {/* Aggressive Motivation Pitch Header */}
-                    {state.aggressivePitch && (
-                      <div className="w-full pointer-events-auto">
-                        <div className="p-6 rounded-3xl bg-gradient-to-r from-red-950/40 via-purple-950/40 to-black border border-red-500/30 backdrop-blur-xl shadow-[0_0_40px_rgba(220,38,38,0.15)]">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-red-400 text-sm">🔥</span>
-                            <span className="text-xs uppercase font-bold text-red-400 tracking-wider">
-                              Executive Mandate
-                            </span>
-                          </div>
-                          <p className="text-sm sm:text-base text-white/90 font-medium leading-relaxed italic">
-                            "{state.aggressivePitch}"
-                          </p>
+                    <div className="flex items-center justify-between gap-4 mb-6 relative z-10">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-900 flex items-center justify-center text-xl sm:text-2xl font-bold text-white shadow-lg shadow-purple-900/50 border border-white/10 shrink-0">
+                          {week.week}
+                        </div>
+                        <div>
+                          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                            Week {week.week} Implementation
+                          </h2>
+                          {week.milestone && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                              <p className="text-cyan-400 text-xs sm:text-sm font-bold uppercase tracking-wider">
+                                🎯 {week.milestone}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    )}
 
-                    {/* Weekly Sprints List */}
-                    {filteredWeeks.map((week, index) => (
-                      <div key={index} className="w-full pointer-events-auto">
-                        <motion.div
-                          initial={{ scale: 0.95, opacity: 0.8 }}
-                          whileInView={{ scale: 1, opacity: 1 }}
-                          transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                          whileHover={{ scale: 1.02, y: -4 }}
-                          className="will-change-transform"
-                        >
-                          <div
-                            className="bg-black/50 backdrop-blur-2xl border border-white/15 p-6 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden group hover:border-purple-500/40 transition-all duration-500"
+                      <span className="text-xs text-purple-300 font-mono bg-purple-950/40 border border-purple-500/30 px-3 py-1 rounded-full font-bold hidden sm:inline-block">
+                        {week.actions.filter((_, aIdx) => checkedItems.has(`w${week.week}-a${aIdx}`)).length}/{week.actions.length} Completed
+                      </span>
+                    </div>
+                    
+                    <ul className="space-y-4 relative z-10">
+                      {week.actions.map((action: string, i: number) => {
+                        const actionId = `w${week.week}-a${i}`;
+                        const isChecked = checkedItems.has(actionId);
+                        
+                        // Parse out YouTube links for a clean interactive button
+                        const linkMatch = action.match(/(.*)\[([^\]]+)\]\((https?:\/\/[^\)]+)\)(.*)/);
+                        const textPart = linkMatch ? (linkMatch[1] + (linkMatch[4] || "")) : action;
+                        const youtubeUrl = linkMatch ? linkMatch[3] : `https://www.youtube.com/results?search_query=${encodeURIComponent(textPart.slice(0, 50))}&sp=CAM%253D`;
+                        const youtubeLabel = linkMatch ? linkMatch[2] : "Watch Top-Rated Tutorial ⭐";
+
+                        return (
+                          <li 
+                            key={i} 
+                            className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-purple-500/30 hover:bg-white/[0.04] transition-all cursor-pointer group/item"
+                            onClick={() => toggleCheck(actionId)}
                           >
-                            {/* Inner ambient glow */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                            
-                            <div className="flex items-center justify-between gap-4 mb-6 relative z-10">
-                              <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-900 flex items-center justify-center text-xl sm:text-2xl font-bold text-white shadow-lg shadow-purple-900/50 border border-white/10 shrink-0">
-                                  {week.week}
-                                </div>
-                                <div>
-                                  <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                                    Week {week.week} Implementation
-                                  </h2>
-                                  {week.milestone && (
-                                    <div className="flex items-center gap-2 mt-1">
-                                      <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                                      <p className="text-cyan-400 text-xs sm:text-sm font-bold uppercase tracking-wider">
-                                        🎯 {week.milestone}
-                                      </p>
-                                    </div>
+                            <div className="flex items-start gap-3.5">
+                              <div className={`flex-shrink-0 w-6 h-6 rounded-lg flex items-center justify-center mt-0.5 border-2 transition-all duration-300 ${isChecked ? 'bg-purple-600 border-purple-500 shadow-[0_0_15px_rgba(139,92,246,0.5)]' : 'bg-black/60 border-white/20 group-hover/item:border-purple-400'}`}>
+                                {isChecked && <span className="text-white text-xs font-bold">✓</span>}
+                              </div>
+
+                              <div className="flex-1">
+                                <p className={`leading-relaxed text-sm sm:text-base font-medium transition-all duration-300 ${isChecked ? 'text-white/30 line-through' : 'text-white/95'}`}>
+                                  {textPart.trim()}
+                                </p>
+
+                                {/* Action Meta & Live YouTube Resource */}
+                                <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                                  <a 
+                                    href={youtubeUrl} 
+                                    target="_blank" 
+                                    rel="noreferrer" 
+                                    onClick={(e) => e.stopPropagation()} 
+                                    className="inline-flex items-center gap-1.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs px-3 py-1 rounded-full border border-red-400/40 transition-all shadow-[0_0_15px_rgba(220,38,38,0.35)] font-bold tracking-wide"
+                                  >
+                                    <span className="text-xs">▶</span>
+                                    <span>{youtubeLabel}</span>
+                                    <span className="text-[10px] text-white/70 uppercase">↗</span>
+                                  </a>
+
+                                  {i === 0 && (
+                                    <span className="text-[11px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2.5 py-0.5 rounded-full font-bold">
+                                      🧠 Mindset Synchronization
+                                    </span>
                                   )}
                                 </div>
                               </div>
-
-                              <span className="text-xs text-purple-300 font-mono bg-purple-950/40 border border-purple-500/30 px-3 py-1 rounded-full font-bold hidden sm:inline-block">
-                                {week.actions.filter((_, aIdx) => checkedItems.has(`w${week.week}-a${aIdx}`)).length}/{week.actions.length} Completed
-                              </span>
                             </div>
-                            
-                            <ul className="space-y-4 relative z-10">
-                              {week.actions.map((action: string, i: number) => {
-                                const actionId = `w${week.week}-a${i}`;
-                                const isChecked = checkedItems.has(actionId);
-                                const isExpanded = expandedAction === actionId;
-                                
-                                // Parse out YouTube links for a clean interactive button
-                                const linkMatch = action.match(/(.*)\[([^\]]+)\]\((https?:\/\/[^\)]+)\)(.*)/);
-                                const textPart = linkMatch ? (linkMatch[1] + (linkMatch[4] || "")) : action;
-                                const youtubeUrl = linkMatch ? linkMatch[3] : `https://www.youtube.com/results?search_query=${encodeURIComponent(textPart.slice(0, 50))}&sp=CAM%253D`;
-                                const youtubeLabel = linkMatch ? linkMatch[2] : "Watch Top-Rated Tutorial ⭐";
-
-                                return (
-                                  <li 
-                                    key={i} 
-                                    className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-purple-500/30 hover:bg-white/[0.04] transition-all cursor-pointer group/item"
-                                    onClick={() => toggleCheck(actionId)}
-                                  >
-                                    <div className="flex items-start gap-3.5">
-                                      <div className={`flex-shrink-0 w-6 h-6 rounded-lg flex items-center justify-center mt-0.5 border-2 transition-all duration-300 ${isChecked ? 'bg-purple-600 border-purple-500 shadow-[0_0_15px_rgba(139,92,246,0.5)]' : 'bg-black/60 border-white/20 group-hover/item:border-purple-400'}`}>
-                                        {isChecked && <span className="text-white text-xs font-bold">✓</span>}
-                                      </div>
-
-                                      <div className="flex-1">
-                                        <p className={`leading-relaxed text-sm sm:text-base font-medium transition-all duration-300 ${isChecked ? 'text-white/30 line-through' : 'text-white/95'}`}>
-                                          {textPart.trim()}
-                                        </p>
-
-                                        {/* Action Meta & Live YouTube Resource */}
-                                        <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                                          <a 
-                                            href={youtubeUrl} 
-                                            target="_blank" 
-                                            rel="noreferrer" 
-                                            onClick={(e) => e.stopPropagation()} 
-                                            className="inline-flex items-center gap-1.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs px-3 py-1 rounded-full border border-red-400/40 transition-all shadow-[0_0_15px_rgba(220,38,38,0.35)] font-bold tracking-wide"
-                                          >
-                                            <span className="text-xs">▶</span>
-                                            <span>{youtubeLabel}</span>
-                                            <span className="text-[10px] text-white/70 uppercase">↗</span>
-                                          </a>
-
-                                          {i === 0 && (
-                                            <span className="text-[11px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2.5 py-0.5 rounded-full font-bold">
-                                              🧠 Mindset Synchronization
-                                            </span>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </div>
-                        </motion.div>
-                      </div>
-                    ))}
+                          </li>
+                        );
+                      })}
+                    </ul>
                   </div>
-                )}
-              </Scroll>
-            </ScrollControls>
-          </Suspense>
-        </Canvas>
+                </motion.div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </motion.div>
   );
