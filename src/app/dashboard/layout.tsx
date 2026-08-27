@@ -139,7 +139,7 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
   );
 }
 
-/* ─── Layout ────────────────────────────────────────────────── */
+import CopilotDrawer from "@/components/dashboard/CopilotDrawer";
 
 export default function DashboardLayout({
   children,
@@ -179,6 +179,9 @@ export default function DashboardLayout({
       <main className="lg:pl-[270px] pt-16 lg:pt-0 min-h-screen">
         <div className="p-6 md:p-10 max-w-6xl mx-auto">{children}</div>
       </main>
+
+      {/* Global AI Oracle Career Copilot */}
+      <CopilotDrawer />
     </div>
   );
 }

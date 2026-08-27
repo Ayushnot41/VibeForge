@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     const truncatedText = text.length > 5000 ? text.slice(0, 5000) : text;
 
     const elevenLabsResponse = await fetch(
-      `${ELEVENLABS_API_BASE}/text-to-speech/${voiceId}/stream`,
+      `${ELEVENLABS_API_BASE}/text-to-speech/${voiceId}/stream?optimize_streaming_latency=3`,
       {
         method: 'POST',
         headers: {
@@ -56,10 +56,10 @@ export async function POST(request: NextRequest) {
         },
         body: JSON.stringify({
           text: truncatedText,
-          model_id: 'eleven_multilingual_v2',
+          model_id: 'eleven_turbo_v2_5',
           voice_settings: {
             stability: 0.5,
-            similarity_boost: 0.75,
+            similarity_boost: 0.8,
             style: 0.0,
             use_speaker_boost: true,
           },
