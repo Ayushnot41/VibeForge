@@ -444,10 +444,10 @@ export async function deployerNode(
     '12_weeks': 12,
     '24_weeks': 24,
     '36_weeks': 36,
-    '1_year': 52,
-    '3_years': 52,
-    '5_years': 60,
-    '10_years': 120,
+    '1_year': 48,
+    '3_years': 144,
+    '5_years': 240,
+    '10_years': 480,
   };
   const targetWeeks = state.userInput.customWeeks && state.userInput.customWeeks > 0
     ? state.userInput.customWeeks

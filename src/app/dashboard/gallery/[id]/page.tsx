@@ -39,12 +39,10 @@ function getFallbackInfographicSvg(title: string, desc: string, stepIndex: numbe
     <rect width="600" height="800" fill="#080812" rx="24"/>
     <rect x="20" y="20" width="560" height="760" fill="#0d0d1e" stroke="#22d3ee" stroke-width="2" stroke-dasharray="6 6" rx="16" opacity="0.5"/>
     
-    <!-- Top Header Banner -->
     <rect x="35" y="35" width="530" height="75" fill="#111126" rx="14" stroke="#a855f7" stroke-width="1.5"/>
     <text x="55" y="65" fill="#22d3ee" font-size="13" font-family="monospace" font-weight="bold">📊 STEP-BY-STEP GROWTH BLUEPRINT • PHASE ${phaseNum}</text>
     <text x="55" y="94" fill="#ffffff" font-size="22" font-family="sans-serif" font-weight="bold">${cleanTitle}</text>
     
-    <!-- Diagram Card 1: Baseline to Milestone -->
     <rect x="35" y="130" width="530" height="310" fill="#04040a" rx="16" stroke="#22d3ee" stroke-width="1.5" stroke-opacity="0.3"/>
     
     <circle cx="85" cy="180" r="18" fill="#22d3ee" fill-opacity="0.2" stroke="#22d3ee" stroke-width="2"/>
@@ -66,7 +64,6 @@ function getFallbackInfographicSvg(title: string, desc: string, stepIndex: numbe
     <text x="120" y="358" fill="#ffffff" font-size="16" font-family="sans-serif" font-weight="bold">Milestone Scaling & Edge Mastery</text>
     <text x="120" y="378" fill="#9ca3af" font-size="13" font-family="sans-serif">Scale position sizing & achieve compounding consistency</text>
 
-    <!-- Bottom Implementation Notes -->
     <rect x="35" y="460" width="530" height="290" fill="#0b0b17" rx="16" stroke="#ffffff" stroke-opacity="0.1"/>
     <text x="60" y="498" fill="#22d3ee" font-size="14" font-family="monospace" font-weight="bold">📝 IMPLEMENTATION PROTOCOL INSTRUCTIONS:</text>
     <foreignObject x="60" y="520" width="480" height="210">
@@ -78,7 +75,7 @@ function getFallbackInfographicSvg(title: string, desc: string, stepIndex: numbe
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-// 3D Card for Desktop Growth Cylinder
+// 3D Card for Device-Responsive Growth Cylinder
 function CylinderCard3D({
   url,
   position,
@@ -87,6 +84,7 @@ function CylinderCard3D({
   subtitle,
   onClick,
   index,
+  distanceFactor,
 }: {
   url: string;
   position: [number, number, number];
@@ -95,6 +93,7 @@ function CylinderCard3D({
   subtitle: string;
   onClick: () => void;
   index: number;
+  distanceFactor: number;
 }) {
   const meshRef = useRef<THREE.Group>(null);
   const [imgSrc, setImgSrc] = useState(url);
@@ -107,13 +106,13 @@ function CylinderCard3D({
 
   return (
     <group position={position} rotation={rotation} ref={meshRef}>
-      <Html transform distanceFactor={5.5} center className="pointer-events-none">
+      <Html transform distanceFactor={distanceFactor} center className="pointer-events-none">
         <div
           onClick={(e) => {
             e.stopPropagation();
             onClick();
           }}
-          className="w-[390px] h-[520px] flex flex-col justify-between p-4 rounded-3xl overflow-hidden bg-[#070712]/95 backdrop-blur-2xl border-2 border-cyan-500/40 shadow-[0_0_40px_rgba(6,182,212,0.25)] transition-all duration-300 hover:scale-105 hover:border-cyan-300 cursor-pointer pointer-events-auto group select-none"
+          className="w-[370px] sm:w-[390px] h-[500px] sm:h-[520px] flex flex-col justify-between p-4 rounded-3xl overflow-hidden bg-[#070712]/95 backdrop-blur-2xl border-2 border-cyan-500/40 shadow-[0_0_40px_rgba(6,182,212,0.25)] transition-all duration-300 hover:scale-105 hover:border-cyan-300 cursor-pointer pointer-events-auto group select-none"
         >
           <div className="w-full h-full relative rounded-2xl overflow-hidden bg-black flex flex-col justify-between p-4">
             <img
@@ -134,7 +133,7 @@ function CylinderCard3D({
             </div>
 
             <div className="relative z-10 text-left">
-              <p className="text-white text-sm font-semibold leading-snug line-clamp-2 drop-shadow-lg mb-1.5">
+              <p className="text-white text-xs sm:text-sm font-semibold leading-snug line-clamp-2 drop-shadow-lg mb-1.5">
                 {subtitle}
               </p>
               <span className="text-cyan-400 text-xs font-bold inline-flex items-center gap-1 group-hover:text-cyan-300">
@@ -148,20 +147,22 @@ function CylinderCard3D({
   );
 }
 
-// 3D Cylinder Orbit Group for Desktop
+// 3D Cylinder Orbit Group
 function HologramCylinder3D({
   prompts,
   rotationY,
   onSelect,
   userGoal,
+  distanceFactor,
 }: {
   prompts: ImagePrompt[];
   rotationY: number;
   onSelect: (index: number) => void;
   userGoal?: string;
+  distanceFactor: number;
 }) {
   const groupRef = useRef<THREE.Group>(null);
-  const radius = Math.max(5.8, prompts.length * 0.95);
+  const radius = Math.max(5.6, prompts.length * 0.92);
 
   useFrame((_, delta) => {
     if (groupRef.current) {
@@ -193,6 +194,7 @@ function HologramCylinder3D({
             subtitle={prompt.sceneDescription}
             onClick={() => onSelect(index)}
             index={index}
+            distanceFactor={distanceFactor}
           />
         );
       })}
@@ -213,20 +215,54 @@ export default function GalleryPage() {
   const [selectedHologram, setSelectedHologram] = useState<number | null>(null);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
 
-  // Mobile Detection & Active Card Index for Touch Deck
-  const [isMobile, setIsMobile] = useState(false);
+  // Machine & Viewport Auto-Detection
+  const [deviceMetrics, setDeviceMetrics] = useState({
+    isMobile: false,
+    cameraZ: 9.5,
+    fov: 50,
+    cardDistanceFactor: 5.5,
+  });
   const [activeMobileCard, setActiveMobileCard] = useState(0);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+      const w = window.innerWidth;
+      if (w < 768) {
+        setDeviceMetrics({
+          isMobile: true,
+          cameraZ: 12,
+          fov: 60,
+          cardDistanceFactor: 6.5,
+        });
+      } else if (w < 1024) {
+        setDeviceMetrics({
+          isMobile: false,
+          cameraZ: 10.2,
+          fov: 52,
+          cardDistanceFactor: 5.8,
+        });
+      } else if (w < 1440) {
+        setDeviceMetrics({
+          isMobile: false,
+          cameraZ: 9.2,
+          fov: 50,
+          cardDistanceFactor: 5.5,
+        });
+      } else {
+        setDeviceMetrics({
+          isMobile: false,
+          cameraZ: 8.8,
+          fov: 48,
+          cardDistanceFactor: 5.2,
+        });
+      }
     };
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Wheel / Touch Rotation Physics for Desktop 3D
+  // Wheel / Touch Rotation Physics
   const [rotationY, setRotationY] = useState(0);
   const isDragging = useRef(false);
   const startX = useRef(0);
@@ -312,7 +348,7 @@ export default function GalleryPage() {
 
   return (
     <div className="w-full min-h-screen relative bg-[#030308] text-white select-none font-[var(--font-body)] flex flex-col">
-      {/* Top Sticky Navigation Bar — 100% Clickable & Responsive */}
+      {/* Top Sticky Navigation Bar */}
       <header className="sticky top-0 z-50 px-4 sm:px-6 py-3.5 bg-[#030308]/95 backdrop-blur-xl border-b border-zinc-800 flex items-center justify-between pointer-events-auto">
         <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/results/${id}`)}>
           ← Command Center
@@ -345,8 +381,8 @@ export default function GalleryPage() {
 
       {/* Main Content Area */}
       {viewMode === "3d" ? (
-        isMobile ? (
-          /* Mobile Holographic 3D Interactive Card Deck (100% Viewport-Proof) */
+        deviceMetrics.isMobile ? (
+          /* Mobile Holographic 3D Interactive Card Deck */
           <div className="flex-1 w-full flex flex-col justify-between items-center px-4 py-6 overflow-hidden">
             <div className="text-center space-y-1">
               <span className="px-3 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-[10px] font-mono font-bold text-cyan-300 uppercase">
@@ -355,7 +391,6 @@ export default function GalleryPage() {
               <p className="text-xs text-zinc-400">Swipe or tap arrows to navigate growth timeline</p>
             </div>
 
-            {/* Active Card with Smooth 3D Perspective */}
             <div className="w-full max-w-sm my-auto relative">
               <AnimatePresence mode="wait">
                 {(() => {
@@ -409,7 +444,6 @@ export default function GalleryPage() {
               </AnimatePresence>
             </div>
 
-            {/* Mobile Navigation Controls */}
             <div className="w-full max-w-sm flex items-center justify-between gap-4 pt-2">
               <button
                 onClick={() => setActiveMobileCard((prev) => (prev > 0 ? prev - 1 : prompts.length - 1))}
@@ -439,7 +473,7 @@ export default function GalleryPage() {
             </div>
           </div>
         ) : (
-          /* Desktop / Laptop 3D Cylinder Orbit View */
+          /* Laptop / Desktop Machine-Adaptive 3D Cylinder View */
           <div
             className="flex-1 w-full h-[calc(100vh-65px)] relative overflow-hidden cursor-grab active:cursor-grabbing select-none"
             onWheel={handleWheel}
@@ -453,7 +487,10 @@ export default function GalleryPage() {
               </span>
             </div>
 
-            <Canvas camera={{ position: [0, 0, 9.5], fov: 50 }} dpr={[1, 2]}>
+            <Canvas
+              camera={{ position: [0, 0, deviceMetrics.cameraZ], fov: deviceMetrics.fov }}
+              dpr={[1, 2]}
+            >
               <color attach="background" args={["#030308"]} />
               <fog attach="fog" args={["#030308", 4, 30]} />
               <ambientLight intensity={0.7} />
@@ -465,6 +502,7 @@ export default function GalleryPage() {
                   rotationY={rotationY}
                   onSelect={(idx) => setSelectedHologram(idx)}
                   userGoal={state?.userInput?.goals}
+                  distanceFactor={deviceMetrics.cardDistanceFactor}
                 />
               </Suspense>
             </Canvas>
