@@ -12,26 +12,23 @@ import VibeCore from "@/components/three/VibeCore";
 import { DEMO_SIMULATION } from "@/lib/demoSimulation";
 import SuccessForecastCard from "@/components/SuccessForecastCard";
 
-// PDF styles to inject when printing
+// Clean Professional PDF Print Stylesheet
 const printStyles = `
   @media print {
-    body { background: white !important; color: black !important; }
+    body { background: #ffffff !important; color: #000000 !important; }
     canvas { display: none !important; }
     .no-print { display: none !important; }
     .print-only { display: block !important; }
     .print-container { 
-      padding: 20px; 
-      max-width: 800px; 
+      padding: 24px; 
+      max-width: 900px; 
       margin: 0 auto;
-    }
-    .print-week {
-      margin-bottom: 30px;
-      page-break-inside: avoid;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
   }
 `;
 
-// The Galaxy Stone that appears at 100% completion
+// Galaxy Stone for 100% Completion
 function GalaxyStone() {
   const meshRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
@@ -62,7 +59,6 @@ function GalaxyStone() {
         />
       </mesh>
       
-      {/* Outer Glow / Energy Field */}
       <mesh ref={glowRef}>
         <sphereGeometry args={[2.5, 32, 32]} />
         <meshBasicMaterial color="#a78bfa" transparent opacity={0.15} wireframe />
@@ -87,7 +83,6 @@ function PremiumBackground({ progress }: { progress: number }) {
   return (
     <group ref={group}>
       <Stars radius={100} depth={50} count={1000} factor={4} saturation={0} fade speed={0.5} />
-      {/* Ambient floating geometry */}
       {Array.from({ length: 8 }).map((_, i) => (
         <Float key={i} speed={0.5} rotationIntensity={0.5} floatIntensity={1} position={[(Math.sin(i * 1.5)) * 10, (Math.cos(i * 1.2)) * 15, -5 - i]}>
           <mesh>
@@ -96,7 +91,6 @@ function PremiumBackground({ progress }: { progress: number }) {
           </mesh>
         </Float>
       ))}
-      {/* Mindset Alignment Stone */}
       <Float speed={1.5} rotationIntensity={1} floatIntensity={0.5} position={[0, -1, -6]}>
         <mesh castShadow receiveShadow>
           <icosahedronGeometry args={[1.5, 0]} />
@@ -111,11 +105,11 @@ function PremiumBackground({ progress }: { progress: number }) {
 
 // Milestone Rewards Config
 interface RewardTier {
-  threshold: number; // percentage (0 - 100)
+  threshold: number;
   name: string;
   badge: string;
   coupon: string;
-  discount: number; // percentage off
+  discount: number;
   description: string;
 }
 
@@ -156,19 +150,17 @@ const REWARD_TIERS: RewardTier[] = [
 
 export default function ActionPlanPage() {
   const params = useParams();
-  const id = params.id as string;
+  const id = params?.id as string;
   const router = useRouter();
+
   const [state, setState] = useState<SimulationState | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  // Interactive Progress State
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
-  const [glitchModal, setGlitchModal] = useState<{ isOpen: boolean; imageUrl: string | null }>({ isOpen: false, imageUrl: null });
+  const [equippedSkin, setEquippedSkin] = useState<"default" | "quantum" | "infernal" | "chronos">("default");
   const [storeModal, setStoreModal] = useState(false);
   const [rewardModal, setRewardModal] = useState<{ isOpen: boolean; tier: RewardTier | null }>({ isOpen: false, tier: null });
-  const [equippedSkin, setEquippedSkin] = useState<"default" | "quantum" | "infernal" | "chronos">("default");
   const [activeFilter, setActiveFilter] = useState<"all" | "p1" | "p2" | "p3" | "milestones">("all");
-  const [expandedAction, setExpandedAction] = useState<string | null>(null);
+  const [glitchModal, setGlitchModal] = useState<{ isOpen: boolean; imageUrl: string | null }>({ isOpen: false, imageUrl: null });
 
   // Weekly Check-In data for Success Forecast (loaded from localStorage)
   const [checkIns, setCheckIns] = useState<{ weekNumber: number; completionPercent: number }[]>([]);
@@ -196,25 +188,29 @@ export default function ActionPlanPage() {
   }, [egoSprintActive, egoSprintSeconds]);
 
   useEffect(() => {
-    async function fetchSim() {
+    async function loadData() {
       try {
         const localData = typeof window !== "undefined" ? localStorage.getItem(`sim_${id}`) : null;
         if (localData) {
-          setState(JSON.parse(localData));
+          const parsed = JSON.parse(localData);
+          setState(parsed);
+          if (parsed.checkedActions) {
+            setCheckedItems(new Set(parsed.checkedActions));
+          }
+          if (parsed.equippedSkin) {
+            setEquippedSkin(parsed.equippedSkin);
+          }
         } else {
           setState(DEMO_SIMULATION);
-          if (typeof window !== "undefined") {
-            localStorage.setItem(`sim_${id}`, JSON.stringify(DEMO_SIMULATION));
-          }
         }
-      } catch (e) {
-        console.error(e);
+      } catch (err) {
+        console.error(err);
         setState(DEMO_SIMULATION);
       } finally {
         setLoading(false);
       }
     }
-    fetchSim();
+    loadData();
   }, [id]);
 
   // Load check-ins for this simulation from localStorage
@@ -237,36 +233,18 @@ export default function ActionPlanPage() {
     } catch { /* ignore */ }
   }, [id]);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 min-h-screen bg-black">
-        <div className="w-10 h-10 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mb-4" />
-        <p className="text-white/60 font-mono text-sm tracking-wider">Compiling AI Execution Protocol & Curriculum...</p>
-      </div>
-    );
-  }
-
-  if (!state || !state.actionPlan) {
-    return (
-      <div className="text-center py-20 min-h-screen bg-black flex flex-col items-center justify-center">
-        <h2 className="text-2xl font-bold text-rose-400 mb-2">Execution Protocol Not Found</h2>
-        <p className="text-white/50 text-sm mb-6">The requested simulation roadmap could not be loaded.</p>
-        <Button onClick={() => router.push(`/dashboard/results/${id}`)}>
-          ← Back to Command Center
-        </Button>
-      </div>
-    );
-  }
-
-  const weeks = state.actionPlan.weeklyActions || [];
-  const pages = Math.max(2, weeks.length / 1.1);
-  
-  const totalActions = weeks.reduce((acc: number, w: any) => acc + w.actions.length, 0);
-  const progress = totalActions === 0 ? 0 : checkedItems.size / totalActions;
-  const progressPercent = Math.round(progress * 100);
-
-  // Highest unlocked reward tier
-  const highestUnlockedTier = [...REWARD_TIERS].reverse().find((t) => progressPercent >= t.threshold) || null;
+  const saveProgress = (newChecked: Set<string>, newSkin?: string) => {
+    if (typeof window === "undefined" || !state) return;
+    try {
+      const updated = {
+        ...state,
+        checkedActions: Array.from(newChecked),
+        equippedSkin: newSkin || equippedSkin,
+        localSavedAt: Date.now(),
+      };
+      localStorage.setItem(`sim_${id}`, JSON.stringify(updated));
+    } catch (e) {}
+  };
 
   const toggleCheck = (actionId: string) => {
     const newSet = new Set(checkedItems);
@@ -276,12 +254,11 @@ export default function ActionPlanPage() {
       newSet.delete(actionId);
     } else {
       newSet.add(actionId);
-      
-      // Check if newly crossed a reward threshold
+      const totalActions = (state?.actionPlan?.weeklyActions || []).reduce((acc: number, w: any) => acc + w.actions.length, 0);
       const newProgress = totalActions === 0 ? 0 : newSet.size / totalActions;
       const newPct = Math.round(newProgress * 100);
       const justUnlockedTier = REWARD_TIERS.find(
-        (t) => newPct >= t.threshold && progressPercent < t.threshold
+        (t) => newPct >= t.threshold && Math.round((checkedItems.size / (totalActions || 1)) * 100) < t.threshold
       );
 
       if (justUnlockedTier) {
@@ -298,12 +275,36 @@ export default function ActionPlanPage() {
       }
     }
     setCheckedItems(newSet);
+    saveProgress(newSet);
   };
 
-  // VibeCore Tamagotchi Health Calculation
-  const daysElapsed = state?.localSavedAt ? (Date.now() - state.localSavedAt) / (1000 * 60 * 60 * 24) : 0;
-  const expectedActions = Math.max(0, daysElapsed / 2);
-  const health = expectedActions === 0 ? 1.0 : Math.max(0, 1 - Math.max(0, expectedActions - checkedItems.size) * 0.2);
+  const weeks = state?.actionPlan?.weeklyActions || [];
+  const totalActions = weeks.reduce((acc: number, w: any) => acc + w.actions.length, 0);
+  const progress = totalActions === 0 ? 0 : checkedItems.size / totalActions;
+  const progressPercent = Math.round(progress * 100);
+
+  // Dynamic Phase Filtering
+  const totalWeeksCount = weeks.length;
+  const phaseSize = Math.max(3, Math.ceil(totalWeeksCount / 3));
+
+  const filterTabs = [
+    { id: "all", label: `All Sprints (${totalWeeksCount}W)` },
+    { id: "p1", label: `Phase 1 (W1-${Math.min(phaseSize, totalWeeksCount)})` },
+    ...(totalWeeksCount > phaseSize ? [{ id: "p2", label: `Phase 2 (W${phaseSize + 1}-${Math.min(phaseSize * 2, totalWeeksCount)})` }] : []),
+    ...(totalWeeksCount > phaseSize * 2 ? [{ id: "p3", label: `Phase 3 (W${phaseSize * 2 + 1}-${totalWeeksCount})` }] : []),
+    { id: "milestones", label: "🎯 Key Milestones" },
+  ];
+
+  const filteredWeeks = weeks.filter((w) => {
+    if (activeFilter === "all") return true;
+    if (activeFilter === "p1") return w.week <= phaseSize;
+    if (activeFilter === "p2") return w.week > phaseSize && w.week <= phaseSize * 2;
+    if (activeFilter === "p3") return w.week > phaseSize * 2;
+    if (activeFilter === "milestones") return !!w.milestone;
+    return true;
+  });
+
+  const highestUnlockedTier = [...REWARD_TIERS].reverse().find((t) => progressPercent >= t.threshold) || null;
 
   const exportToICS = () => {
     if (!weeks || weeks.length === 0) return;
@@ -337,26 +338,25 @@ export default function ActionPlanPage() {
     window.print();
   };
 
-  // Dynamic Phase Filtering based on actual total weeks count
-  const totalWeeksCount = weeks.length;
-  const phaseSize = Math.max(3, Math.ceil(totalWeeksCount / 3));
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 min-h-screen bg-black">
+        <div className="w-10 h-10 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mb-4" />
+        <p className="text-white/60 font-mono text-sm tracking-wider">Compiling AI Execution Protocol...</p>
+      </div>
+    );
+  }
 
-  const filterTabs = [
-    { id: "all", label: `All Sprints (${totalWeeksCount}W)` },
-    { id: "p1", label: `Phase 1 (W1-${Math.min(phaseSize, totalWeeksCount)})` },
-    ...(totalWeeksCount > phaseSize ? [{ id: "p2", label: `Phase 2 (W${phaseSize + 1}-${Math.min(phaseSize * 2, totalWeeksCount)})` }] : []),
-    ...(totalWeeksCount > phaseSize * 2 ? [{ id: "p3", label: `Phase 3 (W${phaseSize * 2 + 1}-${totalWeeksCount})` }] : []),
-    { id: "milestones", label: "🎯 Key Milestones" },
-  ];
-
-  const filteredWeeks = weeks.filter((w) => {
-    if (activeFilter === "all") return true;
-    if (activeFilter === "p1") return w.week <= phaseSize;
-    if (activeFilter === "p2") return w.week > phaseSize && w.week <= phaseSize * 2;
-    if (activeFilter === "p3") return w.week > phaseSize * 2;
-    if (activeFilter === "milestones") return !!w.milestone;
-    return true;
-  });
+  if (!state || !state.actionPlan) {
+    return (
+      <div className="text-center py-20 min-h-screen bg-black flex flex-col items-center justify-center">
+        <h2 className="text-2xl font-bold text-rose-400 mb-2">Execution Protocol Not Found</h2>
+        <Button onClick={() => router.push(`/dashboard/results/${id}`)}>
+          ← Back to Command Center
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -366,12 +366,12 @@ export default function ActionPlanPage() {
       className="w-full h-screen relative bg-[#030305] overflow-hidden select-none"
     >
       <style>{printStyles}</style>
-      
+
       {/* Print Only Version */}
       <div className="hidden print-only print-container">
         <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '20px' }}>VibeForge Execution Protocol</h1>
         {weeks.map((week, index) => (
-          <div key={index} className="print-week">
+          <div key={index} style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
             <h2 style={{ fontSize: '18px', fontWeight: 'bold' }}>Week {week.week} {week.milestone ? `- ${week.milestone}` : ''}</h2>
             <ul>
               {week.actions.map((action: string, i: number) => (
@@ -383,40 +383,40 @@ export default function ActionPlanPage() {
       </div>
 
       {/* Top Left Navigation & Export Controls */}
-      <div className="absolute top-6 left-6 z-20 flex flex-wrap items-center gap-3 no-print">
+      <div className="absolute top-6 left-6 z-20 flex flex-wrap items-center gap-2.5 no-print">
         <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/results/${id}`)}>
           ← Command Center
         </Button>
-        <Button variant="secondary" size="sm" onClick={exportToICS}>
-          📅 ICS Export
-        </Button>
-        <Button variant="secondary" size="sm" onClick={exportToPDF}>
+        <Button variant="secondary" size="sm" onClick={exportToPDF} className="text-xs">
           📄 PDF
+        </Button>
+        <Button variant="secondary" size="sm" onClick={exportToICS} className="text-xs">
+          📅 ICS
         </Button>
 
         {/* Milestone Rewards Trigger Badge */}
         <button
           onClick={() => setRewardModal({ isOpen: true, tier: highestUnlockedTier || REWARD_TIERS[0] })}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-indigo-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold hover:scale-105 transition-all shadow-[0_0_20px_rgba(245,158,11,0.2)] cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-purple-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold hover:scale-105 transition-all shadow-md cursor-pointer"
         >
           <span>🎁</span>
           <span>
             {highestUnlockedTier
-              ? `${highestUnlockedTier.badge} Claim ${highestUnlockedTier.discount}% Pro Discount`
-              : `🎯 Earn Up to 50% Pro Discount`}
+              ? `${highestUnlockedTier.badge} Claim ${highestUnlockedTier.discount}% Discount`
+              : `🎯 Earn Discounts`}
           </span>
         </button>
       </div>
-      
+
       {/* Top Right Header & Live Sync Progress */}
       <div className="absolute top-6 right-6 z-20 text-right no-print">
-        <h1 className="text-2xl sm:text-3xl font-black text-white mb-1 tracking-tight drop-shadow-lg flex items-center justify-end gap-2">
+        <h1 className="text-xl sm:text-2xl font-black text-white mb-1 tracking-tight flex items-center justify-end gap-2">
           <span>Execution Protocol</span>
           <span className="text-amber-400">⚡</span>
         </h1>
         <div className="flex items-center justify-end gap-3">
-          <span className="text-white/60 text-xs uppercase tracking-wider font-bold">
-            {progress === 1 ? "Roadmap Completed" : `${progressPercent}% Synchronized (${checkedItems.size}/${totalActions} Actions)`}
+          <span className="text-white/60 text-xs font-mono">
+            {progress === 1 ? "Roadmap Completed" : `${progressPercent}% Synchronized (${checkedItems.size}/${totalActions})`}
           </span>
           <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
             <div 
@@ -467,9 +467,6 @@ export default function ActionPlanPage() {
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xl p-4 pointer-events-auto no-print"
           >
             <div className="bg-[#0b0b14] border border-amber-400/40 p-6 sm:p-8 rounded-3xl max-w-lg w-full shadow-[0_0_80px_rgba(245,158,11,0.25)] relative overflow-hidden">
-              <div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
-
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <span className="text-xs uppercase font-bold text-amber-400 tracking-widest bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-full">
@@ -917,7 +914,6 @@ export default function ActionPlanPage() {
                   <div
                     className="bg-black/50 backdrop-blur-2xl border border-white/15 p-6 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden group hover:border-purple-500/40 transition-all duration-500"
                   >
-                    {/* Inner ambient glow */}
                     <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                     
                     <div className="flex items-center justify-between gap-4 mb-6 relative z-10">
@@ -950,7 +946,6 @@ export default function ActionPlanPage() {
                         const actionId = `w${week.week}-a${i}`;
                         const isChecked = checkedItems.has(actionId);
                         
-                        // Parse out YouTube links for a clean interactive button
                         const linkMatch = action.match(/(.*)\[([^\]]+)\]\((https?:\/\/[^\)]+)\)(.*)/);
                         const textPart = linkMatch ? (linkMatch[1] + (linkMatch[4] || "")) : action;
                         const youtubeUrl = linkMatch ? linkMatch[3] : `https://www.youtube.com/results?search_query=${encodeURIComponent(textPart.slice(0, 50))}&sp=CAM%253D`;
@@ -972,7 +967,6 @@ export default function ActionPlanPage() {
                                   {textPart.trim()}
                                 </p>
 
-                                {/* Action Meta & Live YouTube Resource */}
                                 <div className="mt-2.5 flex flex-wrap items-center gap-2">
                                   <a 
                                     href={youtubeUrl} 

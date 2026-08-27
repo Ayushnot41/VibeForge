@@ -1,19 +1,19 @@
 // ============================================================================
-// Visualizer Agent — DALL-E 3 prompt generation & narrative scripting
-// No external API calls — produces prompts and scripts for downstream use
+// Visualizer Agent — Comic-Type Roadmap Hologram & Narrative Engine
+// Generates graphic novel hologram panel prompts for full career transformations
 // ============================================================================
 
 import { SimulationAnnotation } from './state';
 import type { ImagePrompt, FuturePath, UserInput } from '@/types/agents';
 import { callOpenRouterWithFallback } from '@/lib/openrouterClient';
 
-const STYLE_MAP: Record<FuturePath['type'], string> = {
+const COMIC_STYLE_MAP: Record<FuturePath['type'], string> = {
   optimistic:
-    'Hyper-realistic documentary photography, shot on 35mm lens, f/1.8, golden hour natural lighting, cinematic composition, authentic human expression, extremely detailed, highly realistic textures, zero digital art artifacts, award-winning photography, 8k resolution',
+    'High-tech comic graphic novel splash panel, vibrant holographic neon blueprint overlays, glowing cyber-hologram timeline progression, dynamic action lines, crisp graphic ink lines, comic book color grading, Unreal Engine 5 volumetric lighting, 8k comic masterpiece, zero watermark, cinematic widescreen',
   realistic:
-    'Hyper-realistic documentary photography, shot on 50mm lens, f/2.8, balanced soft daylight, professional authentic atmosphere, grounded reality, subtle depth of field, photorealistic textures, zero digital art artifacts, award-winning photography, 8k resolution',
+    'Detailed comic book illustration, holographic roadmap HUD interface displaying week-by-week milestones, clean ink linework, subtle neon blue and violet accents, modern graphic novel aesthetic, intense focus and deliberate practice, 8k resolution, cinematic',
   pessimistic:
-    'Hyper-realistic documentary photography, shot on 35mm lens, f/2.0, overcast moody lighting, dramatic shadows, authentic resilience, gritty realism, photorealistic textures, zero digital art artifacts, award-winning photography, 8k resolution',
+    'Moody graphic novel comic panel, dark atmospheric cyber-noir shading, holographic glitch warnings and breakthrough solutions, resilient character overcoming obstacles, comic book cross-hatching, cinematic lighting, 8k masterwork',
 };
 
 /**
@@ -31,7 +31,7 @@ function selectKeyMilestones(path: FuturePath): typeof path.milestones {
 }
 
 /**
- * Build a DALL-E 3 prompt for a specific milestone in a future path.
+ * Build a Comic-Type Roadmap Hologram prompt for a specific milestone in a future path.
  */
 function buildImagePrompt(
   path: FuturePath,
@@ -39,15 +39,16 @@ function buildImagePrompt(
   userInput: UserInput
 ): ImagePrompt {
   const yearMark = Math.ceil(milestone.month / 12);
-  const style = STYLE_MAP[path.type];
+  const style = COMIC_STYLE_MAP[path.type] || COMIC_STYLE_MAP.realistic;
 
   const sceneDescription = [
-    `Context: The user's goal is: "${userInput.goals}". Current situation: "${userInput.currentSituation}".`,
-    `Scene: "${milestone.title}" — Year ${yearMark} of their ${path.type} future path titled "${path.title}".`,
-    `CRITICAL INSTRUCTION: The environment MUST heavily and explicitly reflect their specific career or goal mentioned above (e.g., if they are a trader, show complex multi-monitor trading terminals; if a web developer, show modern coding setups and IDEs; if a doctor, show a high-tech hospital). Make it extremely specific to their profession or goal. Do NOT use generic sci-fi imagery.`,
-    `A person ${milestone.description.toLowerCase()}.`,
-    `The environment reflects ${path.type === 'optimistic' ? 'massive success and peak performance' : path.type === 'realistic' ? 'steady progress and daily grind' : 'harsh challenges being overcome with intense resilience'}.`,
-    `No text or words in the image.`,
+    `Stylized graphic novel comic roadmap panel depicting career transition from "${userInput.currentSituation}" to "${userInput.goals}".`,
+    `Episode/Chapter: "${milestone.title}" (Month ${milestone.month}, Year ${yearMark} of ${path.title}).`,
+    `The scene depicts the character actively executing: ${milestone.description}.`,
+    `A floating holographic cyan and violet HUD interface glows in the air, illustrating the week-by-week progress roadmap, learning milestones, and skill blueprints.`,
+    `The physical environment is heavily customized to their dream profession (${userInput.goals}).`,
+    `Atmosphere reflects ${path.type === 'optimistic' ? 'triumphant peak mastery and cosmic success' : path.type === 'realistic' ? 'disciplined daily execution and steady growth' : 'gritty resilience overcoming brutal challenges'}.`,
+    `Cinematic comic book composition, dramatic angles, crisp ink outlines, glowing neon accents, 8k masterwork.`,
   ].join(' ');
 
   return {
@@ -135,7 +136,7 @@ function generateNarrativeScript(paths: FuturePath[]): string {
 }
 
 /**
- * Visualizer node — generates DALL-E 3 prompts and a narrative script.
+ * Visualizer node — generates Comic Roadmap Hologram prompts and a narrative script.
  */
 export async function visualizerNode(
   state: typeof SimulationAnnotation.State,
@@ -167,7 +168,7 @@ export async function visualizerNode(
           { role: 'system', content: "You are the user's highly motivational, energetic mentor and brother in arms. Write a short, punchy, dopamine-inducing speech (max 150 words) to hype them up about achieving their specific life goals. Speak directly to them like a champion brother. Do NOT read action steps. Just pure, hyper-focused motivation." },
           { role: 'user', content: `Goal: ${state.userInput.goals}. Current situation: ${state.userInput.currentSituation}` },
         ],
-        preferredModels: ['anthropic/claude-opus-5', 'meta-llama/llama-3.3-70b-instruct', 'openai/gpt-4o-mini'],
+        preferredModels: ['meta-llama/llama-3.3-70b-instruct', 'openai/gpt-4o-mini', 'x-ai/grok-4.6', 'anthropic/claude-opus-5'],
         temperature: 0.85,
         maxTokens: 400,
       });

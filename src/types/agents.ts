@@ -7,7 +7,8 @@
 export interface UserInput {
   currentSituation: string;  // Career, education, location, skills
   goals: string;             // Short/medium/long-term goals
-  timeHorizon: '1_year' | '3_years' | '5_years' | '10_years';
+  timeHorizon: '6_weeks' | '12_weeks' | '24_weeks' | '36_weeks' | '1_year' | '3_years' | '5_years' | '10_years' | string;
+  customWeeks?: number;      // Exact user-specified number of weeks (e.g. 6, 24, 36, 52, etc.)
   riskTolerance: 'conservative' | 'moderate' | 'aggressive';
   additionalContext?: string;
 }

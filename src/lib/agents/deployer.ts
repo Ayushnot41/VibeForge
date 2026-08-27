@@ -166,6 +166,7 @@ function generateFallbackPlan(goals: string, situation: string): { actionPlan: A
   console.warn('[Deployer] Generating dynamic domain fallback plan for:', goals);
   const goalKeyword = encodeURIComponent(goals.split(' ').slice(0, 4).join(' '));
   const isTrading = /trad(e|ing|er)|stock|forex|crypto|market|nifty/i.test(goals);
+  const isCreator = /youtub|content creator|freelanc|influencer|video edit|channel|podcast/i.test(goals);
 
   const weeks: WeeklyAction[] = [];
 
@@ -217,7 +218,6 @@ function generateFallbackPlan(goals: string, situation: string): { actionPlan: A
       },
     ];
 
-    // Expand to 12 weeks with advanced concepts
     for (let i = 1; i <= 12; i++) {
       if (i <= 4) {
         weeks.push(tradingWeeks[i - 1]);
@@ -235,8 +235,73 @@ function generateFallbackPlan(goals: string, situation: string): { actionPlan: A
         });
       }
     }
+  } else if (isCreator) {
+    // Specific high-yield Content Creator & YouTuber curriculum
+    const creatorWeeks = [
+      {
+        week: 1,
+        title: "Niche Selection & Channel Architecture",
+        actions: [
+          "Mental Synchronization: Define your unfair advantage and core audience persona. Commit to consistent creation. [Watch Finding Your YouTube Niche ⭐](https://www.youtube.com/results?search_query=how+to+find+your+youtube+niche+for+beginners&sp=CAM%253D)",
+          "Channel Setup: Configure YouTube Studio, high-converting channel banner, profile icon, and SEO description. [Watch Complete YouTube Channel Setup Guide ⭐](https://www.youtube.com/results?search_query=youtube+channel+setup+tutorial+step+by+step&sp=CAM%253D)",
+          "Topic Ideation: Brainstorm 20 high-demand video topics using YouTube search auto-suggest and Google Trends. [Watch YouTube Video Ideas Research ⭐](https://www.youtube.com/results?search_query=how+to+find+viral+youtube+video+ideas&sp=CAM%253D)",
+          "Equipment Prep: Setup your smartphone 4K camera, ring light, and lapel microphone for clean audio. [Watch Best Budget YouTube Equipment Guide ⭐](https://www.youtube.com/results?search_query=budget+youtube+setup+for+beginners&sp=CAM%253D)",
+        ],
+        milestone: "Channel Architecture & Tech Setup Complete",
+      },
+      {
+        week: 2,
+        title: "Video Editing & Visual Storytelling",
+        actions: [
+          "Mental Synchronization: Overcome camera shyness. The first 10 videos are practice to build confidence. [Watch How to Be Confident on Camera ⭐](https://www.youtube.com/results?search_query=how+to+be+confident+on+camera+youtube&sp=CAM%253D)",
+          "Editing Software: Master timeline cutting, B-roll overlays, J/L cuts, and sound effects in CapCut or Premiere Pro. [Watch Video Editing Masterclass for Beginners ⭐](https://www.youtube.com/results?search_query=video+editing+tutorial+for+beginners+capcut+premiere&sp=CAM%253D)",
+          "Thumbnail Psychology: Learn high-CTR thumbnail composition (contrast, facial expression, 3-word text limit). [Watch High CTR YouTube Thumbnail Masterclass ⭐](https://www.youtube.com/results?search_query=how+to+make+viral+thumbnails+photoshop+canva&sp=CAM%253D)",
+          "First Recording: Record a 60-second test video to verify lighting, audio levels, and eye contact. [Watch YouTube Audio and Lighting Setup ⭐](https://www.youtube.com/results?search_query=youtube+lighting+and+audio+tutorial&sp=CAM%253D)",
+        ],
+        milestone: "Editing & Thumbnail Mastery Blueprint",
+      },
+      {
+        week: 3,
+        title: "Scriptwriting & High-Retention Production",
+        actions: [
+          "Mental Synchronization: Hook viewers in the first 5 seconds. Eliminate filler words and fluff. [Watch YouTube Scriptwriting Frameworks ⭐](https://www.youtube.com/results?search_query=how+to+write+engaging+youtube+scripts&sp=CAM%253D)",
+          "First Full Video: Script and film your first cornerstone 8-minute high-value video. [Watch Filming Your First YouTube Video ⭐](https://www.youtube.com/results?search_query=how+to+film+first+youtube+video&sp=CAM%253D)",
+          "Retention Editing: Insert pattern interrupts every 30 seconds (zoom-ins, sound effects, B-roll). [Watch Increasing YouTube Audience Retention ⭐](https://www.youtube.com/results?search_query=how+to+increase+audience+retention+youtube&sp=CAM%253D)",
+          "Thumbnail A/B Test: Design 2 distinct thumbnail variations in Canva/Photoshop. [Watch Thumbnail Testing Guide ⭐](https://www.youtube.com/results?search_query=youtube+thumbnail+ab+testing+tutorial&sp=CAM%253D)",
+        ],
+      },
+      {
+        week: 4,
+        title: "Publishing, SEO & Community Launch",
+        actions: [
+          "Mental Synchronization: Detach your self-worth from early view counts. Focus on iterative improvement. [Watch Creator Mindset and Consistency ⭐](https://www.youtube.com/results?search_query=youtube+creator+mindset+motivation&sp=CAM%253D)",
+          "Publish Video #1: Upload video with optimized title, search tags, chapter timestamps, and pinned comment. [Watch How to Upload Video on YouTube Properly ⭐](https://www.youtube.com/results?search_query=how+to+upload+video+on+youtube+with+seo&sp=CAM%253D)",
+          "Shorts Repurposing: Cut 3 vertical Shorts/Reels from the main video to drive organic traffic. [Watch Repurposing Long Form to Shorts ⭐](https://www.youtube.com/results?search_query=how+to+repurpose+youtube+videos+into+shorts&sp=CAM%253D)",
+          "Analytics Review: Analyze Click-Through-Rate (CTR) and Average Percentage Viewed (APV) in YouTube Analytics. [Watch Understanding YouTube Analytics ⭐](https://www.youtube.com/results?search_query=how+to+read+youtube+analytics+for+beginners&sp=CAM%253D)",
+        ],
+        milestone: "Month 1 Content Creator Launch Certified",
+      },
+    ];
+
+    for (let i = 1; i <= 12; i++) {
+      if (i <= 4) {
+        weeks.push(creatorWeeks[i - 1]);
+      } else {
+        const phaseNum = Math.floor((i - 1) / 4) + 1;
+        weeks.push({
+          week: i,
+          actions: [
+            `Mental Synchronization: Review creator metrics. Double down on what worked and discard what underperformed. [Watch Scaling YouTube Channel Fast ⭐](https://www.youtube.com/results?search_query=how+to+scale+youtube+channel+views&sp=CAM%253D)`,
+            `Weekly Video Production: Script, record, and edit 1 high-value long-form video and 2 Shorts. [Watch Streamlining YouTube Production Workflow ⭐](https://www.youtube.com/results?search_query=youtube+content+creation+workflow&sp=CAM%253D)`,
+            `Community & Engagement: Reply to all comments within 2 hours of publishing and post a community poll. [Watch Building Loyal YouTube Community ⭐](https://www.youtube.com/results?search_query=how+to+build+a+loyal+audience+on+youtube&sp=CAM%253D)`,
+            `End of Week Performance Audit: Track subscriber velocity, watch hours, and plan next week's packaging. [Watch YouTube Packaging Masterclass ⭐](https://www.youtube.com/results?search_query=youtube+title+and+thumbnail+packaging&sp=CAM%253D)`,
+          ],
+          milestone: i % 4 === 0 ? `Phase ${phaseNum} Creator Growth Milestone` : undefined,
+        });
+      }
+    }
   } else {
-    // General career-specific curriculum
+    // Universal career-specific curriculum
     for (let i = 1; i <= 12; i++) {
       weeks.push({
         week: i,
@@ -375,12 +440,18 @@ export async function deployerNode(
 ): Promise<Partial<typeof SimulationAnnotation.State>> {
   const MAX_RETRIES = 2;
   const timeHorizonWeeks: Record<string, number> = {
-    '1_year': 12,
-    '3_years': 36,
-    '5_years': 60,
-    '10_years': 120,
+    '6_weeks': 6,
+    '12_weeks': 12,
+    '24_weeks': 24,
+    '36_weeks': 36,
+    '1_year': 48,
+    '3_years': 144,
+    '5_years': 240,
+    '10_years': 480,
   };
-  const targetWeeks = timeHorizonWeeks[state.userInput.timeHorizon] || 12;
+  const targetWeeks = state.userInput.customWeeks && state.userInput.customWeeks > 0
+    ? state.userInput.customWeeks
+    : (timeHorizonWeeks[state.userInput.timeHorizon] || 12);
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
