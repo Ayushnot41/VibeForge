@@ -1,22 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "nextjs",
-  "regions": ["iad1"],
-  "build": {
-    "env": {
-      "NEXT_PUBLIC_SUPABASE_URL": "@supabase-url",
-      "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase-anon-key",
-      "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "@stripe-publishable-key",
-      "NEXT_PUBLIC_APP_URL": "@app-url"
-    }
-  },
-  "env": {
-    "SUPABASE_SERVICE_ROLE_KEY": "@supabase-service-role-key",
-    "ANTHROPIC_API_KEY": "@anthropic-api-key",
-    "GROQ_API_KEY": "@groq-api-key",
-    "OPENAI_API_KEY": "@openai-api-key",
-    "ELEVENLABS_API_KEY": "@elevenlabs-api-key",
-    "STRIPE_SECRET_KEY": "@stripe-secret-key",
-    "STRIPE_WEBHOOK_SECRET": "@stripe-webhook-secret"
-  }
+  "framework": "nextjs"
 }
