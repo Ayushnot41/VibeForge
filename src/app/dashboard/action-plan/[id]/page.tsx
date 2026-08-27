@@ -312,12 +312,23 @@ export default function ActionPlanPage() {
     window.print();
   };
 
-  // Filtered weeks
+  // Dynamic Phase Filtering based on actual total weeks count
+  const totalWeeksCount = weeks.length;
+  const phaseSize = Math.max(3, Math.ceil(totalWeeksCount / 3));
+
+  const filterTabs = [
+    { id: "all", label: `All Sprints (${totalWeeksCount}W)` },
+    { id: "p1", label: `Phase 1 (W1-${Math.min(phaseSize, totalWeeksCount)})` },
+    ...(totalWeeksCount > phaseSize ? [{ id: "p2", label: `Phase 2 (W${phaseSize + 1}-${Math.min(phaseSize * 2, totalWeeksCount)})` }] : []),
+    ...(totalWeeksCount > phaseSize * 2 ? [{ id: "p3", label: `Phase 3 (W${phaseSize * 2 + 1}-${totalWeeksCount})` }] : []),
+    { id: "milestones", label: "🎯 Key Milestones" },
+  ];
+
   const filteredWeeks = weeks.filter((w) => {
     if (activeFilter === "all") return true;
-    if (activeFilter === "p1") return w.week <= 4;
-    if (activeFilter === "p2") return w.week >= 5 && w.week <= 8;
-    if (activeFilter === "p3") return w.week >= 9;
+    if (activeFilter === "p1") return w.week <= phaseSize;
+    if (activeFilter === "p2") return w.week > phaseSize && w.week <= phaseSize * 2;
+    if (activeFilter === "p3") return w.week > phaseSize * 2;
     if (activeFilter === "milestones") return !!w.milestone;
     return true;
   });
@@ -391,15 +402,9 @@ export default function ActionPlanPage() {
         </div>
       </div>
 
-      {/* Filter Navigation Bar */}
+      {/* Dynamic Filter Navigation Bar */}
       <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 p-1 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 no-print shadow-xl">
-        {[
-          { id: "all", label: "All Sprints" },
-          { id: "p1", label: "Phase 1 (W1-4)" },
-          { id: "p2", label: "Phase 2 (W5-8)" },
-          { id: "p3", label: "Phase 3 (W9+)" },
-          { id: "milestones", label: "🎯 Key Milestones" },
-        ].map((tab) => (
+        {filterTabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveFilter(tab.id as any)}

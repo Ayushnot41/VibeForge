@@ -3,6 +3,7 @@
 import React, { useEffect, useState, Suspense, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Canvas, useFrame } from "@react-three/fiber";
+import { Html } from "@react-three/drei";
 import { motion, AnimatePresence } from "framer-motion";
 import { SimulationState, ImagePrompt } from "@/types/agents";
 import * as THREE from "three";
@@ -21,7 +22,7 @@ function getHologramUrl(prompt: ImagePrompt, index: number): string {
   return `https://image.pollinations.ai/prompt/${comicQuery}?width=1024&height=1024&nologo=true&seed=${index * 79 + 1042}&model=flux`;
 }
 
-// Interactive 3D Mesh Card in the Cylinder
+// Interactive 3D Card in the Cylinder using hardware-accelerated HTML transform
 function CylinderCard3D({
   url,
   position,
@@ -38,84 +39,52 @@ function CylinderCard3D({
   onClick: () => void;
 }) {
   const meshRef = useRef<THREE.Group>(null);
-  const [hovered, setHovered] = useState(false);
-  const texture = useRef<THREE.Texture | null>(null);
-  const [textureLoaded, setTextureLoaded] = useState(false);
+  const [imgSrc, setImgSrc] = useState(url);
 
-  useEffect(() => {
-    const loader = new THREE.TextureLoader();
-    loader.load(
-      url,
-      (tex) => {
-        tex.colorSpace = THREE.SRGBColorSpace;
-        texture.current = tex;
-        setTextureLoaded(true);
-      },
-      undefined,
-      () => {
-        // Fallback texture
-        loader.load(
-          "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1024&q=80",
-          (fallbackTex) => {
-            fallbackTex.colorSpace = THREE.SRGBColorSpace;
-            texture.current = fallbackTex;
-            setTextureLoaded(true);
-          }
-        );
-      }
-    );
-  }, [url]);
-
-  useFrame((state, delta) => {
+  useFrame((state) => {
     if (meshRef.current) {
       meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 1.5 + position[0]) * 0.08;
-      const targetScale = hovered ? 1.08 : 1.0;
-      meshRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 10);
     }
   });
 
   return (
     <group position={position} rotation={rotation} ref={meshRef}>
-      {/* Front Hologram Panel */}
-      <mesh
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick();
-        }}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHovered(true);
-          document.body.style.cursor = "pointer";
-        }}
-        onPointerOut={() => {
-          setHovered(false);
-          document.body.style.cursor = "auto";
-        }}
-      >
-        <planeGeometry args={[2.8, 3.6]} />
-        {textureLoaded && texture.current ? (
-          <meshBasicMaterial map={texture.current} side={THREE.DoubleSide} />
-        ) : (
-          <meshStandardMaterial color="#080816" roughness={0.5} metalness={0.8} />
-        )}
-      </mesh>
+      <Html transform distanceFactor={5.5} center className="pointer-events-none">
+        <div
+          onClick={onClick}
+          className="w-[420px] h-[540px] flex flex-col justify-between p-4 rounded-3xl overflow-hidden bg-[#070712]/95 backdrop-blur-2xl border-2 border-cyan-500/40 shadow-[0_0_50px_rgba(6,182,212,0.3)] transition-all duration-300 hover:scale-105 hover:border-cyan-300 cursor-pointer pointer-events-auto group select-none"
+        >
+          <div className="w-full h-full relative rounded-2xl overflow-hidden bg-black flex flex-col justify-between p-4">
+            <img
+              src={imgSrc}
+              alt={title}
+              onError={() =>
+                setImgSrc("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1024&q=80")
+              }
+              className="absolute inset-0 w-full h-full object-cover rounded-2xl transition-transform duration-700 group-hover:scale-110"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-black/40 pointer-events-none" />
 
-      {/* Outer Holographic Cyan/Neon Glow Wireframe */}
-      <mesh position={[0, 0, -0.01]}>
-        <planeGeometry args={[2.95, 3.75]} />
-        <meshBasicMaterial
-          color={hovered ? "#38bdf8" : "#8b5cf6"}
-          transparent
-          opacity={hovered ? 0.9 : 0.4}
-          wireframe
-        />
-      </mesh>
+            <div className="relative z-10 flex items-center justify-between">
+              <span className="px-3 py-1 rounded-full bg-cyan-950/90 backdrop-blur-md border border-cyan-400/50 text-[11px] font-black text-cyan-300 tracking-wider uppercase shadow-lg">
+                ⚡ {title}
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full bg-purple-950/90 border border-purple-400/50 text-[10px] font-bold text-purple-300 uppercase">
+                Hologram
+              </span>
+            </div>
 
-      {/* Cyberpunk Glow Background Plate */}
-      <mesh position={[0, 0, -0.05]}>
-        <planeGeometry args={[3.0, 3.8]} />
-        <meshBasicMaterial color="#020208" transparent opacity={0.9} />
-      </mesh>
+            <div className="relative z-10 text-left">
+              <p className="text-white text-sm font-bold leading-snug line-clamp-2 drop-shadow-lg mb-2">
+                {subtitle}
+              </p>
+              <span className="text-cyan-400 text-xs font-bold inline-flex items-center gap-1 group-hover:text-cyan-300">
+                🔍 Click to Inspect 4K Blueprint →
+              </span>
+            </div>
+          </div>
+        </div>
+      </Html>
     </group>
   );
 }

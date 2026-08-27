@@ -18,7 +18,8 @@ interface FormData {
   skills: string[];
   location: string;
   goals: string;
-  timeHorizon: "1_year" | "3_years" | "5_years" | "10_years";
+  timeHorizon: string;
+  customWeeks?: number;
   riskTolerance: number;
 }
 
@@ -27,7 +28,8 @@ const initialForm: FormData = {
   skills: [],
   location: "",
   goals: "",
-  timeHorizon: "3_years",
+  timeHorizon: "36_weeks",
+  customWeeks: undefined,
   riskTolerance: 50,
 };
 
@@ -41,10 +43,13 @@ const stepLabels = [
 ];
 
 const timeHorizons = [
-  { value: "1_year" as const, label: "1 Year", emoji: "🏃", sub: "Sprint Focus" },
-  { value: "3_years" as const, label: "3 Years", emoji: "🚀", sub: "Hyper Growth" },
-  { value: "5_years" as const, label: "5 Years", emoji: "🌟", sub: "Industry Leader" },
-  { value: "10_years" as const, label: "10 Years", emoji: "🌌", sub: "Legacy Empire" },
+  { value: "6_weeks", label: "6 Weeks", emoji: "⚡", sub: "Rapid Sprint" },
+  { value: "12_weeks", label: "12 Weeks", emoji: "🏃", sub: "Quarter Goal" },
+  { value: "24_weeks", label: "24 Weeks", emoji: "🚀", sub: "6-Month Build" },
+  { value: "36_weeks", label: "36 Weeks", emoji: "🔥", sub: "9-Month Mastery" },
+  { value: "1_year", label: "1 Year", emoji: "🎯", sub: "52-Week Journey" },
+  { value: "3_years", label: "3 Years", emoji: "🌟", sub: "Multi-Year Empire" },
+  { value: "5_years", label: "5 Years", emoji: "🌌", sub: "Industry Leader" },
 ];
 
 /* ─── Animations ────────────────────────────────────────────── */
@@ -166,18 +171,23 @@ function Step3({
 
       {/* Time Horizon */}
       <div className="space-y-3">
-        <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-          Target Horizon
-        </label>
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+            Target Horizon / Timeline
+          </label>
+          <span className="text-xs text-white/50 font-mono">
+            {data.customWeeks ? `${data.customWeeks} Custom Weeks` : data.timeHorizon.replace("_", " ")}
+          </span>
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {timeHorizons.map((th) => (
             <button
               key={th.value}
               type="button"
-              onClick={() => onChange({ timeHorizon: th.value })}
+              onClick={() => onChange({ timeHorizon: th.value, customWeeks: undefined })}
               className={cn(
                 "flex flex-col items-center text-center p-4 rounded-2xl border transition-all duration-200 cursor-pointer",
-                data.timeHorizon === th.value
+                data.timeHorizon === th.value && !data.customWeeks
                   ? "bg-[rgba(124,58,237,0.18)] border-[var(--accent-purple)] shadow-[0_0_20px_rgba(124,58,237,0.3)] text-white"
                   : "bg-[rgba(255,255,255,0.03)] border-white/10 hover:border-white/20 text-[var(--text-secondary)]"
               )}
@@ -187,6 +197,24 @@ function Step3({
               <span className="text-[11px] text-[var(--text-muted)]">{th.sub}</span>
             </button>
           ))}
+        </div>
+
+        {/* Or enter custom weeks */}
+        <div className="pt-2 flex items-center gap-3">
+          <span className="text-xs text-white/50 font-mono whitespace-nowrap">Or custom duration:</span>
+          <input
+            type="number"
+            min={2}
+            max={260}
+            placeholder="e.g. 8, 16, 24, 36, 48 weeks"
+            value={data.customWeeks || ""}
+            onChange={(e) => {
+              const val = parseInt(e.target.value);
+              onChange({ customWeeks: isNaN(val) ? undefined : val });
+            }}
+            className="w-44 px-3 py-1.5 rounded-xl bg-black/60 border border-white/10 text-xs text-white focus:outline-none focus:border-[var(--accent-purple)] font-mono"
+          />
+          <span className="text-xs text-white/40 font-mono">weeks</span>
         </div>
       </div>
 
@@ -366,6 +394,7 @@ export default function SimulatePage() {
             currentSituation: currentSit,
             goals: targetGoal,
             timeHorizon: data.timeHorizon,
+            customWeeks: data.customWeeks,
             riskTolerance: riskLabel,
             additionalContext: [
               data.skills.length > 0 ? `Skills: ${data.skills.join(", ")}` : "",

@@ -440,12 +440,18 @@ export async function deployerNode(
 ): Promise<Partial<typeof SimulationAnnotation.State>> {
   const MAX_RETRIES = 2;
   const timeHorizonWeeks: Record<string, number> = {
-    '1_year': 12,
-    '3_years': 36,
+    '6_weeks': 6,
+    '12_weeks': 12,
+    '24_weeks': 24,
+    '36_weeks': 36,
+    '1_year': 52,
+    '3_years': 52,
     '5_years': 60,
     '10_years': 120,
   };
-  const targetWeeks = timeHorizonWeeks[state.userInput.timeHorizon] || 12;
+  const targetWeeks = state.userInput.customWeeks && state.userInput.customWeeks > 0
+    ? state.userInput.customWeeks
+    : (timeHorizonWeeks[state.userInput.timeHorizon] || 12);
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
