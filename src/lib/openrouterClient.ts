@@ -1,12 +1,11 @@
 // ============================================================================
-// OpenRouter Resilient Client with Dual API Key Switching & Model Failover
-// Seamlessly balances requests, switches keys on 401/402/429/timeouts, and cascades
-// through flagship models (Grok 4.6 / Claude Opus 5 -> Llama 3.3 70B -> GPT-4o-mini -> Llama 3.1 8B).
+// OpenRouter Client — Multi-Key Failover & Resilient Model Cascading
+// Supports primary and backup OpenRouter keys with automated model cascading
 // ============================================================================
 
 import OpenAI from 'openai';
 
-interface OpenRouterRequestOptions {
+export interface OpenRouterCallOptions {
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
   preferredModels?: string[];
   temperature?: number;
@@ -14,21 +13,10 @@ interface OpenRouterRequestOptions {
   responseFormatJson?: boolean;
 }
 
-/**
- * Returns available OpenRouter API keys in priority order.
- */
-function getApiKeys(): string[] {
-  const keys: string[] = [];
-  if (process.env.OPENROUTER_API_KEY?.trim()) {
-    keys.push(process.env.OPENROUTER_API_KEY.trim());
-  }
-  if (
-    process.env.OPENROUTER_API_KEY_BACKUP?.trim() &&
-    process.env.OPENROUTER_API_KEY_BACKUP.trim() !== process.env.OPENROUTER_API_KEY?.trim()
-  ) {
-    keys.push(process.env.OPENROUTER_API_KEY_BACKUP.trim());
-  }
-  return keys;
+export interface OpenRouterCallResult {
+  content: string;
+  modelUsed: string;
+  keyIndexUsed: number;
 }
 
 const DEFAULT_MODEL_CASCADE = [
@@ -36,25 +24,25 @@ const DEFAULT_MODEL_CASCADE = [
   'openai/gpt-4o-mini',
   'x-ai/grok-4.6',
   'anthropic/claude-opus-5',
-  'meta-llama/llama-3.1-8b-instruct',
 ];
 
 /**
- * Executes a chat completion with multi-key failover and multi-model cascading.
+ * Executes an LLM completion with automatic API key and model failover.
  */
-export async function callOpenRouterWithFallback(options: OpenRouterRequestOptions): Promise<{
-  content: string;
-  modelUsed: string;
-  keyIndexUsed: number;
-}> {
-  const apiKeys = getApiKeys();
+export async function callOpenRouterWithFallback(
+  options: OpenRouterCallOptions,
+): Promise<OpenRouterCallResult> {
+  const primaryKey = process.env.OPENROUTER_API_KEY;
+  const backupKey = process.env.BACKUP_OPENROUTER_API_KEY;
+
+  const apiKeys = [primaryKey, backupKey].filter((k): k is string => Boolean(k && k.trim().length > 0));
 
   if (apiKeys.length === 0) {
     throw new Error('No OpenRouter API keys configured in environment variables.');
   }
 
   const modelList = options.preferredModels && options.preferredModels.length > 0
-    ? Array.from(new Set([...options.preferredModels, ...DEFAULT_MODEL_CASCADE]))
+    ? options.preferredModels
     : DEFAULT_MODEL_CASCADE;
 
   let lastError: Error | null = null;
@@ -94,8 +82,6 @@ export async function callOpenRouterWithFallback(options: OpenRouterRequestOptio
         const status = err?.status || err?.response?.status;
         const msg = err?.message || String(err);
         
-        // If it's a 402 (Payment/Credits) or 404 (Model unavailable) or 429 (Rate limit),
-        // try the next model immediately. If all models fail on this key, loop moves to next key.
         console.warn(`[OpenRouter Key ${keyIdx + 1}] Model '${model}' failed (${status || 'ERR'}): ${msg.slice(0, 120)}`);
         lastError = err instanceof Error ? err : new Error(msg);
       }
@@ -106,7 +92,7 @@ export async function callOpenRouterWithFallback(options: OpenRouterRequestOptio
 }
 
 /**
- * Helper to safely extract JSON from LLM output, stripping markdown code fences.
+ * Helper to safely extract JSON from LLM output with robust repair for markdown fences and syntax quirks.
  */
 export function extractJsonFromResponse<T = any>(rawText: string): T {
   let cleaned = rawText.trim();
@@ -119,5 +105,31 @@ export function extractJsonFromResponse<T = any>(rawText: string): T {
     cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
   }
 
-  return JSON.parse(cleaned);
+  // Remove potential leading/trailing non-json chars
+  const firstBrace = cleaned.indexOf('{');
+  const firstBracket = cleaned.indexOf('[');
+  let startIdx = 0;
+  if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+    startIdx = firstBrace;
+    const lastBrace = cleaned.lastIndexOf('}');
+    if (lastBrace !== -1) {
+      cleaned = cleaned.slice(startIdx, lastBrace + 1);
+    }
+  } else if (firstBracket !== -1) {
+    startIdx = firstBracket;
+    const lastBracket = cleaned.lastIndexOf(']');
+    if (lastBracket !== -1) {
+      cleaned = cleaned.slice(startIdx, lastBracket + 1);
+    }
+  }
+
+  try {
+    return JSON.parse(cleaned);
+  } catch (e) {
+    // Attempt minor repair: remove trailing commas before closing braces/brackets
+    const repaired = cleaned
+      .replace(/,\s*([}\]])/g, '$1')
+      .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
+    return JSON.parse(repaired);
+  }
 }

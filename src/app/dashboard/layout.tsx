@@ -67,7 +67,7 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
         className={cn(
           "fixed top-0 left-0 h-full z-50",
           "w-[270px] flex flex-col",
-          "bg-[rgba(10,10,15,0.92)] backdrop-blur-2xl",
+          "bg-[rgba(10,10,15,0.95)] backdrop-blur-2xl",
           "border-r border-[var(--glass-border)]",
           "transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
           "lg:translate-x-0",
@@ -98,19 +98,12 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
                 onClick={onClose}
                 className={cn(
                   "relative flex items-center gap-3.5 px-4 py-3 rounded-2xl",
-                  "text-sm font-semibold transition-colors duration-200",
+                  "text-sm font-semibold transition-all duration-150",
                   isActive
-                    ? "text-white"
-                    : "text-[var(--text-secondary)] hover:text-white hover:bg-white/[0.04]"
+                    ? "text-white bg-gradient-to-r from-purple-600/25 to-indigo-600/20 border border-purple-500/40 shadow-[0_0_20px_rgba(124,58,237,0.25)]"
+                    : "text-[var(--text-secondary)] hover:text-white hover:bg-white/[0.05] border border-transparent"
                 )}
               >
-                {isActive && (
-                  <motion.div
-                    layoutId="activeNavIndicator"
-                    className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-indigo-600/15 border border-purple-500/35 rounded-2xl shadow-[0_0_20px_rgba(124,58,237,0.2)] -z-10"
-                    transition={{ type: "spring", stiffness: 450, damping: 30 }}
-                  />
-                )}
                 <span className={cn(isActive ? "text-[var(--accent-purple)]" : "text-[var(--text-muted)]")}>
                   <Icon />
                 </span>

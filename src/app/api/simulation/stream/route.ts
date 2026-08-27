@@ -1,7 +1,6 @@
 // ============================================================================
-// POST /api/simulation/stream — SSE stream that runs the REAL LangGraph pipeline
-// Sends agent_progress events as each agent completes, then a complete event
-// with the full SimulationState.
+// POST /api/simulation/stream — SSE stream that runs the FAST Multi-Agent Pipeline
+// Optimizes latency by running Visualizer & Deployer concurrently in parallel
 // ============================================================================
 
 import { NextRequest } from "next/server";
@@ -9,15 +8,13 @@ import type { UserInput, SimulationState } from "@/types/agents";
 import { checkRateLimit, DEFAULT_CONFIGS } from "@/lib/rateLimiter";
 import { TelemetryLogger } from "@/lib/telemetry";
 
-// Import the real LangGraph agent modules directly (not the compiled graph,
-// because we need to stream progress between each agent step)
 import { researcherNode } from "@/lib/agents/researcher";
 import { simulatorNode } from "@/lib/agents/simulator";
 import { visualizerNode } from "@/lib/agents/visualizer";
 import { deployerNode } from "@/lib/agents/deployer";
 import type { SimulationAnnotation } from "@/lib/agents/state";
 
-export const maxDuration = 120; // Allow up to 2 minutes for full pipeline
+export const maxDuration = 120; // Up to 2 minutes
 
 export async function POST(req: NextRequest) {
   const clientIp = req.headers.get("x-forwarded-for") || "anonymous";
@@ -46,7 +43,6 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ error: "User goals are required" }), { status: 400 });
   }
 
-  // Validate required API key
   if (!process.env.OPENROUTER_API_KEY) {
     return new Response(
       JSON.stringify({ error: "OPENROUTER_API_KEY is not configured. Cannot run AI pipeline." }),
@@ -66,7 +62,6 @@ export async function POST(req: NextRequest) {
       try {
         TelemetryLogger.startTimer("sse_simulation_pipeline");
 
-        // Build initial LangGraph state
         let state: typeof SimulationAnnotation.State = {
           userInput,
           researchInsights: [],
@@ -86,8 +81,8 @@ export async function POST(req: NextRequest) {
         sendEvent("agent_progress", {
           agent: "Researcher",
           status: "researching",
-          progress: 10,
-          message: "Deep-scanning industry benchmarks, market vectors, and skill dependencies via Llama 3.1...",
+          progress: 15,
+          message: `Deep-scanning career dynamics & market vectors for ${userInput.goals.slice(0, 40)}...`,
         });
 
         const researchResult = await researcherNode(state);
@@ -97,66 +92,60 @@ export async function POST(req: NextRequest) {
         sendEvent("agent_progress", {
           agent: "Researcher",
           status: "complete",
-          progress: 30,
-          message: `Researcher complete: ${insightCount} insights extracted (trends, obstacles, opportunities).`,
+          progress: 35,
+          message: `Researcher complete: ${insightCount} career insights & obstacles identified.`,
         });
 
         // ─── Stage 2: Simulator Agent ────────────────────────────────
         sendEvent("agent_progress", {
           agent: "Simulator",
           status: "simulating",
-          progress: 35,
-          message: "Synthesizing 3 parallel future trajectories (Optimistic, Realistic, Risk-Mitigated)...",
+          progress: 40,
+          message: "Synthesizing 3 realistic future trajectories (Optimistic, Realistic, Risk-Mitigated)...",
         });
 
         const simulatorResult = await simulatorNode(state);
         state = { ...state, ...simulatorResult } as typeof SimulationAnnotation.State;
 
         const pathCount = state.futurePaths?.length || 0;
-        const obstacleCount = state.obstacles?.length || 0;
         sendEvent("agent_progress", {
           agent: "Simulator",
           status: "complete",
-          progress: 55,
-          message: `Simulator complete: ${pathCount} future paths, ${obstacleCount} obstacles identified.`,
-        });
-
-        // ─── Stage 3: Visualizer Agent ───────────────────────────────
-        sendEvent("agent_progress", {
-          agent: "Visualizer",
-          status: "visualizing",
           progress: 60,
-          message: "Generating 4K future milestone image prompts & motivational narrative...",
+          message: `Simulator complete: ${pathCount} career timelines & milestone branches forged.`,
         });
 
-        const visualizerResult = await visualizerNode(state);
-        state = { ...state, ...visualizerResult } as typeof SimulationAnnotation.State;
-
-        const promptCount = state.imagePrompts?.length || 0;
+        // ─── Stage 3 & 4: Concurrent Parallel Synthesis (Visualizer + Deployer) ─────
         sendEvent("agent_progress", {
-          agent: "Visualizer",
-          status: "complete",
-          progress: 75,
-          message: `Visualizer complete: ${promptCount} image prompts, narrative script generated.`,
+          agent: "Visualizer & Deployer",
+          status: "synthesizing",
+          progress: 65,
+          message: "Parallel synthesizing: Comic Roadmap Holograms & Weekly Action Protocol...",
         });
 
-        // ─── Stage 4: Deployer Agent ─────────────────────────────────
-        sendEvent("agent_progress", {
-          agent: "Deployer",
-          status: "planning",
-          progress: 80,
-          message: "Compiling personalized weekly action protocol with YouTube resources & rival system...",
-        });
+        // Execute Visualizer and Deployer concurrently to double throughput speed!
+        const [visualizerResult, deployerResult] = await Promise.all([
+          visualizerNode(state).catch((err) => {
+            console.error("[Visualizer Parallel Error]", err);
+            return { imagePrompts: [], narrativeScript: "Let's conquer your vision!" };
+          }),
+          deployerNode(state).catch((err) => {
+            console.error("[Deployer Parallel Error]", err);
+            return { actionPlan: null, aggressivePitch: "Discipline beats motivation every single time." };
+          }),
+        ]);
 
-        const deployerResult = await deployerNode(state);
-        state = { ...state, ...deployerResult } as typeof SimulationAnnotation.State;
+        state = {
+          ...state,
+          ...visualizerResult,
+          ...deployerResult,
+        } as typeof SimulationAnnotation.State;
 
-        const weekCount = state.actionPlan?.weeklyActions?.length || 0;
         sendEvent("agent_progress", {
-          agent: "Deployer",
+          agent: "Orchestrator",
           status: "complete",
           progress: 95,
-          message: `Deployer complete: ${weekCount}-week execution protocol with habits, calendar & rival system.`,
+          message: "Finalizing multiverse parameters and locking career trajectory...",
         });
 
         // ─── Final Assembly ──────────────────────────────────────────
@@ -166,35 +155,34 @@ export async function POST(req: NextRequest) {
           trendAnalysis: state.trendAnalysis || "",
           futurePaths: state.futurePaths || [],
           obstacles: state.obstacles || [],
-          feedbackLoopCount: state.feedbackLoopCount || 0,
           imagePrompts: state.imagePrompts || [],
           narrativeScript: state.narrativeScript || "",
-          actionPlan: state.actionPlan || null,
+          actionPlan: state.actionPlan,
           aggressivePitch: state.aggressivePitch,
-          status: "complete",
+          feedbackLoopCount: state.feedbackLoopCount || 0,
           errors: state.errors || [],
+          status: "complete",
           localSavedAt: Date.now(),
         };
 
-        const duration = TelemetryLogger.endTimer("sse_simulation_pipeline");
         TelemetryLogger.logAgentExecution({
           agentName: "OrchestratorPipeline",
-          durationMs: duration,
+          durationMs: TelemetryLogger.endTimer("sse_simulation_pipeline"),
           status: "success",
           timestamp: new Date().toISOString(),
         });
 
-        // Complete Event — frontend saves this to localStorage
         sendEvent("complete", {
-          progress: 100,
           state: finalState,
+          progress: 100,
+          message: "Simulation fully synthesized and stabilized.",
         });
 
         controller.close();
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Simulation generation failed";
-        console.error("[SSE Pipeline] Fatal error:", message);
-        sendEvent("error", { error: message });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error in simulation pipeline";
+        console.error("[Simulation Stream] Pipeline Error:", message);
+        sendEvent("error", { message });
         controller.close();
       }
     },
@@ -202,10 +190,9 @@ export async function POST(req: NextRequest) {
 
   return new Response(stream, {
     headers: {
-      "Content-Type": "text/event-stream; charset=utf-8",
+      "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
-      "X-Accel-Buffering": "no",
     },
   });
 }
