@@ -53,10 +53,10 @@ export async function researcherNode(
         { role: 'user', content: buildUserPrompt(state) },
       ],
       preferredModels: [
-        'x-ai/grok-4.6',
-        'anthropic/claude-opus-5',
         'meta-llama/llama-3.3-70b-instruct',
         'openai/gpt-4o-mini',
+        'x-ai/grok-4.6',
+        'anthropic/claude-opus-5',
       ],
       temperature: 0.7,
       maxTokens: 2500,
@@ -69,11 +69,22 @@ export async function researcherNode(
 
     try {
       const parsed = extractJsonFromResponse(content);
-      insights = Array.isArray(parsed)
-        ? parsed
-        : Array.isArray(parsed.insights)
-          ? parsed.insights
-          : [];
+      if (Array.isArray(parsed)) {
+        insights = parsed;
+      } else if (Array.isArray(parsed.insights)) {
+        insights = parsed.insights;
+      } else if (Array.isArray(parsed.researchInsights)) {
+        insights = parsed.researchInsights;
+      } else if (parsed.trends || parsed.obstacles || parsed.opportunities) {
+        const trends = Array.isArray(parsed.trends) ? parsed.trends.map((t: any) => ({ ...t, category: 'trend' })) : [];
+        const obstacles = Array.isArray(parsed.obstacles) ? parsed.obstacles.map((o: any) => ({ ...o, category: 'obstacle' })) : [];
+        const opps = Array.isArray(parsed.opportunities) ? parsed.opportunities.map((op: any) => ({ ...op, category: 'opportunity' })) : [];
+        insights = [...trends, ...obstacles, ...opps];
+      } else if (parsed.title || parsed.description) {
+        insights = [parsed];
+      } else {
+        insights = [];
+      }
     } catch {
       console.error('[Researcher] Failed to parse LLM JSON:', content.slice(0, 200));
       insights = [];

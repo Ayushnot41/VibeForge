@@ -90,9 +90,9 @@ export async function simulatorNode(
         { role: 'user', content: buildUserPrompt(state) },
       ],
       preferredModels: [
-        'x-ai/grok-4.6',
         'meta-llama/llama-3.3-70b-instruct',
         'openai/gpt-4o-mini',
+        'x-ai/grok-4.6',
         'anthropic/claude-opus-5',
       ],
       temperature: 0.8,
