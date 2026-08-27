@@ -5,6 +5,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { callOpenRouterWithFallback } from "@/lib/openrouterClient";
 
+export const dynamic = "force-dynamic";
+
 export function cleanOutputFormatting(text: string): string {
   if (!text) return "";
   return text

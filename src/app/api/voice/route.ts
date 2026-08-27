@@ -4,6 +4,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 const ELEVENLABS_API_BASE = 'https://api.elevenlabs.io/v1';
 const DEFAULT_VOICE_ID = 'JBFqnCBsd6RMkjVDRZzb'; // George — deep, sophisticated male (Jarvis-like)
 
