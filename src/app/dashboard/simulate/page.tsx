@@ -18,8 +18,8 @@ interface FormData {
   skills: string[];
   location: string;
   goals: string;
-  timeHorizon: string;
-  customWeeks?: number;
+  timeHorizon: "1_year" | "3_years" | "5_years" | "10_years";
+  targetDate: string; // "yyyy-mm-dd" — empty means use preset
   riskTolerance: number;
 }
 
@@ -28,10 +28,22 @@ const initialForm: FormData = {
   skills: [],
   location: "",
   goals: "",
-  timeHorizon: "36_weeks",
-  customWeeks: undefined,
+  timeHorizon: "3_years",
+  targetDate: "",
   riskTolerance: 50,
 };
+
+/** Whole months (rounded up) between two dates, used for the custom horizon. */
+function monthsBetween(from: Date, to: Date): number {
+  if (to.getTime() <= from.getTime()) return 0;
+  const months =
+    (to.getFullYear() - from.getFullYear()) * 12 +
+    (to.getMonth() - from.getMonth());
+  if (to.getDate() >= from.getDate()) {
+    return months;
+  }
+  return months - 1 < 0 ? 0 : months;
+}
 
 /* ─── Step Config ───────────────────────────────────────────── */
 
@@ -160,12 +172,29 @@ function Step3({
         ? "Moderate (Calculated Asymmetry)"
         : "Aggressive (Extreme High-Growth)";
 
+  // Precompute today's ISO date so the date picker can't select the past.
+  const todayISO = new Date().toISOString().split("T")[0];
+
+  // Custom duration derived from the selected target date.
+  const customMonths = data.targetDate
+    ? monthsBetween(new Date(), new Date(data.targetDate + "T00:00:00"))
+    : 0;
+
+  const customDurationLabel =
+    customMonths <= 0
+      ? ""
+      : customMonths < 12
+        ? `${customMonths} month${customMonths === 1 ? "" : "s"}`
+        : customMonths % 12 === 0
+          ? `${customMonths / 12} year${customMonths / 12 === 1 ? "" : "s"}`
+          : `${Math.floor(customMonths / 12)} yr ${customMonths % 12} mo`;
+
   return (
     <div className="space-y-8">
       <div>
         <h2 className="text-2xl font-bold mb-2 text-white">Timeline Horizon & Risk Profile ⚙️</h2>
         <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
-          How far ahead should we project, and what intensity level suits your strategy?
+          How far ahead should we project, and what intensity level suits your strategy? Pick a preset, or mark the exact target date — there&apos;s no limit on how far you can look.
         </p>
       </div>
 
@@ -184,10 +213,10 @@ function Step3({
             <button
               key={th.value}
               type="button"
-              onClick={() => onChange({ timeHorizon: th.value, customWeeks: undefined })}
+              onClick={() => onChange({ timeHorizon: th.value, targetDate: "" })}
               className={cn(
                 "flex flex-col items-center text-center p-4 rounded-2xl border transition-all duration-200 cursor-pointer",
-                data.timeHorizon === th.value && !data.customWeeks
+                data.timeHorizon === th.value && !data.targetDate
                   ? "bg-[rgba(124,58,237,0.18)] border-[var(--accent-purple)] shadow-[0_0_20px_rgba(124,58,237,0.3)] text-white"
                   : "bg-[rgba(255,255,255,0.03)] border-white/10 hover:border-white/20 text-[var(--text-secondary)]"
               )}
@@ -216,6 +245,46 @@ function Step3({
           />
           <span className="text-xs text-white/40 font-mono">weeks</span>
         </div>
+      </div>
+
+      {/* Custom Target Date */}
+      <div className="space-y-3 rounded-2xl border border-dashed border-[var(--accent-purple)]/40 bg-[rgba(124,58,237,0.06)] p-5">
+        <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+          Or Mark Your Exact Target Date 🗓️
+        </label>
+        <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+          Pick the precise day you want to see yourself at. The simulation will be sized to however far away that is — 2 years, 7 years, 25 years, no limits.
+        </p>
+        <label
+          className={cn(
+            "flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border p-3 transition-all cursor-pointer",
+            data.targetDate
+              ? "border-[var(--accent-purple)] bg-[rgba(124,58,237,0.1)]"
+              : "border-white/10 bg-[rgba(255,255,255,0.03)]"
+          )}
+        >
+          <span className="text-sm font-semibold text-white whitespace-nowrap">
+            {data.targetDate ? "🎯" : "📅"} Target date reached
+          </span>
+          <input
+            type="date"
+            min={todayISO}
+            value={data.targetDate}
+            onChange={(e) => onChange({ targetDate: e.target.value, timeHorizon: "3_years" })}
+            className={cn(
+              "flex-1 min-w-0 rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-sm text-white",
+              "focus:outline-none focus:border-[var(--accent-purple)] cursor-pointer"
+            )}
+          />
+          {customMonths > 0 && (
+            <span className="text-xs font-bold text-[var(--accent-purple)] bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full whitespace-nowrap">
+              ~{customDurationLabel} from today
+            </span>
+          )}
+        </label>
+        <p className="text-[11px] text-[var(--text-muted)]">
+          Selecting a date overrides the preset horizon above.
+        </p>
       </div>
 
       {/* Risk Tolerance */}
@@ -258,6 +327,23 @@ function Step4({ data }: { data: FormData }) {
         ? "Moderate"
         : "Aggressive";
 
+  // Custom duration derived from the selected target date.
+  const customMonths = data.targetDate
+    ? monthsBetween(new Date(), new Date(data.targetDate + "T00:00:00"))
+    : 0;
+  const customDurationLabel =
+    customMonths <= 0
+      ? ""
+      : customMonths < 12
+        ? `${customMonths} month${customMonths === 1 ? "" : "s"}`
+        : customMonths % 12 === 0
+          ? `${customMonths / 12} year${customMonths / 12 === 1 ? "" : "s"}`
+          : `${Math.floor(customMonths / 12)} yr ${customMonths % 12} mo`;
+
+  const horizonValue = data.targetDate
+    ? `${data.targetDate} (${customDurationLabel} from today)`
+    : horizonLabel || "3 Years";
+
   return (
     <div className="space-y-6">
       <div>
@@ -277,7 +363,7 @@ function Step4({ data }: { data: FormData }) {
         />
         <ReviewRow label="Location" value={data.location || "India"} />
         <ReviewRow label="Goals" value={data.goals || "Career Mastery"} />
-        <ReviewRow label="Horizon" value={horizonLabel || "3 Years"} />
+        <ReviewRow label="Horizon" value={horizonValue} />
         <ReviewRow label="Risk Profile" value={riskLabel} />
       </Card>
     </div>
@@ -381,26 +467,34 @@ export default function SimulatePage() {
 
     const id = uuidv4();
 
+    const currentSit = data.situation.trim() || "Student in Kolkata";
+    const targetGoal = data.goals.trim() || "Become a profitable trader";
+
+    // Custom horizon: when a target date is set, derive the exact duration.
+    const customMonths = data.targetDate
+      ? monthsBetween(new Date(), new Date(data.targetDate + "T00:00:00"))
+      : 0;
+
+    const userInputPayload = {
+      currentSituation: currentSit,
+      goals: targetGoal,
+      timeHorizon: data.timeHorizon,
+      riskTolerance: riskLabel,
+      targetDate: data.targetDate || undefined,
+      timeHorizonMonths: customMonths > 0 ? customMonths : undefined,
+      additionalContext: [
+        data.skills.length > 0 ? `Skills: ${data.skills.join(", ")}` : "",
+        data.location ? `Location: ${data.location}` : "",
+      ].filter(Boolean).join(". ") || undefined,
+    };
+
     try {
       // 1. Attempt Enterprise Server-Sent Events (SSE) stream
-      const currentSit = data.situation.trim() || "Student in Kolkata";
-      const targetGoal = data.goals.trim() || "Become a profitable trader";
-
       const response = await fetch("/api/simulation/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userInput: {
-            currentSituation: currentSit,
-            goals: targetGoal,
-            timeHorizon: data.timeHorizon,
-            customWeeks: data.customWeeks,
-            riskTolerance: riskLabel,
-            additionalContext: [
-              data.skills.length > 0 ? `Skills: ${data.skills.join(", ")}` : "",
-              data.location ? `Location: ${data.location}` : "",
-            ].filter(Boolean).join(". ") || undefined,
-          },
+          userInput: userInputPayload,
         }),
       });
 
@@ -467,28 +561,16 @@ export default function SimulatePage() {
       // Fallback if SSE completed without final redirect
       const fallbackData = {
         ...DEMO_SIMULATION,
-        userInput: {
-          currentSituation: currentSit,
-          goals: targetGoal,
-          timeHorizon: data.timeHorizon,
-          riskTolerance: riskLabel,
-        },
+        userInput: userInputPayload,
         localSavedAt: Date.now(),
       };
       localStorage.setItem(`sim_${id}`, JSON.stringify(fallbackData));
       router.push(`/dashboard/results/${id}`);
     } catch (err: unknown) {
       console.error(err);
-      const currentSit = data.situation.trim() || "Student in Kolkata";
-      const targetGoal = data.goals.trim() || "Become a profitable trader";
       const fallbackData = {
         ...DEMO_SIMULATION,
-        userInput: {
-          currentSituation: currentSit,
-          goals: targetGoal,
-          timeHorizon: data.timeHorizon,
-          riskTolerance: riskLabel,
-        },
+        userInput: userInputPayload,
         localSavedAt: Date.now(),
       };
       localStorage.setItem(`sim_${id}`, JSON.stringify(fallbackData));

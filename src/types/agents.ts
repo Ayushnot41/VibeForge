@@ -11,6 +11,11 @@ export interface UserInput {
   customWeeks?: number;      // Exact user-specified number of weeks (e.g. 6, 24, 36, 52, etc.)
   riskTolerance: 'conservative' | 'moderate' | 'aggressive';
   additionalContext?: string;
+  // Custom target date (ISO yyyy-mm-dd). When set, the simulation duration is
+  // derived from the time between "now" and this date with no upper limit.
+  targetDate?: string;
+  // Computed number of months from now until targetDate (or overrides preset).
+  timeHorizonMonths?: number;
 }
 
 // --- Researcher Output ---
@@ -146,3 +151,15 @@ export const TIME_HORIZON_MONTHS: Record<UserInput['timeHorizon'], number> = {
   '5_years': 60,
   '10_years': 120,
 };
+
+/**
+ * Returns the effective simulation duration in months. Prefers a custom
+ * computed duration (from a target date) when present, otherwise falls back
+ * to the preset time horizon lookup.
+ */
+export function getTimeHorizonMonths(input: UserInput): number {
+  if (input.timeHorizonMonths && input.timeHorizonMonths > 0) {
+    return Math.round(input.timeHorizonMonths);
+  }
+  return TIME_HORIZON_MONTHS[input.timeHorizon];
+}

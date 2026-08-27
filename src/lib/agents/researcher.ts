@@ -32,7 +32,7 @@ function buildUserPrompt(state: typeof SimulationAnnotation.State): string {
 
 **Current Situation:** ${userInput.currentSituation}
 **Goals:** ${userInput.goals}
-**Time Horizon:** ${userInput.timeHorizon.replace('_', ' ')}
+**Time Horizon:** ${userInput.targetDate ? `Until ${userInput.targetDate}` : userInput.timeHorizon.replace('_', ' ')}
 **Risk Tolerance:** ${userInput.riskTolerance}
 ${userInput.additionalContext ? `**Additional Context:** ${userInput.additionalContext}` : ''}
 

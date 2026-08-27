@@ -77,7 +77,7 @@ function buildUserPrompt(state: typeof SimulationAnnotation.State): string {
   return `## USER PROFILE & CAREER TRANSITION
 **Current Situation:** ${userInput.currentSituation}
 **Target Goal / Career:** ${userInput.goals}
-**Time Horizon:** ${userInput.timeHorizon.replace('_', ' ')}
+**Time Horizon:** ${userInput.targetDate ? `Until ${userInput.targetDate}` : userInput.timeHorizon.replace('_', ' ')}
 **Risk Tolerance:** ${userInput.riskTolerance}
 ${userInput.additionalContext ? `**Additional Context:** ${userInput.additionalContext}` : ''}
 **Start Date:** ${startDate}
@@ -449,8 +449,12 @@ export async function deployerNode(
     '5_years': 240,
     '10_years': 480,
   };
-  const targetWeeks = state.userInput.customWeeks && state.userInput.customWeeks > 0
-    ? state.userInput.customWeeks
+  // Use custom horizon when a target date was chosen, else the preset lookup.
+  const customMonths = state.userInput.timeHorizonMonths && state.userInput.timeHorizonMonths > 0
+    ? state.userInput.timeHorizonMonths
+    : 0;
+  const targetWeeks = customMonths > 0
+    ? Math.round(customMonths / 12 * 52)
     : (timeHorizonWeeks[state.userInput.timeHorizon] || 12);
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
