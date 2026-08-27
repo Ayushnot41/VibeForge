@@ -340,7 +340,383 @@ export default function ActionPlanPage() {
   };
 
   const exportToPDF = () => {
-    window.print();
+    if (!state || !state.actionPlan) {
+      window.print();
+      return;
+    }
+
+    const situation = state.userInput?.currentSituation || "Baseline Background";
+    const goals = state.userInput?.goals || "Dream Career";
+    const weeksList = state.actionPlan.weeklyActions || [];
+    const totalW = weeksList.length;
+    const habits = state.actionPlan.habits || [];
+    const rival = state.actionPlan.rival || {
+      name: "The Disciplined Competitor",
+      bio: "Relentless execution every single day without excuses.",
+      taunts: ["I practiced today without hesitation. Did you?"],
+      progressOffset: 7,
+    };
+
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VibeForge Execution Protocol - ${goals}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #06060c;
+      color: #f1f5f9;
+      line-height: 1.6;
+      padding: 32px 24px;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    .header {
+      background: linear-gradient(135deg, #0d0d1e 0%, #16122d 100%);
+      border: 1px solid rgba(124, 58, 237, 0.4);
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      background: rgba(6, 182, 212, 0.2);
+      color: #22d3ee;
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      margin-bottom: 12px;
+    }
+    .title { font-size: 28px; font-weight: 800; color: #ffffff; margin-bottom: 8px; }
+    .subtitle { font-size: 15px; color: #94a3b8; margin-bottom: 16px; }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .meta-item { font-size: 13px; }
+    .meta-label { color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 10px; }
+    .meta-val { color: #f8fafc; font-weight: 700; margin-top: 2px; }
+    .section-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #f8fafc;
+      margin: 28px 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .phase-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .phase-card {
+      background: #0f0f1c;
+      border-radius: 14px;
+      padding: 16px;
+      border-top: 4px solid;
+    }
+    .p1 { border-color: #06b6d4; }
+    .p2 { border-color: #8b5cf6; }
+    .p3 { border-color: #ec4899; }
+    .p4 { border-color: #10b981; }
+    .phase-num { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
+    .phase-name { font-size: 14px; font-weight: 700; color: #fff; margin: 4px 0 6px; }
+    .phase-desc { font-size: 11px; color: #94a3b8; line-height: 1.4; }
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .matrix-card {
+      background: #0f0f1c;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .matrix-header { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+    .matrix-list { font-size: 12px; color: #cbd5e1; list-style: none; }
+    .matrix-list li { margin-bottom: 6px; padding-left: 14px; position: relative; }
+    .matrix-list li::before { content: "•"; position: absolute; left: 0; color: #8b5cf6; }
+    .week-card {
+      background: #0b0b14;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      page-break-inside: avoid;
+    }
+    .week-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding-bottom: 10px;
+    }
+    .week-title { font-size: 16px; font-weight: 800; color: #ffffff; }
+    .milestone-badge {
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      color: #22d3ee;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .actions-list { list-style: none; }
+    .action-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      color: #e2e8f0;
+    }
+    .checkbox-box {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #64748b;
+      border-radius: 4px;
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+    .action-text { flex: 1; line-height: 1.5; }
+    .yt-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(220, 38, 38, 0.2);
+      border: 1px solid rgba(220, 38, 38, 0.4);
+      color: #f87171;
+      text-decoration: none;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .habits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .habit-box {
+      background: #0f0f1c;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .habit-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .habit-desc { font-size: 11px; color: #94a3b8; margin-bottom: 6px; }
+    .habit-streak { font-size: 10px; font-weight: 700; color: #34d399; font-family: 'JetBrains Mono', monospace; }
+    .rival-box {
+      background: linear-gradient(135deg, #18080f 0%, #11050a 100%);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .rival-title { font-size: 15px; font-weight: 800; color: #f87171; margin-bottom: 6px; }
+    .rival-bio { font-size: 12px; color: #fca5a5; margin-bottom: 10px; }
+    .rival-taunts { font-size: 12px; color: #ffffff; font-style: italic; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; }
+    @media print {
+      body { background: #ffffff !important; color: #0f172a !important; padding: 0 !important; }
+      .header { background: #f8fafc !important; border-color: #cbd5e1 !important; }
+      .title { color: #0f172a !important; }
+      .subtitle { color: #475569 !important; }
+      .meta-grid, .phase-card, .matrix-card, .week-card, .habit-box { background: #f8fafc !important; border-color: #e2e8f0 !important; }
+      .phase-name, .week-title, .habit-title { color: #0f172a !important; }
+      .action-item { color: #1e293b !important; }
+      .checkbox-box { border-color: #94a3b8 !important; }
+      .yt-link { background: #fee2e2 !important; color: #b91c1c !important; }
+      .rival-box { background: #fff1f2 !important; border-color: #fca5a5 !important; }
+      .rival-title { color: #991b1b !important; }
+      .rival-bio, .rival-taunts { color: #4c0519 !important; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="no-print" style="margin-bottom: 20px; display: flex; gap: 12px; justify-content: flex-end;">
+      <button onclick="window.print()" style="padding: 10px 20px; background: #7c3aed; color: #fff; border: none; border-radius: 10px; font-weight: 700; cursor: pointer;">🖨️ Save as PDF / Print</button>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+      <span class="badge">⚡ VibeForge Autonomous Platform</span>
+      <h1 class="title">Career Execution Protocol</h1>
+      <p class="subtitle">Complete Step-by-Step Transition Protocol: <strong>${situation}</strong> ➔ <strong>${goals}</strong></p>
+      
+      <div class="meta-grid">
+        <div class="meta-item">
+          <div class="meta-label">Baseline Background</div>
+          <div class="meta-val">${situation}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Target Dream Career</div>
+          <div class="meta-val">${goals}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Timeline Horizon</div>
+          <div class="meta-val">${totalW} Weekly Sprints</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Execution Strategy</div>
+          <div class="meta-val">High-Velocity Asymmetric Growth</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visual 4-Phase Progression Flowchart -->
+    <h2 class="section-title">📊 4-Phase Progression Architecture</h2>
+    <div class="phase-grid">
+      <div class="phase-card p1">
+        <div class="phase-num">Phase 1 (Weeks 1 - ${Math.round(totalW * 0.25)})</div>
+        <div class="phase-name">Foundational Setup</div>
+        <div class="phase-desc">Chart literacy, environment setup, baseline risk mitigation, and core discipline routines.</div>
+      </div>
+      <div class="phase-card p2">
+        <div class="phase-num">Phase 2 (Weeks ${Math.round(totalW * 0.25) + 1} - ${Math.round(totalW * 0.5)})</div>
+        <div class="phase-name">Competency & Simulation</div>
+        <div class="phase-desc">Hands-on practice, backtesting 50+ setups, and habit tracking.</div>
+      </div>
+      <div class="phase-card p3">
+        <div class="phase-num">Phase 3 (Weeks ${Math.round(totalW * 0.5) + 1} - ${Math.round(totalW * 0.75)})</div>
+        <div class="phase-name">Live Execution & Portfolio</div>
+        <div class="phase-desc">Live deployment, client acquisition, and strict risk-to-reward optimization.</div>
+      </div>
+      <div class="phase-card p4">
+        <div class="phase-num">Phase 4 (Weeks ${Math.round(totalW * 0.75) + 1} - ${totalW})</div>
+        <div class="phase-name">Scaling & Sovereignty</div>
+        <div class="phase-desc">Capital compounding, authority building, and full-time professional sovereignty.</div>
+      </div>
+    </div>
+
+    <!-- 4-Quadrant Execution Matrix -->
+    <h2 class="section-title">🎯 4-Quadrant Execution Matrix</h2>
+    <div class="matrix-grid">
+      <div class="matrix-card">
+        <div class="matrix-header" style="color: #38bdf8;">🔥 Q1: High Impact Daily Execution</div>
+        <ul class="matrix-list">
+          <li>Daily skill practice (60 mins uninterrupted focus)</li>
+          <li>Strict risk management & capital preservation rules</li>
+          <li>Daily journaling with emotional discipline score</li>
+        </ul>
+      </div>
+      <div class="matrix-card">
+        <div class="matrix-header" style="color: #c084fc;">🧠 Q2: Skill & Psychology Hardening</div>
+        <ul class="matrix-list">
+          <li>Deep study of historical case studies & pattern recognition</li>
+          <li>Mental synchronization exercises to eliminate hesitation</li>
+          <li>Weekly performance metrics review and audit</li>
+        </ul>
+      </div>
+      <div class="matrix-card">
+        <div class="matrix-header" style="color: #f472b6;">💼 Q3: Live Deliverables & Track Record</div>
+        <ul class="matrix-list">
+          <li>Transition from simulation to real-world deployment</li>
+          <li>Documenting verified track record and portfolio case studies</li>
+          <li>Testing execution under high-stakes conditions</li>
+        </ul>
+      </div>
+      <div class="matrix-card">
+        <div class="matrix-header" style="color: #4ade80;">👑 Q4: Scaling & Sovereignty</div>
+        <ul class="matrix-list">
+          <li>Systematic scaling based on verified 3-month consistency</li>
+          <li>Professional infrastructure, legal/tax compliance</li>
+          <li>Achieving full-time financial and operational independence</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Adversary Rival Matrix -->
+    <div class="rival-box">
+      <div class="rival-title">⚔️ Active Challenger: ${rival.name}</div>
+      <div class="rival-bio">${rival.bio} (${rival.progressOffset} days ahead in disciplined execution)</div>
+      <div class="rival-taunts">"${rival.taunts?.[0] || 'I executed my daily plan without hesitation. Did you?'}"</div>
+    </div>
+
+    <!-- Habits Tracker -->
+    <h2 class="section-title">⚡ Core Discipline Habits</h2>
+    <div class="habits-grid">
+      ${habits.map(h => `
+        <div class="habit-box">
+          <div class="habit-title">${h.name} (${h.frequency})</div>
+          <div class="habit-desc">${h.description}</div>
+          <div class="habit-streak">Target Streak: ${h.targetStreak} Days</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- Weekly Action Sprints -->
+    <h2 class="section-title">📅 Week-by-Week Action Protocol (${totalW} Weeks)</h2>
+    ${weeksList.map((week) => `
+      <div class="week-card">
+        <div class="week-header">
+          <div class="week-title">Week ${week.week} Implementation</div>
+          ${week.milestone ? `<span class="milestone-badge">🎯 ${week.milestone}</span>` : ''}
+        </div>
+        <ul class="actions-list">
+          ${week.actions.map((act: string) => {
+            const linkMatch = act.match(/(.*)\[([^\]]+)\]\((https?:\/\/[^\)]+)\)(.*)/);
+            const textPart = linkMatch ? (linkMatch[1] + (linkMatch[4] || "")) : act;
+            const ytUrl = linkMatch ? linkMatch[3] : `https://www.youtube.com/results?search_query=${encodeURIComponent(textPart.slice(0, 50))}&sp=CAM%253D`;
+            const ytLabel = linkMatch ? linkMatch[2] : "Watch Video Guide ⭐";
+
+            return `
+              <li class="action-item">
+                <div class="checkbox-box"></div>
+                <div class="action-text">
+                  <div>${textPart.trim()}</div>
+                  <a href="${ytUrl}" target="_blank" class="yt-link">▶ ${ytLabel} ↗</a>
+                </div>
+              </li>
+            `;
+          }).join('')}
+        </ul>
+      </div>
+    `).join('')}
+  </div>
+</body>
+</html>`;
+
+    // 1. Direct Local File Download (HTML vector report)
+    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `VibeForge_Execution_Protocol_${goals.replace(/[^a-zA-Z0-9]/g, "_")}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // 2. Open print view in new window so user can save as vector PDF
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+      }, 500);
+    }
   };
 
   if (loading) {
@@ -392,11 +768,16 @@ export default function ActionPlanPage() {
         <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/results/${id}`)}>
           ← Command Center
         </Button>
-        <Button variant="secondary" size="sm" onClick={exportToPDF} className="text-xs">
-          📄 PDF
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={exportToPDF}
+          className="bg-gradient-to-r from-cyan-600 to-purple-600 hover:opacity-90 text-white font-bold text-xs shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+        >
+          💾 Download PDF &amp; Report
         </Button>
         <Button variant="secondary" size="sm" onClick={exportToICS} className="text-xs">
-          📅 ICS
+          📅 Export ICS
         </Button>
 
         {/* Milestone Rewards Trigger Badge */}
