@@ -117,7 +117,7 @@ function PremiumBackground({ progress }: { progress: number }) {
   );
 }
 
-import { generateDynamicProfessionCurriculum } from "@/lib/agents/deployer";
+import { generateDynamicProfessionCurriculum } from "@/lib/curriculumGenerator";
 
 // Milestone Rewards Config
 interface RewardTier {
