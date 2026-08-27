@@ -202,60 +202,60 @@ export default function ResultsHubPage() {
 
       {/* Exploration Portals */}
       <motion.div variants={fadeIn}>
-        <h2 className="text-2xl font-bold mb-6 text-center">Execution & Visualization</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <h2 className="text-2xl font-bold mb-6 text-center text-white">Execution & Visualization Portals</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           
           <Link href={`/dashboard/action-plan/${id}`}>
-            <Card className="h-full group hover:-translate-y-2 transition-all duration-300" glowColor="#10B981">
+            <Card className="h-full group hover:-translate-y-2 transition-all duration-300 border-white/10 hover:border-emerald-500/50" glowColor="#10B981">
               <div className="flex flex-col items-center text-center p-4">
-                <div className="w-16 h-16 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-950/60 border border-emerald-500/30 flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(16,185,129,0.3)]">
                   ⚡
                 </div>
-                <h3 className="text-xl font-bold mb-2 text-white">Execution Protocol</h3>
-                <p className="text-sm text-[var(--text-secondary)]">
-                  Climb the 12-week 3D staircase of your personalized habits and tasks.
-                </p>
-              </div>
-            </Card>
-          </Link>
-
-          <Link href={`/dashboard/narrative/${id}`}>
-            <Card className="h-full group hover:-translate-y-2 transition-all duration-300" glowColor="#3B82F6">
-              <div className="flex flex-col items-center text-center p-4">
-                <div className="w-16 h-16 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-                  🎙️
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-white">Cinematic Overlook</h3>
-                <p className="text-sm text-[var(--text-secondary)]">
-                  Listen to the AI voice narration in an immersive 3D text space.
+                <h3 className="text-lg font-bold mb-1.5 text-white">Execution Protocol</h3>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                  Personalized week-by-week sprint roadmap with video tutorials and habit tracking.
                 </p>
               </div>
             </Card>
           </Link>
 
           <Link href={`/dashboard/gallery/${id}`}>
-            <Card className="h-full group hover:-translate-y-2 transition-all duration-300" glowColor="#F59E0B">
+            <Card className="h-full group hover:-translate-y-2 transition-all duration-300 border-white/10 hover:border-cyan-500/50" glowColor="#06B6D4">
               <div className="flex flex-col items-center text-center p-4">
-                <div className="w-16 h-16 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(245,158,11,0.3)]">
+                <div className="w-14 h-14 rounded-2xl bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(6,182,212,0.3)]">
                   🔮
                 </div>
-                <h3 className="text-xl font-bold mb-2 text-white">Future Holograms</h3>
-                <p className="text-sm text-[var(--text-secondary)]">
-                  Walk through a hyper-realistic 3D carousel of your generated future.
+                <h3 className="text-lg font-bold mb-1.5 text-white">Growth Holograms</h3>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                  Interactive 3D cylinder &amp; step-by-step visual blueprint infographics.
+                </p>
+              </div>
+            </Card>
+          </Link>
+
+          <Link href={`/dashboard/narrative/${id}`}>
+            <Card className="h-full group hover:-translate-y-2 transition-all duration-300 border-white/10 hover:border-purple-500/50" glowColor="#8B5CF6">
+              <div className="flex flex-col items-center text-center p-4">
+                <div className="w-14 h-14 rounded-2xl bg-purple-950/60 border border-purple-500/30 flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(139,92,246,0.3)]">
+                  🎙️
+                </div>
+                <h3 className="text-lg font-bold mb-1.5 text-white">Cinematic Overlook</h3>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                  AI Voice Mentor audio narration and interactive speech-to-speech Q&amp;A.
                 </p>
               </div>
             </Card>
           </Link>
 
           <Link href={`/dashboard/reality-check/${id}`}>
-            <Card className="h-full group hover:-translate-y-2 transition-all duration-300" glowColor="#3B82F6">
+            <Card className="h-full group hover:-translate-y-2 transition-all duration-300 border-white/10 hover:border-blue-500/50" glowColor="#3B82F6">
               <div className="flex flex-col items-center text-center p-4">
-                <div className="w-16 h-16 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-                  ⚡
+                <div className="w-14 h-14 rounded-2xl bg-blue-950/60 border border-blue-500/30 flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                  📊
                 </div>
-                <h3 className="text-xl font-bold mb-2 text-white">Reality Check</h3>
-                <p className="text-sm text-[var(--text-secondary)]">
-                  ML-powered career classification with live market demand, salary &amp; skill stats.
+                <h3 className="text-lg font-bold mb-1.5 text-white">Reality Check</h3>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                  ML-powered career classification with live salary and market demand analytics.
                 </p>
               </div>
             </Card>

@@ -286,14 +286,23 @@ export default function GalleryPage() {
     fetchSim();
   }, [id]);
 
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
-      if (viewMode !== "3d") return;
-      const sensitivity = 0.0025;
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = canvasContainerRef.current;
+    if (!el || viewMode !== "3d") return;
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const sensitivity = 0.003;
       setRotationY((prev) => prev - e.deltaY * sensitivity);
-    },
-    [viewMode]
-  );
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+    };
+  }, [viewMode]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (viewMode !== "3d") return;
@@ -347,7 +356,7 @@ export default function GalleryPage() {
   };
 
   return (
-    <div className="w-full min-h-screen relative bg-[#030308] text-white select-none font-[var(--font-body)] flex flex-col">
+    <div className={`w-full relative bg-[#030308] text-white select-none font-[var(--font-body)] flex flex-col ${viewMode === "3d" ? "h-screen overflow-hidden" : "min-h-screen overflow-y-auto"}`}>
       {/* Top Sticky Navigation Bar */}
       <header className="sticky top-0 z-50 px-4 sm:px-6 py-3.5 bg-[#030308]/95 backdrop-blur-xl border-b border-zinc-800 flex items-center justify-between pointer-events-auto">
         <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/results/${id}`)}>
@@ -475,8 +484,8 @@ export default function GalleryPage() {
         ) : (
           /* Laptop / Desktop Machine-Adaptive 3D Cylinder View */
           <div
+            ref={canvasContainerRef}
             className="flex-1 w-full h-[calc(100vh-65px)] relative overflow-hidden cursor-grab active:cursor-grabbing select-none"
-            onWheel={handleWheel}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
