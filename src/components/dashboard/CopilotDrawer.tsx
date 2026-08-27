@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "@/components/ui/Button";
-import Badge from "@/components/ui/Badge";
 import { SimulationState } from "@/types/agents";
 
 interface ChatMessage {
@@ -15,21 +14,21 @@ interface ChatMessage {
 
 export default function CopilotDrawer() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
+  const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const recognitionRef = useRef<any>(null);
 
-  // Load active simulation context
   const getActiveSimulation = (): SimulationState | null => {
     if (typeof window === "undefined") return null;
     try {
-      // Find the most recently modified simulation
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key && key.startsWith("sim_") && key !== "sim_sim-demo") {
@@ -67,13 +66,12 @@ export default function CopilotDrawer() {
       }
     }
 
-    // Default greeting
     setMessages([
       {
         id: "msg-init",
         role: "assistant",
         content:
-          "👋 Greetings! I am the **VibeForge Oracle**. I have synchronized with your career roadmap and weekly sprints. Ask me anything about your next steps, technical obstacles, or daily discipline routine!",
+          "👋 Greetings! I am the **VibeForge Oracle** — your universal AI intelligence and career transformation copilot.\n\nI can answer **any question across any domain** (coding, trading, science, business, writing, psychology) or help you execute your roadmap step-by-step. What would you like to explore today?",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ]);
@@ -85,7 +83,7 @@ export default function CopilotDrawer() {
 
   const toggleSpeechRecognition = () => {
     if (!recognitionRef.current) {
-      alert("Speech recognition is not supported in this browser. Please type your message.");
+      alert("Speech recognition is not supported in this browser. Please type your query.");
       return;
     }
     if (isListening) {
@@ -108,13 +106,12 @@ export default function CopilotDrawer() {
 
     setSpeakingMsgId(msgId);
 
-    // Try ElevenLabs audio first
     try {
       const cleanText = text.replace(/\[.*?\]\(.*?\)/g, "").replace(/[*_#`]/g, "");
       const res = await fetch("/api/voice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: cleanText.slice(0, 400) }),
+        body: JSON.stringify({ text: cleanText.slice(0, 450) }),
       });
 
       if (res.ok) {
@@ -127,7 +124,6 @@ export default function CopilotDrawer() {
       }
     } catch (e) {}
 
-    // Fallback to Web Speech Synthesis
     fallbackSpeak(text);
   };
 
@@ -143,6 +139,23 @@ export default function CopilotDrawer() {
     utterance.onend = () => setSpeakingMsgId(null);
     utterance.onerror = () => setSpeakingMsgId(null);
     synthRef.current.speak(utterance);
+  };
+
+  const copyMessage = (msgId: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedMsgId(msgId);
+    setTimeout(() => setCopiedMsgId(null), 2000);
+  };
+
+  const handleClearChat = () => {
+    setMessages([
+      {
+        id: `msg-${Date.now()}`,
+        role: "assistant",
+        content: "New conversation initiated. Ask me anything on any topic!",
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      },
+    ]);
   };
 
   const sendMessage = async (textToSend?: string) => {
@@ -179,7 +192,7 @@ export default function CopilotDrawer() {
       const data = await res.json();
       const assistantReply =
         data?.message?.content ||
-        "I am analyzing your next milestone. Execute your primary action item today with discipline.";
+        "I am ready. Ask me any question on coding, business, trading, or personal mastery.";
 
       const assistantMsg: ChatMessage = {
         id: `assistant-${Date.now()}`,
@@ -197,7 +210,7 @@ export default function CopilotDrawer() {
           id: `err-${Date.now()}`,
           role: "assistant",
           content:
-            "I encountered a temporary connection glitch. Stay focused on your Week 1 actions while I re-establish connection.",
+            "I encountered a momentary connection hiccup. Please re-send your question and I will resolve it immediately.",
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
@@ -208,15 +221,16 @@ export default function CopilotDrawer() {
 
   const quickPrompts = [
     "Explain Week 1 step-by-step in simple language",
-    "How do I overcome procrastination and hesitation?",
-    "Give me 3 daily habits to build real momentum",
-    "What are the top mistakes beginners make in my goal?",
+    "Write a high-performance Python script for data analysis",
+    "How to manage risk and avoid emotional trading errors?",
+    "Explain how transformer neural networks work simply",
+    "Give me 3 daily habits to achieve my goal 2x faster",
   ];
 
   return (
     <>
       {/* Floating Trigger Button */}
-      <div className="fixed bottom-6 right-6 z-40 no-print">
+      <div className="fixed bottom-6 right-6 z-40 no-print pointer-events-auto">
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="group px-4 py-3 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 text-white font-bold text-xs shadow-[0_0_30px_rgba(147,51,234,0.5)] hover:shadow-[0_0_40px_rgba(6,182,212,0.7)] transition-all duration-300 flex items-center gap-2.5 hover:scale-105"
@@ -231,32 +245,54 @@ export default function CopilotDrawer() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, x: 400 }}
+            initial={{ opacity: 0, x: 500 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 400 }}
+            exit={{ opacity: 0, x: 500 }}
             transition={{ duration: 0.28, ease: "easeOut" }}
-            className="fixed top-0 right-0 bottom-0 w-full sm:w-[460px] bg-zinc-950/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl z-50 flex flex-col justify-between font-[var(--font-body)] text-white"
+            className={`fixed top-0 right-0 bottom-0 ${
+              isExpanded ? "w-full sm:w-[800px]" : "w-full sm:w-[480px]"
+            } bg-zinc-950/95 backdrop-blur-2xl border-l border-zinc-800 shadow-2xl z-50 flex flex-col justify-between font-[var(--font-body)] text-white pointer-events-auto`}
           >
             {/* Header */}
-            <div className="p-4 border-b border-white/10 flex items-center justify-between bg-black/40">
+            <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-black/60">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-purple-600 to-cyan-400 flex items-center justify-center text-white font-black shadow-md">
                   🔮
                 </div>
                 <div>
                   <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                    VibeForge Oracle <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950/80 px-2 py-0.5 rounded-full border border-cyan-500/30">AI Copilot</span>
+                    VibeForge Oracle
+                    <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950/80 px-2 py-0.5 rounded-full border border-cyan-500/30">
+                      Universal AI (Grok & Llama 3.3)
+                    </span>
                   </h2>
-                  <p className="text-[11px] text-white/50">Context-Aware Career & Execution Mentor</p>
+                  <p className="text-[11px] text-zinc-400">Ask any question across any domain or roadmap</p>
                 </div>
               </div>
 
-              <button
-                onClick={() => setIsOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors"
-              >
-                ✕
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs transition-colors"
+                  title={isExpanded ? "Collapse width" : "Expand width"}
+                >
+                  {isExpanded ? "🗗" : "🗖"}
+                </button>
+                <button
+                  onClick={handleClearChat}
+                  className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs transition-colors"
+                  title="Clear conversation"
+                >
+                  🔄
+                </button>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs transition-colors"
+                  title="Close Oracle"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {/* Messages Stream */}
@@ -267,23 +303,29 @@ export default function CopilotDrawer() {
                   className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}
                 >
                   <div
-                    className={`max-w-[88%] p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed ${
+                    className={`max-w-[90%] p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${
                       m.role === "user"
                         ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-none shadow-md font-medium"
-                        : "bg-zinc-900 border border-white/10 text-zinc-200 rounded-bl-none shadow-sm"
+                        : "bg-zinc-900/90 border border-zinc-800 text-zinc-200 rounded-bl-none shadow-sm"
                     }`}
                   >
                     <div className="whitespace-pre-wrap">{m.content}</div>
                   </div>
 
-                  <div className="flex items-center gap-2 mt-1 px-1">
-                    <span className="text-[10px] text-white/30 font-mono">{m.timestamp}</span>
+                  <div className="flex items-center gap-3 mt-1 px-1">
+                    <span className="text-[10px] text-zinc-500 font-mono">{m.timestamp}</span>
+                    <button
+                      onClick={() => copyMessage(m.id, m.content)}
+                      className="text-[10px] text-zinc-400 hover:text-white font-mono"
+                    >
+                      {copiedMsgId === m.id ? "✓ Copied" : "📋 Copy"}
+                    </button>
                     {m.role === "assistant" && (
                       <button
                         onClick={() => speakMessage(m.id, m.content)}
                         className="text-[10px] text-cyan-400 hover:text-cyan-300 font-mono flex items-center gap-1"
                       >
-                        {speakingMsgId === m.id ? "⏹ Stop Voice" : "🔊 Listen"}
+                        {speakingMsgId === m.id ? "⏹ Stop Voice" : "🔊 Listen Voice"}
                       </button>
                     )}
                   </div>
@@ -291,9 +333,9 @@ export default function CopilotDrawer() {
               ))}
 
               {loading && (
-                <div className="flex items-center gap-2 p-3 rounded-2xl bg-zinc-900/80 border border-white/5 w-fit">
-                  <div className="w-2 h-2 rounded-full bg-purple-500 animate-ping" />
-                  <span className="text-xs text-white/50 font-mono">Oracle is synthesizing strategy...</span>
+                <div className="flex items-center gap-2 p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 w-fit">
+                  <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                  <span className="text-xs text-zinc-400 font-mono">Oracle is synthesizing solution...</span>
                 </div>
               )}
 
@@ -301,13 +343,13 @@ export default function CopilotDrawer() {
             </div>
 
             {/* Quick Prompt Chips */}
-            <div className="p-3 border-t border-white/5 bg-black/20 overflow-x-auto">
+            <div className="p-3 border-t border-zinc-800/60 bg-black/40 overflow-x-auto">
               <div className="flex items-center gap-2 whitespace-nowrap">
                 {quickPrompts.map((p, i) => (
                   <button
                     key={i}
                     onClick={() => sendMessage(p)}
-                    className="px-2.5 py-1 rounded-xl bg-white/5 hover:bg-purple-600/20 hover:border-purple-500/40 border border-white/10 text-[11px] text-white/70 hover:text-white transition-all font-mono"
+                    className="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-purple-600/20 hover:border-purple-500/40 border border-zinc-800 text-[11px] text-zinc-300 hover:text-white transition-all font-mono"
                   >
                     {p}
                   </button>
@@ -316,7 +358,7 @@ export default function CopilotDrawer() {
             </div>
 
             {/* Input Bar */}
-            <div className="p-3 border-t border-white/10 bg-black/60">
+            <div className="p-3 border-t border-zinc-800 bg-black/80">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -330,19 +372,19 @@ export default function CopilotDrawer() {
                   className={`p-2.5 rounded-xl transition-all ${
                     isListening
                       ? "bg-red-600 text-white animate-pulse"
-                      : "bg-white/10 hover:bg-white/15 text-white/70"
+                      : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
                   }`}
-                  title="Speak your question"
+                  title="Speak query into microphone"
                 >
                   🎤
                 </button>
 
                 <input
                   type="text"
-                  placeholder="Ask Oracle about your execution plan..."
+                  placeholder="Ask any question on any topic or roadmap..."
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  className="flex-1 px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-xs text-white placeholder-white/40 focus:outline-none focus:border-cyan-400 font-mono"
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-400 font-mono"
                 />
 
                 <Button

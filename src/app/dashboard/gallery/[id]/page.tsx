@@ -51,7 +51,10 @@ function CylinderCard3D({
     <group position={position} rotation={rotation} ref={meshRef}>
       <Html transform distanceFactor={5.5} center className="pointer-events-none">
         <div
-          onClick={onClick}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick();
+          }}
           className="w-[420px] h-[540px] flex flex-col justify-between p-4 rounded-3xl overflow-hidden bg-[#070712]/95 backdrop-blur-2xl border-2 border-cyan-500/40 shadow-[0_0_50px_rgba(6,182,212,0.3)] transition-all duration-300 hover:scale-105 hover:border-cyan-300 cursor-pointer pointer-events-auto group select-none"
         >
           <div className="w-full h-full relative rounded-2xl overflow-hidden bg-black flex flex-col justify-between p-4">
@@ -104,7 +107,6 @@ function HologramCylinder3D({
 
   useFrame((_, delta) => {
     if (groupRef.current) {
-      // Smoothly interpolate rotation to target rotationY
       groupRef.current.rotation.y = THREE.MathUtils.damp(
         groupRef.current.rotation.y,
         rotationY,
@@ -136,7 +138,6 @@ function HologramCylinder3D({
         );
       })}
 
-      {/* Central Holographic Core Light */}
       <pointLight position={[0, 0, 0]} color="#06b6d4" intensity={4} distance={15} />
       <pointLight position={[0, 3, 0]} color="#a855f7" intensity={3} distance={15} />
     </group>
@@ -177,15 +178,15 @@ export default function GalleryPage() {
     fetchSim();
   }, [id]);
 
-  // Handle Wheel Scrolling inside 3D Cylinder viewport
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    if (viewMode !== "3d") return;
-    // Scroll down moves left-to-right (positive delta), scroll up moves right-to-left
-    const sensitivity = 0.0025;
-    setRotationY((prev) => prev - e.deltaY * sensitivity);
-  }, [viewMode]);
+  const handleWheel = useCallback(
+    (e: React.WheelEvent) => {
+      if (viewMode !== "3d") return;
+      const sensitivity = 0.0025;
+      setRotationY((prev) => prev - e.deltaY * sensitivity);
+    },
+    [viewMode]
+  );
 
-  // Handle Dragging
   const handleMouseDown = (e: React.MouseEvent) => {
     if (viewMode !== "3d") return;
     isDragging.current = true;
@@ -255,54 +256,53 @@ export default function GalleryPage() {
   };
 
   return (
-    <div
-      className="w-full h-screen relative bg-[#030308] text-white overflow-hidden select-none font-[var(--font-body)]"
-      onWheel={handleWheel}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
-      {/* Top Navigation Bar */}
-      <div className="absolute top-6 left-6 right-6 z-30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pointer-events-none">
-        <div className="pointer-events-auto">
-          <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/results/${id}`)}>
-            ← Command Center
-          </Button>
-        </div>
+    <div className="w-full min-h-screen relative bg-[#030308] text-white select-none font-[var(--font-body)] flex flex-col">
+      {/* Top Sticky Navigation Bar — 100% Clickable with high z-index */}
+      <header className="sticky top-0 z-50 px-6 py-4 bg-[#030308]/95 backdrop-blur-xl border-b border-zinc-800 flex items-center justify-between pointer-events-auto">
+        <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/results/${id}`)}>
+          ← Command Center
+        </Button>
 
-        <div className="pointer-events-auto flex items-center gap-2 bg-[rgba(10,10,20,0.85)] backdrop-blur-xl border border-cyan-500/30 p-1.5 rounded-2xl shadow-2xl">
+        {/* 3D / 2D View Switcher */}
+        <div className="flex items-center gap-2 bg-zinc-950/90 border border-zinc-800 p-1.5 rounded-2xl shadow-xl">
           <button
             onClick={() => setViewMode("3d")}
-            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               viewMode === "3d"
-                ? "bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-[0_0_20px_rgba(6,182,212,0.5)]"
-                : "text-white/60 hover:text-white"
+                ? "bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)]"
+                : "text-zinc-400 hover:text-white hover:bg-zinc-900"
             }`}
           >
             🌀 3D Hologram Cylinder
           </button>
           <button
             onClick={() => setViewMode("grid")}
-            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               viewMode === "grid"
-                ? "bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-[0_0_20px_rgba(6,182,212,0.5)]"
-                : "text-white/60 hover:text-white"
+                ? "bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)]"
+                : "text-zinc-400 hover:text-white hover:bg-zinc-900"
             }`}
           >
             📖 Comic Roadmap Panels
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Main Content Area */}
       {viewMode === "3d" ? (
-        <div className="w-full h-full relative cursor-grab active:cursor-grabbing">
+        <div
+          className="flex-1 w-full h-[calc(100vh-73px)] relative overflow-hidden cursor-grab active:cursor-grabbing select-none"
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           {/* Scroll / Drag Interaction Hint */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 pointer-events-none text-center">
-            <span className="px-6 py-2 rounded-full bg-black/80 backdrop-blur-md border border-cyan-500/40 text-xs font-bold text-cyan-300 uppercase tracking-widest animate-pulse shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+            <span className="px-6 py-2 rounded-full bg-black/85 backdrop-blur-md border border-cyan-500/40 text-xs font-bold text-cyan-300 uppercase tracking-widest animate-pulse shadow-[0_0_20px_rgba(6,182,212,0.3)]">
               ↕ Scroll Wheel / Drag to Rotate 3D Cylinder Left & Right
             </span>
           </div>
@@ -312,7 +312,7 @@ export default function GalleryPage() {
             <fog attach="fog" args={["#030308", 4, 25]} />
             <ambientLight intensity={0.7} />
             <directionalLight position={[10, 10, 5]} intensity={1.5} />
-            
+
             <Suspense fallback={null}>
               <HologramCylinder3D
                 prompts={prompts}
@@ -323,17 +323,17 @@ export default function GalleryPage() {
           </Canvas>
         </div>
       ) : (
-        <div className="w-full h-full overflow-y-auto px-6 pt-28 pb-20">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-12">
-              <Badge color="cyan" dot className="mb-3">
-                Graphic Novel Timeline Visualizer
+        <div className="flex-1 w-full overflow-y-auto px-6 py-10">
+          <div className="max-w-7xl mx-auto space-y-10">
+            <div className="text-center space-y-2">
+              <Badge color="cyan" dot className="mb-2">
+                Graphic Novel Progression Engine
               </Badge>
-              <h1 className="text-3xl sm:text-5xl font-black mb-3 text-white tracking-tight">
+              <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
                 Comic Roadmap <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-purple-400 to-amber-300">Holograms</span>
               </h1>
-              <p className="text-white/60 text-sm max-w-2xl mx-auto">
-                Step-by-step graphic novel panels illustrating your career transformation from{" "}
+              <p className="text-zinc-400 text-sm max-w-2xl mx-auto">
+                Step-by-step graphic novel panels illustrating your transformation from{" "}
                 <strong className="text-white">{state?.userInput?.currentSituation || "baseline"}</strong> to{" "}
                 <strong className="text-cyan-300">{state?.userInput?.goals || "dream profession"}</strong>.
               </p>
@@ -347,11 +347,11 @@ export default function GalleryPage() {
                     key={index}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
+                    transition={{ delay: index * 0.08 }}
                   >
                     <Card
                       elevated
-                      className="overflow-hidden p-0 border-white/10 hover:border-cyan-400/60 group cursor-pointer transition-all duration-300 flex flex-col h-full bg-[#080812]"
+                      className="overflow-hidden p-0 border-zinc-800 hover:border-cyan-400/60 group cursor-pointer transition-all duration-300 flex flex-col h-full bg-[#080812]"
                       onClick={() => setSelectedHologram(index)}
                     >
                       <div className="w-full h-72 relative overflow-hidden bg-black">
@@ -361,11 +361,12 @@ export default function GalleryPage() {
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            target.src = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1024&q=80";
+                            target.src =
+                              "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1024&q=80";
                           }}
                         />
                         <div className="absolute top-4 left-4 flex gap-2">
-                          <span className="px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-xs font-black text-cyan-300 tracking-wider">
+                          <span className="px-3 py-1 rounded-full bg-cyan-950/90 border border-cyan-400/50 text-xs font-black text-cyan-300 tracking-wider">
                             Chapter {index + 1} (Month {prompt.milestoneMonth || (index + 1) * 3})
                           </span>
                         </div>
@@ -381,11 +382,11 @@ export default function GalleryPage() {
                           </p>
                         </div>
 
-                        <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
+                        <div className="mt-4 pt-4 border-t border-zinc-800 flex items-center justify-between">
                           <span className="text-xs text-purple-300 font-bold">
-                            Inspect Blueprint →
+                            Inspect 4K Blueprint →
                           </span>
-                          <span className="text-xs text-white/40 font-mono">
+                          <span className="text-xs text-zinc-500 font-mono">
                             8K Comic
                           </span>
                         </div>
@@ -399,14 +400,14 @@ export default function GalleryPage() {
         </div>
       )}
 
-      {/* Hologram Inspector Modal */}
+      {/* 4K Hologram Inspector Modal */}
       <AnimatePresence>
         {selectedHologram !== null && currentHologram && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/90 backdrop-blur-2xl"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/90 backdrop-blur-2xl pointer-events-auto"
             onClick={() => setSelectedHologram(null)}
           >
             <motion.div
@@ -418,7 +419,7 @@ export default function GalleryPage() {
             >
               <button
                 onClick={() => setSelectedHologram(null)}
-                className="absolute top-6 right-6 text-white/40 hover:text-white text-xl font-bold w-9 h-9 rounded-full bg-white/5 flex items-center justify-center"
+                className="absolute top-6 right-6 text-zinc-400 hover:text-white text-xl font-bold w-9 h-9 rounded-full bg-white/5 flex items-center justify-center transition-colors"
               >
                 ✕
               </button>
@@ -432,7 +433,7 @@ export default function GalleryPage() {
                 </span>
               </div>
 
-              <div className="w-full aspect-square sm:aspect-video relative rounded-2xl overflow-hidden mb-6 bg-black border border-white/10 shadow-2xl">
+              <div className="w-full aspect-square sm:aspect-video relative rounded-2xl overflow-hidden mb-6 bg-black border border-zinc-800 shadow-2xl">
                 <img
                   src={currentImageUrl}
                   alt={`Chapter ${selectedHologram + 1}`}
@@ -450,21 +451,22 @@ export default function GalleryPage() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-white/10">
+                <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-zinc-800">
                   <Button
                     variant="primary"
                     size="sm"
                     onClick={() => handleDownloadImage(currentImageUrl, `vibeforge_chapter_${selectedHologram + 1}`)}
-                    className="bg-gradient-to-r from-cyan-600 to-purple-600 border-0"
+                    className="bg-cyan-600 hover:bg-cyan-500 text-xs font-bold"
                   >
-                    💾 Download 4K Comic Artwork
+                    💾 Download 4K Hologram
                   </Button>
                   <Button
                     variant="secondary"
                     size="sm"
                     onClick={() => handleCopyPrompt(currentHologram.sceneDescription)}
+                    className="text-xs border-zinc-700"
                   >
-                    {copiedPrompt ? "✓ Blueprint Copied!" : "📋 Copy AI Visual Prompt"}
+                    {copiedPrompt ? "✓ Blueprint Copied" : "📋 Copy Prompt"}
                   </Button>
                 </div>
               </div>
