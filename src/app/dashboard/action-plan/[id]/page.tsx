@@ -1092,7 +1092,7 @@ export default function ActionPlanPage() {
       </AnimatePresence>
 
       {/* AI Adversary Rival & Ego-Hurt Matrix — Desktop Dock */}
-      {state.actionPlan.rival && (
+      {effectiveState?.actionPlan?.rival && (
         <div className="hidden md:block fixed bottom-6 left-6 w-[340px] z-30 pointer-events-auto no-print">
           <div className="p-4 rounded-2xl bg-zinc-950/95 backdrop-blur-xl border border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.2)] relative overflow-hidden">
             <div className="flex justify-between items-center mb-2">
@@ -1103,18 +1103,18 @@ export default function ActionPlanPage() {
                 </h3>
               </div>
               <span className="text-[10px] bg-red-500/10 border border-red-500/30 px-2 py-0.5 rounded-full text-red-400 font-bold font-mono">
-                +{liveRivalData?.rivalLeadDays || state.actionPlan.rival.progressOffset || 7}d Pace Lead
+                +{liveRivalData?.rivalLeadDays || effectiveState.actionPlan.rival.progressOffset || 7}d Pace Lead
               </span>
             </div>
 
             <p className="text-zinc-400 text-xs mb-2 leading-relaxed">
-              <strong className="text-zinc-200">{liveRivalData?.rivalName || state.actionPlan.rival.name}</strong> ({liveRivalData?.rivalStatus ? liveRivalData.rivalStatus.slice(0, 55) : "Relentlessly executing at 5:30 AM"}).
+              <strong className="text-zinc-200">{liveRivalData?.rivalName || effectiveState.actionPlan.rival.name}</strong> ({liveRivalData?.rivalStatus ? liveRivalData.rivalStatus.slice(0, 55) : "Relentlessly executing at 5:30 AM"}).
             </p>
 
             {/* Dynamic Ego-Hurt Psychological Taunt */}
             <div 
               onClick={() => {
-                const taunts = state.actionPlan?.rival?.taunts || [];
+                const taunts = effectiveState.actionPlan?.rival?.taunts || [];
                 if (taunts.length > 0) {
                   setRivalTauntIndex((prev) => (prev + 1) % taunts.length);
                 }
@@ -1127,13 +1127,13 @@ export default function ActionPlanPage() {
                 <span className="text-zinc-500 group-hover:text-zinc-300">Tap ↻</span>
               </div>
               <p className="text-zinc-300 text-xs italic font-medium leading-snug">
-                "{liveRivalData?.egoTaunt || state.actionPlan.rival.taunts?.[rivalTauntIndex % (state.actionPlan.rival.taunts.length || 1)] || 'While you make excuses, your competition is executing.'}"
+                "{liveRivalData?.egoTaunt || effectiveState.actionPlan.rival.taunts?.[rivalTauntIndex % (effectiveState.actionPlan.rival.taunts.length || 1)] || 'While you make excuses, your competition is executing.'}"
               </p>
             </div>
 
             {/* Opportunity Loss & Rival Provoke Bar */}
             <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 bg-white/[0.02] px-2.5 py-1.5 rounded-lg mb-2.5 border border-white/5">
-              <span>Rival Lead: <strong className="text-red-400">+{liveRivalData?.rivalLeadDays || state.actionPlan.rival.progressOffset || 7} Days</strong></span>
+              <span>Rival Lead: <strong className="text-red-400">+{liveRivalData?.rivalLeadDays || effectiveState.actionPlan.rival.progressOffset || 7} Days</strong></span>
               <button
                 onClick={triggerRivalEgoTaunt}
                 disabled={isProvokingRival}
@@ -1186,21 +1186,21 @@ export default function ActionPlanPage() {
       )}
 
       {/* AI Adversary Rival — Mobile Pill Button */}
-      {state.actionPlan.rival && (
+      {effectiveState?.actionPlan?.rival && (
         <div className="md:hidden fixed bottom-6 left-6 z-30 pointer-events-auto no-print">
           <button
             onClick={() => setRivalDrawerOpen(true)}
             className="px-3.5 py-2 rounded-full bg-zinc-950/90 backdrop-blur-md border border-red-500/40 text-xs font-bold text-white shadow-xl flex items-center gap-2"
           >
             <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-            <span>⚔️ Rival (+{liveRivalData?.rivalLeadDays || state.actionPlan.rival.progressOffset || 7}d)</span>
+            <span>⚔️ Rival (+{liveRivalData?.rivalLeadDays || effectiveState.actionPlan.rival.progressOffset || 7}d)</span>
           </button>
         </div>
       )}
 
       {/* AI Adversary Rival — Mobile Bottom Sheet Drawer */}
       <AnimatePresence>
-        {rivalDrawerOpen && state.actionPlan.rival && (
+        {rivalDrawerOpen && effectiveState?.actionPlan?.rival && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1228,12 +1228,12 @@ export default function ActionPlanPage() {
               </div>
 
               <p className="text-zinc-400 text-xs">
-                <strong className="text-zinc-200">{liveRivalData?.rivalName || state.actionPlan.rival.name}</strong> is outworking you by +{liveRivalData?.rivalLeadDays || state.actionPlan.rival.progressOffset || 7} days.
+                <strong className="text-zinc-200">{liveRivalData?.rivalName || effectiveState.actionPlan.rival.name}</strong> is outworking you by +{liveRivalData?.rivalLeadDays || effectiveState.actionPlan.rival.progressOffset || 7} days.
               </p>
 
               <div className="bg-black/60 p-3 rounded-xl border border-zinc-800">
                 <p className="text-zinc-300 text-xs italic">
-                  "{liveRivalData?.egoTaunt || state.actionPlan.rival.taunts?.[rivalTauntIndex % (state.actionPlan.rival.taunts.length || 1)] || 'While you make excuses, your competition is executing.'}"
+                  "{liveRivalData?.egoTaunt || effectiveState.actionPlan.rival.taunts?.[rivalTauntIndex % (effectiveState.actionPlan.rival.taunts.length || 1)] || 'While you make excuses, your competition is executing.'}"
                 </p>
               </div>
 

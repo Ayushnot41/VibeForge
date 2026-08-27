@@ -333,4 +333,7 @@ This is not fantasy. This is your calculated destiny. Open your execution protoc
       progressOffset: 7,
     },
   },
+  status: "complete",
+  errors: [],
+  feedbackLoopCount: 0,
 };

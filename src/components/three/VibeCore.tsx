@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, MeshDistortMaterial, Sparkles, Octahedron, Sphere } from "@react-three/drei";
 import * as THREE from "three";
@@ -131,7 +131,9 @@ export default function VibeCore({ progress, health = 1.0, skin = "default", cla
         <ambientLight intensity={0.2 + (safeProgress * 0.3)} />
         <pointLight position={[10, 10, 10]} intensity={1 + safeProgress} color={safeHealth < 0.5 ? "#ef4444" : "#fff"} />
         <pointLight position={[-10, -10, -10]} intensity={safeProgress * 2} color={safeHealth < 0.5 ? "#b91c1c" : (skin === 'chronos' ? "#10b981" : (skin === 'infernal' ? "#ef4444" : "#7C3AED"))} />
-        <CoreEntity progress={safeProgress} health={safeHealth} skin={skin} />
+        <Suspense fallback={null}>
+          <CoreEntity progress={safeProgress} health={safeHealth} skin={skin} />
+        </Suspense>
       </Canvas>
     </div>
   );

@@ -145,8 +145,13 @@ export interface Simulation {
 
 // --- Time horizon helpers ---
 
-export const TIME_HORIZON_MONTHS: Record<UserInput['timeHorizon'], number> = {
+export const TIME_HORIZON_MONTHS: Record<string, number> = {
+  '6_weeks': 1.5,
+  '12_weeks': 3,
+  '24_weeks': 6,
+  '36_weeks': 9,
   '1_year': 12,
+  '2_years': 24,
   '3_years': 36,
   '5_years': 60,
   '10_years': 120,
@@ -155,11 +160,11 @@ export const TIME_HORIZON_MONTHS: Record<UserInput['timeHorizon'], number> = {
 /**
  * Returns the effective simulation duration in months. Prefers a custom
  * computed duration (from a target date) when present, otherwise falls back
- * to the preset time horizon lookup.
+ * to the preset time horizon lookup with a guaranteed safe fallback of 36 months.
  */
 export function getTimeHorizonMonths(input: UserInput): number {
   if (input.timeHorizonMonths && input.timeHorizonMonths > 0) {
     return Math.round(input.timeHorizonMonths);
   }
-  return TIME_HORIZON_MONTHS[input.timeHorizon];
+  return TIME_HORIZON_MONTHS[input.timeHorizon] || 36;
 }

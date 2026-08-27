@@ -11,6 +11,10 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   hint?: string;
 }
 
+function generateInputId(label?: string, id?: string) {
+  return id || label?.toLowerCase().replace(/\s+/g, "-");
+}
+
 export function Input({
   label,
   error,
@@ -19,29 +23,29 @@ export function Input({
   id,
   ...props
 }: InputProps) {
-  const inputId = id || label?.toLowerCase().replace(/\s+/g, "-");
+  const computedId = generateInputId(label, id);
 
   return (
     <div className="flex flex-col gap-1.5 w-full">
       {label && (
         <label
-          htmlFor={inputId}
+          htmlFor={computedId}
           className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider"
         >
           {label}
         </label>
       )}
       <input
-        id={inputId}
+        id={computedId}
         className={cn(
-          "w-full px-4 py-3 rounded-xl",
+          "w-full px-4 py-3 rounded-2xl",
           "bg-[rgba(18,17,30,0.85)] border border-[var(--glass-border)]",
           "text-[var(--text-primary)] placeholder:text-[var(--text-muted)]",
           "font-[var(--font-body)] text-sm md:text-base",
           "outline-none backdrop-blur-md",
-          "transition-all duration-200",
-          "focus:border-[var(--accent-purple)] focus:shadow-[0_0_16px_rgba(168,85,247,0.3)] focus:bg-[rgba(25,23,42,0.95)]",
-          error && "border-rose-500/70 focus:border-rose-500 focus:shadow-[0_0_16px_rgba(244,63,94,0.3)]",
+          "transition-all duration-300 ease-out",
+          "focus:border-[var(--neon-purple)] focus:shadow-[0_0_20px_rgba(139,92,246,0.3)] focus:bg-[rgba(26,24,44,0.95)]",
+          error && "border-rose-500/70 focus:border-rose-500 focus:shadow-[0_0_20px_rgba(244,63,94,0.3)]",
           className
         )}
         {...props}
@@ -58,7 +62,7 @@ export function Input({
 
 /* ─── Textarea ──────────────────────────────────────────────── */
 
-interface TextareaProps
+export interface TextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
@@ -73,29 +77,29 @@ export function Textarea({
   id,
   ...props
 }: TextareaProps) {
-  const textareaId = id || label?.toLowerCase().replace(/\s+/g, "-");
+  const computedId = generateInputId(label, id);
 
   return (
     <div className="flex flex-col gap-1.5 w-full">
       {label && (
         <label
-          htmlFor={inputId(label, id)}
+          htmlFor={computedId}
           className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider"
         >
           {label}
         </label>
       )}
       <textarea
-        id={textareaId}
+        id={computedId}
         className={cn(
           "w-full px-4 py-3.5 rounded-2xl",
           "bg-[rgba(18,17,30,0.85)] border border-[var(--glass-border)]",
           "text-[var(--text-primary)] placeholder:text-[var(--text-muted)]",
           "font-[var(--font-body)] text-sm md:text-base",
           "outline-none resize-y min-h-[120px] backdrop-blur-md leading-relaxed",
-          "transition-all duration-200",
-          "focus:border-[var(--accent-purple)] focus:shadow-[0_0_16px_rgba(168,85,247,0.3)] focus:bg-[rgba(25,23,42,0.95)]",
-          error && "border-rose-500/70 focus:border-rose-500 focus:shadow-[0_0_16px_rgba(244,63,94,0.3)]",
+          "transition-all duration-300 ease-out",
+          "focus:border-[var(--neon-purple)] focus:shadow-[0_0_20px_rgba(139,92,246,0.3)] focus:bg-[rgba(26,24,44,0.95)]",
+          error && "border-rose-500/70 focus:border-rose-500 focus:shadow-[0_0_20px_rgba(244,63,94,0.3)]",
           className
         )}
         {...props}
@@ -108,8 +112,4 @@ export function Textarea({
       )}
     </div>
   );
-}
-
-function inputId(label?: string, id?: string) {
-  return id || label?.toLowerCase().replace(/\s+/g, "-");
 }

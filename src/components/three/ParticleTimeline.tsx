@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useMemo } from "react";
+import React, { useRef, useMemo, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Line, Html } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
@@ -266,10 +266,12 @@ export default function ParticleTimeline({ paths }: { paths?: FuturePath[] }) {
         gl={{ alpha: true, antialias: false, powerPreference: "high-performance" }}
         dpr={[1, 1.5]}
       >
-        <ParticleScene paths={paths} />
-        <EffectComposer multisampling={0}>
-          <Bloom luminanceThreshold={0.5} luminanceSmoothing={0.5} height={200} intensity={1.5} />
-        </EffectComposer>
+        <Suspense fallback={null}>
+          <ParticleScene paths={paths} />
+          <EffectComposer multisampling={0}>
+            <Bloom luminanceThreshold={0.5} luminanceSmoothing={0.5} height={200} intensity={1.5} />
+          </EffectComposer>
+        </Suspense>
       </Canvas>
       {/* Legend */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-6 text-xs font-medium">

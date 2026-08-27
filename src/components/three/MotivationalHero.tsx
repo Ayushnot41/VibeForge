@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, MeshDistortMaterial, Stars, Torus, Icosahedron } from "@react-three/drei";
 import * as THREE from "three";
@@ -69,8 +69,10 @@ export default function MotivationalHero({ goals }: { goals: string }) {
           <ambientLight intensity={0.2} />
           <pointLight position={[10, 10, 10]} intensity={1.5} color="#fff" />
           <pointLight position={[-10, -10, -10]} intensity={1} color="#7C3AED" />
-          <Stars radius={50} depth={20} count={1500} factor={4} fade speed={2} />
-          <EnergyCore />
+          <Suspense fallback={null}>
+            <Stars radius={50} depth={20} count={1500} factor={4} fade speed={2} />
+            <EnergyCore />
+          </Suspense>
         </Canvas>
       </div>
 

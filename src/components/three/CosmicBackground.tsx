@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useMemo } from "react";
+import React, { useRef, useMemo, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -76,7 +76,9 @@ export default function CosmicBackground() {
     <div className="fixed inset-0 z-0 pointer-events-none bg-[#0A0A0F]">
       <Canvas camera={{ position: [0, 0, 15], fov: 60 }} gl={{ alpha: true, antialias: true }}>
         <fog attach="fog" args={["#0A0A0F", 10, 40]} />
-        <Starfield />
+        <Suspense fallback={null}>
+          <Starfield />
+        </Suspense>
       </Canvas>
     </div>
   );
