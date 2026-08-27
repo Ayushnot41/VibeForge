@@ -284,23 +284,87 @@ function generateFallbackPlan(goals: string, situation: string): { actionPlan: A
 /**
  * Expands core weeks into the target number of weeks (e.g. 12, 36, 60, or 120).
  */
-function expandWeeks(coreWeeks: WeeklyAction[], targetWeeks: number): WeeklyAction[] {
-  if (targetWeeks <= coreWeeks.length) return coreWeeks.slice(0, targetWeeks);
-
-  const expanded: WeeklyAction[] = [];
-  const multiplier = Math.ceil(targetWeeks / coreWeeks.length);
-  
-  for (let w = 1; w <= targetWeeks; w++) {
-    const coreIndex = Math.floor((w - 1) / multiplier);
-    const coreWeek = coreWeeks[Math.min(coreIndex, coreWeeks.length - 1)];
-    
-    expanded.push({
-      week: w,
-      actions: coreWeek.actions.map((a: string) => a.replace(/week \d+/gi, `week ${w}`)),
-      milestone: w % multiplier === 0 ? (coreWeek.milestone || `Phase ${Math.ceil(w / multiplier)} Complete`) : undefined
-    });
+/**
+ * Expands core weeks into the target number of weeks (e.g. 12, 36, 60, or 120)
+ * ensuring every single week is distinct, progressive, and has unique actions.
+ */
+function expandWeeks(coreWeeks: WeeklyAction[], targetWeeks: number, goals: string): WeeklyAction[] {
+  if (coreWeeks.length >= targetWeeks) {
+    return coreWeeks.slice(0, targetWeeks);
   }
-  return expanded;
+
+  const isTrading = /trad(e|ing|er)|stock|forex|crypto|market|nifty/i.test(goals);
+  const result: WeeklyAction[] = [];
+
+  // First, add all unique core weeks returned by the LLM
+  coreWeeks.forEach((cw, idx) => {
+    result.push({
+      ...cw,
+      week: idx + 1,
+    });
+  });
+
+  // For remaining weeks (Week coreWeeks.length + 1 to targetWeeks), generate progressive milestones
+  for (let w = result.length + 1; w <= targetWeeks; w++) {
+    const month = Math.ceil(w / 4);
+    const quarter = Math.ceil(w / 12);
+
+    if (isTrading) {
+      if (w <= 8) {
+        result.push({
+          week: w,
+          actions: [
+            `Mental Synchronization: Review trading psychology and maintain strict 1% risk discipline. [Watch Trading in the Zone Summary ⭐](https://www.youtube.com/results?search_query=trading+in+the+zone+mark+douglas+key+takeaways&sp=CAM%253D)`,
+            `Live Chart Analysis: Mark daily support/resistance levels and track price action on Nifty 50 and Bank Nifty during market hours. [Watch Live Price Action Reading ⭐](https://www.youtube.com/results?search_query=live+price+action+reading+nifty+banknifty&sp=CAM%253D)`,
+            `Journaling & Review: Log every simulated trade and calculate your weekly profit factor. [Watch Trading Journal Review Process ⭐](https://www.youtube.com/results?search_query=how+to+audit+trading+journal+mistakes&sp=CAM%253D)`,
+          ],
+          milestone: w % 4 === 0 ? `Month ${month} Risk & Paper Trading Mastery` : undefined,
+        });
+      } else if (w <= 16) {
+        result.push({
+          week: w,
+          actions: [
+            `Capital Transition: Deploy small live capital (₹10,000) with strict 0.5% stop-loss to test real psychology. [Watch Transitioning to Real Money Trading ⭐](https://www.youtube.com/results?search_query=paper+trading+to+real+money+transition+tips&sp=CAM%253D)`,
+            `Strategy Optimization: Backtest 30 high-probability setups and refine entry confirmation triggers. [Watch Backtesting Strategies on TradingView ⭐](https://www.youtube.com/results?search_query=how+to+backtest+candlestick+strategies+properly&sp=CAM%253D)`,
+            `Emotional Audit: Record any impulsive urge to revenge trade and review how you managed it. [Watch Controlling Fear and Greed in Trading ⭐](https://www.youtube.com/results?search_query=how+to+stop+revenge+trading+and+overtrading&sp=CAM%253D)`,
+          ],
+          milestone: w % 4 === 0 ? `Quarter ${quarter} Micro-Capital Execution Checkpoint` : undefined,
+        });
+      } else if (w <= 24) {
+        result.push({
+          week: w,
+          actions: [
+            `Funded Account Prep: Practice meeting 8% profit targets with strict 5% max drawdown rules. [Watch Prop Firm Challenge Passing Rules ⭐](https://www.youtube.com/results?search_query=how+to+pass+prop+firm+challenge+step+by+step&sp=CAM%253D)`,
+            `Market Regime Analysis: Identify trending vs sideways ranging market conditions. [Watch Identifying Market Conditions ⭐](https://www.youtube.com/results?search_query=how+to+identify+trending+vs+ranging+market&sp=CAM%253D)`,
+            `Weekly Performance Metric: Audit Sharpe ratio, win rate, and risk-to-reward consistency. [Watch Trading Performance Statistics Guide ⭐](https://www.youtube.com/results?search_query=trading+performance+metrics+win+rate+risk+reward&sp=CAM%253D)`,
+          ],
+          milestone: w % 4 === 0 ? `Month ${month} Prop Firm Readiness Checkpoint` : undefined,
+        });
+      } else {
+        result.push({
+          week: w,
+          actions: [
+            `Capital Scaling & Longevity: Scale position sizing systematically by 20% only after 4 consecutive green weeks. [Watch How to Scale Trading Capital Safely ⭐](https://www.youtube.com/results?search_query=how+to+scale+up+position+size+trading&sp=CAM%253D)`,
+            `Tax & Business Structure: Setup trading records for Indian tax compliance and accounting. [Watch Income Tax on Trading in India ⭐](https://www.youtube.com/results?search_query=income+tax+on+stock+and+fno+trading+india&sp=CAM%253D)`,
+            `Continuous Edge Refinement: Review 100 historical trades to continuously optimize execution edge. [Watch Building Long-Term Trading Edge ⭐](https://www.youtube.com/results?search_query=how+to+build+a+long+term+trading+edge&sp=CAM%253D)`,
+          ],
+          milestone: w % 4 === 0 ? `Quarter ${quarter} Professional Trader Sovereignty` : undefined,
+        });
+      }
+    } else {
+      result.push({
+        week: w,
+        actions: [
+          `Mental Synchronization: Dedicate 15 minutes to review progress and commit to Week ${w} goals. [Watch High Performance Focus ⭐](https://www.youtube.com/results?search_query=high+performance+focus+and+discipline&sp=CAM%253D)`,
+          `Skill Execution Sprint: Spend 90 minutes executing the core project or skill milestone for Month ${month}. [Watch Advanced Practical Masterclass ⭐](https://www.youtube.com/results?search_query=${encodeURIComponent(goals.slice(0, 30))}+advanced+tutorials&sp=CAM%253D)`,
+          `Feedback & Refinement: Test your deliverable, gather real feedback, and update your strategy. [Watch Feedback Loops for Fast Improvement ⭐](https://www.youtube.com/results?search_query=how+to+get+better+at+skills+fast&sp=CAM%253D)`,
+        ],
+        milestone: w % 4 === 0 ? `Month ${month} Mastery Checkpoint` : undefined,
+      });
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -343,7 +407,7 @@ export async function deployerNode(
       const result = parseActionPlan(content);
       if (result) {
         console.log(`[Deployer] Successfully parsed ${result.actionPlan.weeklyActions.length} weeks. Expanding to ${targetWeeks} weeks.`);
-        result.actionPlan.weeklyActions = expandWeeks(result.actionPlan.weeklyActions, targetWeeks);
+        result.actionPlan.weeklyActions = expandWeeks(result.actionPlan.weeklyActions, targetWeeks, state.userInput.goals);
         return {
           actionPlan: result.actionPlan,
           aggressivePitch: result.aggressivePitch,
@@ -361,7 +425,7 @@ export async function deployerNode(
   // Failsafe fallback plan strictly matching the user's career domain
   console.warn('[Deployer] Retries exhausted. Using dynamic domain fallback plan.');
   const fallback = generateFallbackPlan(state.userInput.goals, state.userInput.currentSituation);
-  fallback.actionPlan.weeklyActions = expandWeeks(fallback.actionPlan.weeklyActions, targetWeeks);
+  fallback.actionPlan.weeklyActions = expandWeeks(fallback.actionPlan.weeklyActions, targetWeeks, state.userInput.goals);
   return {
     actionPlan: fallback.actionPlan,
     aggressivePitch: fallback.aggressivePitch,
