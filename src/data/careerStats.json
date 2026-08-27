@@ -1,0 +1,74 @@
+{
+  "ml_engineer": {
+    "title": "Machine Learning Engineer",
+    "emoji": "🤖",
+    "marketDemand": "14,200+ open roles globally this week",
+    "demandDetail": "India: 2,400+ | US: 8,500+ | Remote: 3,300+",
+    "salaryRange": "₹8L – ₹28L / year (India entry–senior)",
+    "salaryGlobal": "$95K – $195K / year (US market)",
+    "topSkill": "Python + PyTorch / TensorFlow + LLM fine-tuning",
+    "growthRate": "+35% YoY demand increase",
+    "timeToHire": "Avg. 8–12 weeks to first offer",
+    "topCompanies": ["Google DeepMind", "Meta AI", "OpenAI", "Hugging Face", "Anthropic"]
+  },
+  "full_stack_dev": {
+    "title": "Full Stack Developer",
+    "emoji": "💻",
+    "marketDemand": "31,000+ open roles globally this week",
+    "demandDetail": "India: 9,200+ | US: 15,800+ | Remote: 6,000+",
+    "salaryRange": "₹5L – ₹22L / year (India entry–senior)",
+    "salaryGlobal": "$70K – $155K / year (US market)",
+    "topSkill": "React / Next.js + Node.js + TypeScript",
+    "growthRate": "+18% YoY demand increase",
+    "timeToHire": "Avg. 4–7 weeks to first offer",
+    "topCompanies": ["Shopify", "Stripe", "Vercel", "GitHub", "Atlassian"]
+  },
+  "commercial_pilot": {
+    "title": "Commercial Airline Pilot",
+    "emoji": "✈️",
+    "marketDemand": "4,800 open cockpit positions globally this week",
+    "demandDetail": "India: 320+ | Middle East: 1,200+ | US/EU: 3,300+",
+    "salaryRange": "₹6L – ₹35L / year (India — FO to Captain)",
+    "salaryGlobal": "$55K – $340K / year (US legacy carrier Captain)",
+    "topSkill": "ATPL + Boeing 737 / A320 Type Rating",
+    "growthRate": "+22% projected shortfall by 2028",
+    "timeToHire": "Avg. 18–36 months after ATPL to first airline job",
+    "topCompanies": ["IndiGo", "Air India", "Emirates", "Delta Air Lines", "Singapore Airlines"]
+  },
+  "data_scientist": {
+    "title": "Data Scientist",
+    "emoji": "📊",
+    "marketDemand": "18,500+ open roles globally this week",
+    "demandDetail": "India: 5,100+ | US: 9,800+ | Remote: 3,600+",
+    "salaryRange": "₹7L – ₹24L / year (India entry–senior)",
+    "salaryGlobal": "$85K – $170K / year (US market)",
+    "topSkill": "Python + SQL + Causal Inference + ML experimentation",
+    "growthRate": "+28% YoY demand increase",
+    "timeToHire": "Avg. 6–10 weeks to first offer",
+    "topCompanies": ["Netflix", "Airbnb", "Spotify", "Walmart Labs", "Flipkart"]
+  },
+  "product_manager": {
+    "title": "Product Manager",
+    "emoji": "🎯",
+    "marketDemand": "11,300+ open roles globally this week",
+    "demandDetail": "India: 3,400+ | US: 6,100+ | Remote: 1,800+",
+    "salaryRange": "₹10L – ₹40L / year (India PM to Senior PM)",
+    "salaryGlobal": "$100K – $220K / year (US market)",
+    "topSkill": "Product Strategy + Data Analytics + Roadmapping",
+    "growthRate": "+15% YoY demand increase",
+    "timeToHire": "Avg. 8–14 weeks to first PM offer",
+    "topCompanies": ["Google", "Amazon", "Microsoft", "Razorpay", "PhonePe"]
+  },
+  "other": {
+    "title": "Entrepreneurship / General",
+    "emoji": "🚀",
+    "marketDemand": "Highly variable by sector and goal",
+    "demandDetail": "Refine your goal for a more targeted career analysis",
+    "salaryRange": "Unlimited upside — depends on execution",
+    "salaryGlobal": "Self-determined based on venture / niche",
+    "topSkill": "Execution + Resilience + Market Positioning",
+    "growthRate": "+12% startup formation rate YoY",
+    "timeToHire": "Varies — define your goal more specifically",
+    "topCompanies": ["Your Future Company", "Bootstrapped", "VC-backed", "Freelance"]
+  }
+}

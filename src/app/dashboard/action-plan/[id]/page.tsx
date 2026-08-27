@@ -10,6 +10,7 @@ import * as THREE from "three";
 import Button from "@/components/ui/Button";
 import VibeCore from "@/components/three/VibeCore";
 import { DEMO_SIMULATION } from "@/lib/demoSimulation";
+import SuccessForecastCard from "@/components/SuccessForecastCard";
 
 // PDF styles to inject when printing
 const printStyles = `
@@ -169,6 +170,9 @@ export default function ActionPlanPage() {
   const [activeFilter, setActiveFilter] = useState<"all" | "p1" | "p2" | "p3" | "milestones">("all");
   const [expandedAction, setExpandedAction] = useState<string | null>(null);
 
+  // Weekly Check-In data for Success Forecast (loaded from localStorage)
+  const [checkIns, setCheckIns] = useState<{ weekNumber: number; completionPercent: number }[]>([]);
+
   useEffect(() => {
     async function fetchSim() {
       try {
@@ -189,6 +193,26 @@ export default function ActionPlanPage() {
       }
     }
     fetchSim();
+  }, [id]);
+
+  // Load check-ins for this simulation from localStorage
+  useEffect(() => {
+    if (!id || typeof window === "undefined") return;
+    try {
+      const raw = localStorage.getItem(`checkins_${id}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setCheckIns(parsed);
+      } else {
+        // Demo: seed with 3 fake check-ins so the forecast card shows immediately
+        const demo = [
+          { weekNumber: 1, completionPercent: 70 },
+          { weekNumber: 2, completionPercent: 65 },
+          { weekNumber: 3, completionPercent: 75 },
+        ];
+        setCheckIns(demo);
+      }
+    } catch { /* ignore */ }
   }, [id]);
 
   if (loading) {
@@ -631,6 +655,17 @@ export default function ActionPlanPage() {
                 </div>
               </div>
             )}
+
+            {/* AI Success Forecast Card */}
+            <div className="w-full">
+              <SuccessForecastCard
+                simulationId={id}
+                checkIns={checkIns}
+                totalWeeks={state?.actionPlan?.weeklyActions?.length || 12}
+                totalTasks={totalActions}
+                completedTasks={checkedItems.size}
+              />
+            </div>
 
             {/* Weekly Sprints List */}
             {filteredWeeks.map((week, index) => (
