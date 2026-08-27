@@ -1,0 +1,248 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" width="100%" height="100%" style="background:#090912; font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0c0b1a" />
+      <stop offset="50%" stop-color="#07070d" />
+      <stop offset="100%" stop-color="#0e0a1f" />
+    </linearGradient>
+    <linearGradient id="violetGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="amberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <linearGradient id="roseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f43f5e" />
+      <stop offset="100%" stop-color="#e11d48" />
+    </linearGradient>
+
+    <!-- Filters & Glows -->
+    <filter id="glowViolet" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="glowCyan" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.6" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="780" fill="url(#bgGrad)" />
+
+  <!-- Ambient Glow Orbs -->
+  <circle cx="150" cy="150" r="180" fill="#7c3aed" opacity="0.12" filter="blur(50px)" />
+  <circle cx="1050" cy="200" r="220" fill="#3b82f6" opacity="0.1" filter="blur(60px)" />
+  <circle cx="600" cy="650" r="260" fill="#10b981" opacity="0.08" filter="blur(70px)" />
+
+  <!-- Title Banner -->
+  <g transform="translate(60, 40)">
+    <rect x="0" y="0" width="1080" height="60" rx="16" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" />
+    <text x="30" y="38" fill="#ffffff" font-size="22" font-weight="800" letter-spacing="1">🌌 VIBEFORGE</text>
+    <text x="185" y="38" fill="#a78bfa" font-size="16" font-weight="600">| Full-Stack AI Simulation &amp; Machine Learning Architecture</text>
+    <rect x="910" y="16" width="140" height="28" rx="8" fill="url(#violetGrad)" />
+    <text x="980" y="35" fill="#ffffff" font-size="12" font-weight="700" text-anchor="middle">v2.4 PRODUCTION</text>
+  </g>
+
+  <!-- ================= TIER 1: FRONTEND LAYER ================= -->
+  <g transform="translate(60, 125)">
+    <!-- Container Box -->
+    <rect x="0" y="0" width="1080" height="155" rx="20" fill="rgba(18, 17, 30, 0.75)" stroke="rgba(139, 92, 246, 0.3)" filter="url(#cardShadow)" />
+    <rect x="24" y="-12" width="220" height="24" rx="6" fill="#7c3aed" />
+    <text x="134" y="4" fill="#ffffff" font-size="11" font-weight="800" text-anchor="middle" letter-spacing="1">1. PRESENTATION LAYER (Next.js 16)</text>
+
+    <!-- Card 1: Command Center -->
+    <g transform="translate(24, 25)">
+      <rect width="190" height="110" rx="14" fill="rgba(255,255,255,0.04)" stroke="#7c3aed" stroke-width="1.5" />
+      <text x="20" y="32" fill="#c4b5fd" font-size="18">🎯</text>
+      <text x="48" y="32" fill="#ffffff" font-size="14" font-weight="700">Command Center</text>
+      <text x="20" y="55" fill="#94a3b8" font-size="11">3D Particle Timeline</text>
+      <text x="20" y="72" fill="#94a3b8" font-size="11">Multiverse Risk Splitter</text>
+      <rect x="20" y="85" width="150" height="18" rx="4" fill="rgba(124, 58, 237, 0.2)" />
+      <text x="95" y="98" fill="#a78bfa" font-size="9" font-weight="700" text-anchor="middle">/dashboard/results/[id]</text>
+    </g>
+
+    <!-- Card 2: Reality Check -->
+    <g transform="translate(234, 25)">
+      <rect width="190" height="110" rx="14" fill="rgba(255,255,255,0.04)" stroke="#3b82f6" stroke-width="1.5" />
+      <text x="20" y="32" fill="#93c5fd" font-size="18">⚡</text>
+      <text x="48" y="32" fill="#ffffff" font-size="14" font-weight="700">Reality Check ML</text>
+      <text x="20" y="55" fill="#94a3b8" font-size="11">NLP Career Classifier</text>
+      <text x="20" y="72" fill="#94a3b8" font-size="11">Live Market &amp; Salary Stats</text>
+      <rect x="20" y="85" width="150" height="18" rx="4" fill="rgba(59, 130, 246, 0.2)" />
+      <text x="95" y="98" fill="#60a5fa" font-size="9" font-weight="700" text-anchor="middle">/reality-check/[id]</text>
+    </g>
+
+    <!-- Card 3: Execution Protocol -->
+    <g transform="translate(444, 25)">
+      <rect width="190" height="110" rx="14" fill="rgba(255,255,255,0.04)" stroke="#10b981" stroke-width="1.5" />
+      <text x="20" y="32" fill="#6ee7b7" font-size="18">📋</text>
+      <text x="48" y="32" fill="#ffffff" font-size="14" font-weight="700">Execution Protocol</text>
+      <text x="20" y="55" fill="#94a3b8" font-size="11">Success ML Forecast Card</text>
+      <text x="20" y="72" fill="#94a3b8" font-size="11">12-Week Staircase + Rewards</text>
+      <rect x="20" y="85" width="150" height="18" rx="4" fill="rgba(16, 185, 129, 0.2)" />
+      <text x="95" y="98" fill="#34d399" font-size="9" font-weight="700" text-anchor="middle">/action-plan/[id]</text>
+    </g>
+
+    <!-- Card 4: Future Holograms -->
+    <g transform="translate(654, 25)">
+      <rect width="190" height="110" rx="14" fill="rgba(255,255,255,0.04)" stroke="#f59e0b" stroke-width="1.5" />
+      <text x="20" y="32" fill="#fde68a" font-size="18">🔮</text>
+      <text x="48" y="32" fill="#ffffff" font-size="14" font-weight="700">Future Holograms</text>
+      <text x="20" y="55" fill="#94a3b8" font-size="11">3D Holographic Chamber</text>
+      <text x="20" y="72" fill="#94a3b8" font-size="11">Step-by-Step Inspector</text>
+      <rect x="20" y="85" width="150" height="18" rx="4" fill="rgba(245, 158, 11, 0.2)" />
+      <text x="95" y="98" fill="#fbbf24" font-size="9" font-weight="700" text-anchor="middle">/gallery/[id]</text>
+    </g>
+
+    <!-- Card 5: Cinematic Overlook -->
+    <g transform="translate(864, 25)">
+      <rect width="190" height="110" rx="14" fill="rgba(255,255,255,0.04)" stroke="#ec4899" stroke-width="1.5" />
+      <text x="20" y="32" fill="#fbcfe8" font-size="18">🎙️</text>
+      <text x="48" y="32" fill="#ffffff" font-size="14" font-weight="700">Cinematic Overlook</text>
+      <text x="20" y="55" fill="#94a3b8" font-size="11">AI Voice Narration Sync</text>
+      <text x="20" y="72" fill="#94a3b8" font-size="11">3D Audio Cosmic Space</text>
+      <rect x="20" y="85" width="150" height="18" rx="4" fill="rgba(236, 72, 153, 0.2)" />
+      <text x="95" y="98" fill="#f472b6" font-size="9" font-weight="700" text-anchor="middle">/narrative/[id]</text>
+    </g>
+  </g>
+
+  <!-- Connectors from Tier 1 to Tier 2 -->
+  <path d="M 390 280 L 390 320" stroke="#06b6d4" stroke-width="2" stroke-dasharray="4,4" />
+  <path d="M 600 280 L 600 320" stroke="#8b5cf6" stroke-width="2" />
+  <path d="M 810 280 L 810 320" stroke="#10b981" stroke-width="2" stroke-dasharray="4,4" />
+
+  <!-- ================= TIER 2: API & PROXY GATEWAY ================= -->
+  <g transform="translate(60, 320)">
+    <rect x="0" y="0" width="1080" height="90" rx="18" fill="rgba(18, 17, 30, 0.75)" stroke="rgba(6, 182, 212, 0.3)" filter="url(#cardShadow)" />
+    <rect x="24" y="-12" width="200" height="24" rx="6" fill="#0891b2" />
+    <text x="124" y="4" fill="#ffffff" font-size="11" font-weight="800" text-anchor="middle" letter-spacing="1">2. API GATEWAY &amp; EDGE ROUTES</text>
+
+    <!-- Route Pills -->
+    <g transform="translate(30, 30)">
+      <rect width="185" height="42" rx="10" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
+      <text x="15" y="26" fill="#a78bfa" font-size="11" font-weight="700">POST /api/agents</text>
+      <text x="130" y="26" fill="#64748b" font-size="10">LangGraph</text>
+    </g>
+
+    <g transform="translate(235, 30)">
+      <rect width="210" height="42" rx="10" fill="rgba(6, 182, 212, 0.08)" stroke="#06b6d4" />
+      <text x="15" y="26" fill="#38bdf8" font-size="11" font-weight="700">POST /api/classify-goal</text>
+      <text x="160" y="26" fill="#0284c7" font-size="10">1.5s Fallback</text>
+    </g>
+
+    <g transform="translate(465, 30)">
+      <rect width="210" height="42" rx="10" fill="rgba(16, 185, 129, 0.08)" stroke="#10b981" />
+      <text x="15" y="26" fill="#34d399" font-size="11" font-weight="700">POST /api/predict-success</text>
+      <text x="175" y="26" fill="#059669" font-size="10">ML Proxy</text>
+    </g>
+
+    <g transform="translate(695, 30)">
+      <rect width="180" height="42" rx="10" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
+      <text x="15" y="26" fill="#fde047" font-size="11" font-weight="700">POST /api/generate-image</text>
+      <text x="150" y="26" fill="#64748b" font-size="10">Flux</text>
+    </g>
+
+    <g transform="translate(895, 30)">
+      <rect width="155" height="42" rx="10" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
+      <text x="15" y="26" fill="#f43f5e" font-size="11" font-weight="700">POST /api/razorpay</text>
+      <text x="125" y="26" fill="#64748b" font-size="10">Orders</text>
+    </g>
+  </g>
+
+  <!-- Connectors from Tier 2 to Tier 3 -->
+  <path d="M 250 410 L 250 450" stroke="#8b5cf6" stroke-width="2" />
+  <path d="M 850 410 L 850 450" stroke="#06b6d4" stroke-width="2" />
+
+  <!-- ================= TIER 3: AI & ML ENGINES ================= -->
+  <!-- Left Box: LangGraph Multi-Agent Engine -->
+  <g transform="translate(60, 450)">
+    <rect x="0" y="0" width="520" height="175" rx="20" fill="rgba(18, 17, 30, 0.75)" stroke="rgba(139, 92, 246, 0.35)" filter="url(#cardShadow)" />
+    <rect x="24" y="-12" width="220" height="24" rx="6" fill="#6d28d9" />
+    <text x="134" y="4" fill="#ffffff" font-size="11" font-weight="800" text-anchor="middle" letter-spacing="1">3A. LANGGRAPH AGENT ENGINE</text>
+
+    <!-- Agent 1 -->
+    <g transform="translate(24, 28)">
+      <rect width="220" height="56" rx="10" fill="rgba(255,255,255,0.03)" stroke="rgba(139, 92, 246, 0.3)" />
+      <text x="15" y="24" fill="#c4b5fd" font-size="12" font-weight="700">🔬 Trend Researcher</text>
+      <text x="15" y="44" fill="#94a3b8" font-size="10">Groq / Llama 3.3 70B Fast Analysis</text>
+    </g>
+
+    <!-- Agent 2 -->
+    <g transform="translate(274, 28)">
+      <rect width="220" height="56" rx="10" fill="rgba(255,255,255,0.03)" stroke="rgba(139, 92, 246, 0.3)" />
+      <text x="15" y="24" fill="#c4b5fd" font-size="12" font-weight="700">🧠 Scenario Simulator</text>
+      <text x="15" y="44" fill="#94a3b8" font-size="10">Claude Sonnet 4 / Parallel Realities</text>
+    </g>
+
+    <!-- Feedback Loop Badge -->
+    <g transform="translate(24, 100)">
+      <rect width="470" height="56" rx="10" fill="rgba(124, 58, 237, 0.08)" stroke="#7c3aed" stroke-dasharray="4,4" />
+      <text x="20" y="24" fill="#a78bfa" font-size="11" font-weight="700">🔄 Feedback Loop: Obstacle Detection &gt; 70%</text>
+      <text x="20" y="44" fill="#cbd5e1" font-size="10">🎨 Visualizer Prompts + 📋 Deployer 12-Week Action Roadmaps</text>
+    </g>
+  </g>
+
+  <!-- Right Box: Python FastAPI ML Microservice -->
+  <g transform="translate(620, 450)">
+    <rect x="0" y="0" width="520" height="175" rx="20" fill="rgba(18, 17, 30, 0.75)" stroke="rgba(16, 185, 129, 0.35)" filter="url(#cardShadow)" />
+    <rect x="24" y="-12" width="220" height="24" rx="6" fill="#059669" />
+    <text x="134" y="4" fill="#ffffff" font-size="11" font-weight="800" text-anchor="middle" letter-spacing="1">3B. PYTHON ML SERVICE (:8000)</text>
+
+    <!-- Model 1 -->
+    <g transform="translate(24, 28)">
+      <rect width="220" height="128" rx="12" fill="rgba(255,255,255,0.03)" stroke="#3b82f6" />
+      <text x="15" y="24" fill="#60a5fa" font-size="12" font-weight="700">🎯 Career Goal Classifier</text>
+      <text x="15" y="45" fill="#94a3b8" font-size="10">Model: TF-IDF + LogisticReg</text>
+      <text x="15" y="65" fill="#94a3b8" font-size="10">Classes: 6 Career Domains</text>
+      <rect x="15" y="80" width="190" height="34" rx="6" fill="rgba(59, 130, 246, 0.15)" />
+      <text x="110" y="102" fill="#93c5fd" font-size="12" font-weight="800" text-anchor="middle">95.0% TEST ACCURACY</text>
+    </g>
+
+    <!-- Model 2 -->
+    <g transform="translate(274, 28)">
+      <rect width="220" height="128" rx="12" fill="rgba(255,255,255,0.03)" stroke="#10b981" />
+      <text x="15" y="24" fill="#34d399" font-size="12" font-weight="700">📈 Success Forecaster</text>
+      <text x="15" y="45" fill="#94a3b8" font-size="10">Model: Random Forest (200 trees)</text>
+      <text x="15" y="65" fill="#94a3b8" font-size="10">Features: 4 Behavioral Vectors</text>
+      <rect x="15" y="80" width="190" height="34" rx="6" fill="rgba(16, 185, 129, 0.15)" />
+      <text x="110" y="102" fill="#6ee7b7" font-size="12" font-weight="800" text-anchor="middle">80.4% TEST ACCURACY</text>
+    </g>
+  </g>
+
+  <!-- ================= TIER 4: PERSISTENCE & DATA ================= -->
+  <g transform="translate(60, 655)">
+    <rect x="0" y="0" width="1080" height="85" rx="16" fill="rgba(18, 17, 30, 0.75)" stroke="rgba(255,255,255,0.1)" />
+    <rect x="24" y="-10" width="160" height="20" rx="5" fill="#334155" />
+    <text x="104" y="4" fill="#ffffff" font-size="10" font-weight="800" text-anchor="middle">4. PERSISTENCE LAYER</text>
+
+    <g transform="translate(30, 22)">
+      <text x="0" y="22" fill="#ffffff" font-size="13" font-weight="700">🐘 Supabase PostgreSQL</text>
+      <text x="0" y="42" fill="#94a3b8" font-size="11">`simulations` JSONB, auth &amp; telemetry</text>
+    </g>
+
+    <g transform="translate(390, 22)">
+      <text x="0" y="22" fill="#ffffff" font-size="13" font-weight="700">⚡ Vector Search (pgvector)</text>
+      <text x="0" y="42" fill="#94a3b8" font-size="11">Goal embeddings &amp; semantic matching</text>
+    </g>
+
+    <g transform="translate(750, 22)">
+      <text x="0" y="22" fill="#ffffff" font-size="13" font-weight="700">💾 Browser LocalStorage Cache</text>
+      <text x="0" y="42" fill="#94a3b8" font-size="11">Instant zero-latency fallback state</text>
+    </g>
+  </g>
+</svg>
