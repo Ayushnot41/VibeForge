@@ -339,7 +339,45 @@ export default function ActionPlanPage() {
     document.body.removeChild(link);
   };
 
-  const [isExportingPDF, setIsExportingPDF] = useState(false);
+  const [liveRivalData, setLiveRivalData] = useState<{
+    rivalName?: string;
+    rivalArchetype?: string;
+    rivalStatus?: string;
+    rivalLeadDays?: number;
+    rivalCompletionPct?: number;
+    userCompletionPct?: number;
+    egoTaunt?: string;
+    egoChallenge?: string;
+  } | null>(null);
+  const [isProvokingRival, setIsProvokingRival] = useState(false);
+
+  const triggerRivalEgoTaunt = async () => {
+    if (!state) return;
+    setIsProvokingRival(true);
+    try {
+      const res = await fetch("/api/rival/challenge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          goals: state.userInput?.goals || "Elite Professional",
+          situation: state.userInput?.currentSituation || "Student / Professional",
+          weekNumber: 1,
+          completedCount: checkedItems.size,
+          totalActions: totalActions || 3,
+          streak: checkedItems.size > 0 ? 3 : 0,
+          timeline: state.userInput?.timeline || "3 years",
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLiveRivalData(data);
+      }
+    } catch (e) {
+      console.error("Rival challenge fetch error:", e);
+    } finally {
+      setIsProvokingRival(false);
+    }
+  };
 
   const exportDirectPDF = async () => {
     if (!state || !state.actionPlan) return;
@@ -358,12 +396,17 @@ export default function ActionPlanPage() {
       const weeksList = state.actionPlan.weeklyActions || [];
       const totalW = weeksList.length;
       const habits = state.actionPlan.habits || [];
-      const rival = state.actionPlan.rival || {
+      const rival = liveRivalData?.rivalName ? {
+        name: liveRivalData.rivalName,
+        bio: liveRivalData.rivalStatus || "Relentless daily execution without excuses.",
+        taunts: [liveRivalData.egoTaunt || "I practiced today without hesitation. Did you?"],
+        progressOffset: liveRivalData.rivalLeadDays || 7,
+      } : (state.actionPlan.rival || {
         name: "The Disciplined Competitor",
         bio: "Relentless execution every single day without excuses.",
         taunts: ["I practiced today without hesitation. Did you?"],
         progressOffset: 7,
-      };
+      });
 
       // Helper to paint pure obsidian dark theme background on any page
       const paintDarkBackground = () => {
@@ -567,28 +610,29 @@ export default function ActionPlanPage() {
 
       y += 48;
 
-      // ─── RIVAL & HABITS BOX ──────────────────────────────────────
+      // ─── RIVAL EGO-WAR SCORECARD ─────────────────────────────────
       pdf.setFillColor(24, 8, 15);
-      pdf.roundedRect(margin, y, contentWidth, 18, 3, 3, "F");
+      pdf.roundedRect(margin, y, contentWidth, 22, 3, 3, "F");
       pdf.setDrawColor(239, 68, 68);
       pdf.setLineWidth(0.4);
-      pdf.roundedRect(margin, y, contentWidth, 18, 3, 3, "D");
+      pdf.roundedRect(margin, y, contentWidth, 22, 3, 3, "D");
 
       pdf.setFontSize(8.5);
       pdf.setFont("helvetica", "bold");
       pdf.setTextColor(248, 113, 113);
-      pdf.text(`⚔️ Active Challenger: ${rival.name} (${rival.progressOffset} days ahead)`, margin + 4, y + 5.5);
+      pdf.text(`⚔️ Active Challenger: ${rival.name} (+${rival.progressOffset} days pace lead)`, margin + 4, y + 5.5);
 
-      pdf.setFontSize(7.5);
+      pdf.setFontSize(7.2);
       pdf.setFont("helvetica", "normal");
       pdf.setTextColor(252, 165, 165);
-      pdf.text(rival.bio, margin + 4, y + 10);
+      pdf.text(rival.bio.slice(0, 95), margin + 4, y + 10);
 
       pdf.setFont("helvetica", "italic");
       pdf.setTextColor(255, 255, 255);
-      pdf.text(`"${rival.taunts?.[0] || 'I practiced today without hesitation. Did you?'}"`, margin + 4, y + 14.5);
+      const tauntSplit = pdf.splitTextToSize(`"${rival.taunts?.[0] || 'I completed my deep work session today without excuses. Did you?'}"`, contentWidth - 8);
+      pdf.text(tauntSplit, margin + 4, y + 14.5);
 
-      y += 24;
+      y += 28;
 
       // ─── HABITS TRACKER ──────────────────────────────────────────
       if (habits.length > 0) {
@@ -623,7 +667,7 @@ export default function ActionPlanPage() {
         y += 22;
       }
 
-      // ─── WEEKLY SPRINTS TABLE ────────────────────────────────────
+      // ─── WEEKLY SPRINTS TABLE WITH LIVE YOUTUBE LINKS ─────────────
       checkPageBreak(30);
       pdf.setFontSize(12);
       pdf.setFont("helvetica", "bold");
@@ -632,7 +676,7 @@ export default function ActionPlanPage() {
       y += 6;
 
       weeksList.forEach((week) => {
-        const estimatedHeight = 10 + week.actions.length * 10;
+        const estimatedHeight = 12 + week.actions.length * 11;
         checkPageBreak(estimatedHeight);
 
         // Week Card Container
@@ -659,10 +703,24 @@ export default function ActionPlanPage() {
 
         let actY = y + 9.5;
         week.actions.forEach((act: string) => {
-          const linkMatch = act.match(/(.*)\[([^\]]+)\]\((https?:\/\/[^\)]+)\)(.*)/);
-          const textPart = linkMatch ? (linkMatch[1] + (linkMatch[4] || "")) : act;
-          const ytUrl = linkMatch ? linkMatch[3] : `https://www.youtube.com/results?search_query=${encodeURIComponent(textPart.slice(0, 50))}&sp=CAM%253D`;
-          const ytLabel = linkMatch ? linkMatch[2] : "Watch Video Guide ⭐";
+          // Extract all markdown links: [Title](URL)
+          const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
+          const links: { label: string; url: string }[] = [];
+          let match;
+          while ((match = linkRegex.exec(act)) !== null) {
+            links.push({ label: match[1], url: match[2] });
+          }
+
+          const cleanText = act.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, "$1").trim();
+
+          // Fallback YouTube link if none specified in text
+          if (links.length === 0) {
+            const searchTopic = encodeURIComponent(`${cleanText.slice(0, 45)} tutorial masterclass`);
+            links.push({
+              label: "Watch Video Guide ⭐",
+              url: `https://www.youtube.com/results?search_query=${searchTopic}&sp=CAM%253D`,
+            });
+          }
 
           // Checkbox box
           pdf.setDrawColor(100, 116, 139);
@@ -672,21 +730,29 @@ export default function ActionPlanPage() {
           pdf.setFontSize(7.2);
           pdf.setFont("helvetica", "normal");
           pdf.setTextColor(226, 232, 240);
-          const splitText = pdf.splitTextToSize(textPart.trim(), contentWidth - 16);
+          const splitText = pdf.splitTextToSize(cleanText, contentWidth - 16);
           pdf.text(splitText, margin + 9, actY);
 
           const textHeight = splitText.length * 3.5;
 
-          // YouTube pill button link
-          pdf.setFillColor(220, 38, 38);
-          pdf.roundedRect(margin + 9, actY + textHeight - 1.5, 48, 3.5, 1, 1, "F");
-          pdf.setFontSize(5.5);
-          pdf.setFont("helvetica", "bold");
-          pdf.setTextColor(255, 255, 255);
-          pdf.text(`▶ ${ytLabel.slice(0, 28)} ↗`, margin + 11, actY + textHeight + 1);
-          pdf.link(margin + 9, actY + textHeight - 1.5, 48, 3.5, { url: ytUrl });
+          // Render each YouTube pill button link
+          let btnX = margin + 9;
+          links.slice(0, 2).forEach((linkItem) => {
+            const btnLabel = `▶ ${linkItem.label.slice(0, 26)} ↗`;
+            const btnWidth = Math.min(54, Math.max(38, btnLabel.length * 1.8));
 
-          actY += textHeight + 5.5;
+            pdf.setFillColor(220, 38, 38);
+            pdf.roundedRect(btnX, actY + textHeight - 1.5, btnWidth, 3.8, 1, 1, "F");
+            pdf.setFontSize(5.5);
+            pdf.setFont("helvetica", "bold");
+            pdf.setTextColor(255, 255, 255);
+            pdf.text(btnLabel, btnX + 1.5, actY + textHeight + 1.2);
+            pdf.link(btnX, actY + textHeight - 1.5, btnWidth, 3.8, { url: linkItem.url });
+
+            btnX += btnWidth + 3;
+          });
+
+          actY += textHeight + 6;
         });
 
         y += estimatedHeight + 2;
@@ -966,8 +1032,8 @@ export default function ActionPlanPage() {
 
       {/* AI Adversary Rival & Ego-Hurt Matrix — Desktop Dock */}
       {state.actionPlan.rival && (
-        <div className="hidden md:block fixed bottom-6 left-6 w-[320px] z-30 pointer-events-auto no-print">
-          <div className="p-4 rounded-2xl bg-zinc-950/90 backdrop-blur-xl border border-zinc-800 shadow-2xl relative overflow-hidden">
+        <div className="hidden md:block fixed bottom-6 left-6 w-[340px] z-30 pointer-events-auto no-print">
+          <div className="p-4 rounded-2xl bg-zinc-950/95 backdrop-blur-xl border border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.2)] relative overflow-hidden">
             <div className="flex justify-between items-center mb-2">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
@@ -976,12 +1042,12 @@ export default function ActionPlanPage() {
                 </h3>
               </div>
               <span className="text-[10px] bg-red-500/10 border border-red-500/30 px-2 py-0.5 rounded-full text-red-400 font-bold font-mono">
-                +{state.actionPlan.rival.progressOffset || 7}d Lead
+                +{liveRivalData?.rivalLeadDays || state.actionPlan.rival.progressOffset || 7}d Pace Lead
               </span>
             </div>
 
             <p className="text-zinc-400 text-xs mb-2 leading-relaxed">
-              <strong className="text-zinc-200">{state.actionPlan.rival.name}</strong> is relentlessly executing.
+              <strong className="text-zinc-200">{liveRivalData?.rivalName || state.actionPlan.rival.name}</strong> ({liveRivalData?.rivalStatus ? liveRivalData.rivalStatus.slice(0, 55) : "Relentlessly executing at 5:30 AM"}).
             </p>
 
             {/* Dynamic Ego-Hurt Psychological Taunt */}
@@ -992,7 +1058,7 @@ export default function ActionPlanPage() {
                   setRivalTauntIndex((prev) => (prev + 1) % taunts.length);
                 }
               }}
-              className="bg-black/60 p-2.5 rounded-xl border border-zinc-800 mb-2.5 cursor-pointer hover:border-zinc-700 transition-all group"
+              className="bg-black/70 p-2.5 rounded-xl border border-red-500/20 mb-2.5 cursor-pointer hover:border-red-500/40 transition-all group"
               title="Click to cycle adversary taunts"
             >
               <div className="flex items-center justify-between text-[10px] text-red-400 font-mono mb-1">
@@ -1000,16 +1066,20 @@ export default function ActionPlanPage() {
                 <span className="text-zinc-500 group-hover:text-zinc-300">Tap ↻</span>
               </div>
               <p className="text-zinc-300 text-xs italic font-medium leading-snug">
-                "{state.actionPlan.rival.taunts?.[rivalTauntIndex % (state.actionPlan.rival.taunts.length || 1)] || 'While you make excuses, your competition is executing.'}"
+                "{liveRivalData?.egoTaunt || state.actionPlan.rival.taunts?.[rivalTauntIndex % (state.actionPlan.rival.taunts.length || 1)] || 'While you make excuses, your competition is executing.'}"
               </p>
             </div>
 
-            {/* Estimated Laziness Slippage Loss */}
+            {/* Opportunity Loss & Rival Provoke Bar */}
             <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 bg-white/[0.02] px-2.5 py-1.5 rounded-lg mb-2.5 border border-white/5">
-              <span>Opportunity Loss:</span>
-              <span className="text-red-400 font-bold">
-                ₹{((state.actionPlan.rival.progressOffset || 7) * 12500).toLocaleString('en-IN')}
-              </span>
+              <span>Rival Lead: <strong className="text-red-400">+{liveRivalData?.rivalLeadDays || state.actionPlan.rival.progressOffset || 7} Days</strong></span>
+              <button
+                onClick={triggerRivalEgoTaunt}
+                disabled={isProvokingRival}
+                className="text-amber-400 hover:text-amber-300 underline font-bold"
+              >
+                {isProvokingRival ? "Analyzing..." : "⚡ Provoke Rival"}
+              </button>
             </div>
 
             {/* Interactive Actions */}
@@ -1038,7 +1108,7 @@ export default function ActionPlanPage() {
                 ) : (
                   <>
                     <span>🔥</span>
-                    <span>25m Sprint</span>
+                    <span>25m Ego Sprint</span>
                   </>
                 )}
               </button>
@@ -1062,7 +1132,7 @@ export default function ActionPlanPage() {
             className="px-3.5 py-2 rounded-full bg-zinc-950/90 backdrop-blur-md border border-red-500/40 text-xs font-bold text-white shadow-xl flex items-center gap-2"
           >
             <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-            <span>⚔️ Rival (+{state.actionPlan.rival.progressOffset || 7}d)</span>
+            <span>⚔️ Rival (+{liveRivalData?.rivalLeadDays || state.actionPlan.rival.progressOffset || 7}d)</span>
           </button>
         </div>
       )}
@@ -1097,16 +1167,23 @@ export default function ActionPlanPage() {
               </div>
 
               <p className="text-zinc-400 text-xs">
-                <strong className="text-zinc-200">{state.actionPlan.rival.name}</strong> is outworking you by +{state.actionPlan.rival.progressOffset || 7} days.
+                <strong className="text-zinc-200">{liveRivalData?.rivalName || state.actionPlan.rival.name}</strong> is outworking you by +{liveRivalData?.rivalLeadDays || state.actionPlan.rival.progressOffset || 7} days.
               </p>
 
               <div className="bg-black/60 p-3 rounded-xl border border-zinc-800">
                 <p className="text-zinc-300 text-xs italic">
-                  "{state.actionPlan.rival.taunts?.[rivalTauntIndex % (state.actionPlan.rival.taunts.length || 1)] || 'While you make excuses, your competition is executing.'}"
+                  "{liveRivalData?.egoTaunt || state.actionPlan.rival.taunts?.[rivalTauntIndex % (state.actionPlan.rival.taunts.length || 1)] || 'While you make excuses, your competition is executing.'}"
                 </p>
               </div>
 
               <div className="flex items-center gap-2 pt-2">
+                <button
+                  onClick={triggerRivalEgoTaunt}
+                  disabled={isProvokingRival}
+                  className="py-2.5 px-3 rounded-xl text-xs font-bold bg-zinc-800 text-amber-300 border border-amber-500/30"
+                >
+                  {isProvokingRival ? "..." : "⚡ Provoke"}
+                </button>
                 <button
                   onClick={() => {
                     setEgoSprintActive(!egoSprintActive);
