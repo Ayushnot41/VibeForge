@@ -283,6 +283,11 @@ export default function ActionPlanPage() {
   const progress = totalActions === 0 ? 0 : checkedItems.size / totalActions;
   const progressPercent = Math.round(progress * 100);
 
+  // VibeCore Tamagotchi Health Calculation
+  const daysElapsed = state?.localSavedAt ? (Date.now() - state.localSavedAt) / (1000 * 60 * 60 * 24) : 0;
+  const expectedActions = Math.max(0, daysElapsed / 2);
+  const health = expectedActions === 0 ? 1.0 : Math.max(0, 1 - Math.max(0, expectedActions - checkedItems.size) * 0.2);
+
   // Dynamic Phase Filtering
   const totalWeeksCount = weeks.length;
   const phaseSize = Math.max(3, Math.ceil(totalWeeksCount / 3));

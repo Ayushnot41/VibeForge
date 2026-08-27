@@ -5,7 +5,7 @@
 // ============================================================================
 
 import { SimulationAnnotation } from './state';
-import type { FuturePath, Obstacle } from '@/types/agents';
+import type { FuturePath, Obstacle, UserInput } from '@/types/agents';
 import { getTimeHorizonMonths } from '@/types/agents';
 import { callOpenRouterWithFallback, extractJsonFromResponse } from '@/lib/openrouterClient';
 

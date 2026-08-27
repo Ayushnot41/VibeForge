@@ -18,7 +18,8 @@ interface FormData {
   skills: string[];
   location: string;
   goals: string;
-  timeHorizon: "1_year" | "3_years" | "5_years" | "10_years";
+  timeHorizon: "6_weeks" | "12_weeks" | "24_weeks" | "36_weeks" | "1_year" | "3_years" | "5_years" | "10_years";
+  customWeeks?: number;
   targetDate: string; // "yyyy-mm-dd" — empty means use preset
   riskTolerance: number;
 }
@@ -59,10 +60,10 @@ const timeHorizons = [
   { value: "12_weeks", label: "12 Weeks", emoji: "🏃", sub: "Quarter Goal" },
   { value: "24_weeks", label: "24 Weeks", emoji: "🚀", sub: "6-Month Build" },
   { value: "36_weeks", label: "36 Weeks", emoji: "🔥", sub: "9-Month Mastery" },
-  { value: "1_year", label: "1 Year", emoji: "🎯", sub: "52-Week Journey" },
-  { value: "3_years", label: "3 Years", emoji: "🌟", sub: "Multi-Year Empire" },
-  { value: "5_years", label: "5 Years", emoji: "🌌", sub: "Industry Leader" },
-];
+  { value: "1_year", label: "1 Year", emoji: "🎯", sub: "48-Week Journey" },
+  { value: "3_years", label: "3 Years", emoji: "🌟", sub: "144-Week Empire" },
+  { value: "5_years", label: "5 Years", emoji: "🌌", sub: "240-Week Legacy" },
+] as const;
 
 /* ─── Animations ────────────────────────────────────────────── */
 
