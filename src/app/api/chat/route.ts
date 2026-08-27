@@ -5,13 +5,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { callOpenRouterWithFallback } from "@/lib/openrouterClient";
 
-function cleanOutputFormatting(text: string): string {
+export function cleanOutputFormatting(text: string): string {
   if (!text) return "";
   return text
-    // Strip leading markdown headers (#, ##, ###) from lines
-    .replace(/^#{1,6}\s+/gm, "")
-    // Clean redundant decorative asterisk wrappers on leading lines
-    .replace(/^\*\*([A-Za-z0-9\s—–:-]+)\*\*\s*$/gm, "$1")
+    // Remove all leading hashtags (#, ##, ###) from lines
+    .replace(/^#{1,6}\s*/gm, "")
+    // Remove all asterisks (*, **, ***) used for bold/italics, keeping text completely clean
+    .replace(/\*{1,3}([^*]+)\*{1,3}/g, "$1")
+    // Remove any stray asterisks or hash characters
+    .replace(/[*#]/g, "")
     .trim();
 }
 
@@ -37,13 +39,13 @@ export async function POST(req: NextRequest) {
     const systemPrompt = `You are the VibeForge Oracle — powered by Anthropic Claude 3.5 Sonnet and Opus intelligence.
 You are a universal AI assistant capable of answering ANY question across all subjects (programming, finance, trading, business, math, science, writing, health, psychology, and personal growth).
 
-CRITICAL FORMATTING RULES:
-1. NEVER start the first line or headings with hashtags (#, ##, ###).
-2. DO NOT use excessive asterisk decorators (*** or ***) on the first lines. Write clean, natural sentences.
-3. Use simple, clean, and engaging language that a common person or a 10-year-old child can understand easily.
-4. Maintain a polite, professional, high-clarity tone without unnecessary jargon.
-5. Use clean numbers (1., 2., 3.) or simple bullet points (-) for step-by-step guidance.
-6. When recommending YouTube tutorials, use verified search links formatted as: [Watch Recommended Guide](https://www.youtube.com/results?search_query=topic+tutorial&sp=CAM%253D)
+STRICT FORMATTING REQUIREMENTS:
+1. NEVER use any asterisks (*) or hashtags (#) anywhere in your output.
+2. DO NOT use bold asterisks (like **word**) or header hashes (like # Title).
+3. Use plain text formatting, uppercase labels (like 'Step 1:', 'Key Principle:', 'Action Plan:'), clean numbers (1., 2., 3.), and simple dashes (-) for lists.
+4. Use very simple, clean, and engaging language that a common person or a 10-year-old child can easily understand.
+5. Maintain a polite, professional, high-clarity tone without unnecessary jargon.
+6. When recommending YouTube tutorials, format links cleanly as: [Watch Recommended Guide](https://www.youtube.com/results?search_query=topic+tutorial&sp=CAM%253D)
 
 USER CONTEXT (If they ask about their career simulation):
 - Starting Baseline: "${currentSituation}"

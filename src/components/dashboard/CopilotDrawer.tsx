@@ -71,7 +71,7 @@ export default function CopilotDrawer() {
         id: "msg-init",
         role: "assistant",
         content:
-          "Greetings! I am the **VibeForge Oracle** — your AI Career & Execution Copilot.\n\nI am here to guide you step-by-step in very simple, clear language. You can ask me any question about your career roadmap, programming, trading, business, or daily habits. How can I help you today?",
+          "Greetings! I am the VibeForge Oracle — your AI Career & Execution Copilot.\n\nI am here to guide you step-by-step in very simple, clear language. You can ask me any question about your career roadmap, programming, trading, business, or daily habits. How can I help you today?",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ]);
