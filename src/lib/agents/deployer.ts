@@ -1,31 +1,41 @@
 // ============================================================================
-// Deployer Agent — OpenRouter + Llama 3.1 8B
-// Creates actionable plans, habit trackers, and calendar events
-// Includes retry logic and a guaranteed hardcoded fallback so the action plan
-// is NEVER empty.
+// Deployer Agent — Action Protocol & Implementation Curriculum Engine
+// Powered by Grok 4.6 (Research/Curriculum) & Anthropic Claude Opus 5 / Sonnet 5
+// Creates crystal-clear, beginner-friendly weekly action plans with top-rated YouTube links.
 // ============================================================================
 
-import OpenAI from 'openai';
 import { SimulationAnnotation } from './state';
 import type { ActionPlan, FuturePath, WeeklyAction } from '@/types/agents';
+import { callOpenRouterWithFallback, extractJsonFromResponse } from '@/lib/openrouterClient';
 
-const DEPLOYER_SYSTEM_PROMPT = `You are an elite productivity coach and action planning specialist. Given a person's realistic future path with milestones, create a comprehensive action plan that bridges their current situation to their ultimate goal.
+const DEPLOYER_SYSTEM_PROMPT = `You are an elite master coach and implementation curriculum architect. Given a person's goals, current background, and realistic future path, create a world-class, step-by-step Execution Protocol.
 
-Return your response as a JSON object with exactly this structure:
+CRITICAL COMMUNICATION RULES:
+1. Language must be CRYSTAL-CLEAR and SO SIMPLE that even a 10-year-old or complete beginner can understand it effortlessly.
+2. Every action must explain:
+   - WHAT to do in plain words
+   - HOW to do it step-by-step
+   - WHY it matters
+3. EVERY SINGLE ACTION MUST end with a high-relevance YouTube tutorial search link sorted by highest view count and ratings, formatted exactly like:
+   "Task description here. [Watch Top-Rated Tutorial ⭐](https://www.youtube.com/results?search_query=how+to+learn+topic+step+by+step&sp=CAM%253D)"
+   (Notice &sp=CAM%253D sorts YouTube results by highest view count).
+4. The FIRST action of each week MUST be a "Mental Synchronization Task" to prime their focus and mindset.
+
+Return your response as a valid JSON object matching this exact schema:
 {
-  "aggressivePitch": string (A highly aggressive, adrenaline-boosting, ego-hitting motivational pitch tailored specifically to the user's goal. e.g. for a trader: "The market doesn't care about your feelings. It takes from the weak and gives to the ruthless. Wake up." For a developer: "Code is shipping while you sleep. Are you going to be replaced or are you going to build the future?"),
+  "aggressivePitch": string (A high-adrenaline, motivational executive pitch tailored to the user's specific goal that sparks relentless drive),
   "weeklyActions": [
     {
       "week": number (1 to 12),
-      "actions": string[] (3-5 specific, fluent, simple, and highly user-friendly actions. The FIRST action of each week MUST be a 'Mental Synchronization Challenge Task' to align their mind with their goal. VERY IMPORTANT: You MUST append a direct YouTube search link to the end of EVERY action string, formatted exactly like: "Learn NextJS. [Watch Tutorial](https://www.youtube.com/results?search_query=how+to+learn+nextjs)"),
-      "milestone": string (optional, name of milestone this week leads toward)
+      "actions": string[] (3-5 specific, step-by-step, beginner-friendly actions with YouTube search links attached),
+      "milestone": string (optional, milestone name if this week reaches a checkpoint)
     }
   ],
   "habits": [
     {
       "name": string,
       "frequency": "daily" | "weekly" | "monthly",
-      "description": string (Fluent, simple, and user-friendly description),
+      "description": string (Simple, actionable description),
       "targetStreak": number (in days)
     }
   ],
@@ -39,74 +49,60 @@ Return your response as a JSON object with exactly this structure:
     }
   ],
   "rival": {
-    "name": string (A fictional, hyper-realistic rival competing for the exact same goal),
-    "bio": string (Why they are dangerous and currently beating the user),
-    "taunts": string[] (3 hyper-aggressive, dopamine-spiking taunts to fuel the user's competitive drive),
-    "progressOffset": number (An integer between 5 and 20, representing how many days ahead they are)
+    "name": string (A fictional, hyper-realistic adversary competing for the exact same goal),
+    "bio": string (Why they are dangerous and currently ahead),
+    "taunts": string[] (3 aggressive taunts to keep the user disciplined),
+    "progressOffset": number (Days ahead)
   }
 }
 
-CRITICAL INSTRUCTIONS:
-1. Your 'weeklyActions' array MUST contain EXACTLY 12 weeks. NEVER return 0 weeks.
-2. Each week MUST have 3-5 actions. NEVER return 0 actions for any week.
-3. Create 4-6 habits, and 4-6 calendar events.
-4. Keep the language extremely simple, fluent, and user-friendly (except for the aggressive pitch, which must be hard-hitting).
-5. Return ONLY the valid JSON object. No additional text or markdown formatting.
-6. The rival MUST always be included.`;
+CRITICAL RULES:
+- 'weeklyActions' MUST contain 12 weeks. NEVER return 0 weeks.
+- Each week MUST have 3-5 comprehensive actions.
+- Return ONLY the JSON object without markdown fences or outside commentary.`;
 
 function buildUserPrompt(state: typeof SimulationAnnotation.State): string {
   const { userInput, futurePaths, obstacles } = state;
 
-  // Prefer the realistic path; fall back to first available
   const realisticPath: FuturePath | undefined =
     futurePaths.find((p) => p.type === 'realistic') ?? futurePaths[0];
 
   if (!realisticPath) {
-    return `No future path available. Generate a generic 12-week productivity plan for the user's goal: "${userInput.goals}".`;
+    return `Generate a comprehensive, simple, step-by-step 12-week execution protocol for the goal: "${userInput.goals}".`;
   }
 
-  // Build a start date for calendar events (today)
   const startDate = new Date().toISOString().split('T')[0];
-
   const topObstacles = obstacles
     .sort((a, b) => b.probability - a.probability)
     .slice(0, 3);
 
   return `## User Profile
-**Situation:** ${userInput.currentSituation}
+**Current Situation:** ${userInput.currentSituation}
 **Goals:** ${userInput.goals}
 **Risk Tolerance:** ${userInput.riskTolerance}
 **Plan Start Date:** ${startDate}
 
-## Realistic Future Path: "${realisticPath.title}"
+## Realistic Future Scenario: "${realisticPath.title}"
 ${realisticPath.narrative}
 
-### Milestones
+### Milestones to Reach
 ${realisticPath.milestones.map((m) => `- Month ${m.month}: ${m.title} — ${m.description}`).join('\n')}
 
-### Daily Routines (target state)
+### Target Daily Routines
 ${realisticPath.dailyRoutines.map((r) => `- ${r.timeOfDay}: ${r.activity} (${r.purpose})`).join('\n')}
 
-### Top Obstacles to Mitigate
-${topObstacles.map((o) => `- ${o.description} (probability: ${o.probability}) — Mitigation: ${o.mitigation}`).join('\n')}
+### Risks to Counter
+${topObstacles.map((o) => `- ${o.description} — Mitigation: ${o.mitigation}`).join('\n')}
 
-CRITICAL: Generate EXACTLY 12 weeks of plans starting from ${startDate}. Each week must have 3-5 specific, measurable actions. Include habits that build toward the daily routines described above. NEVER leave weeklyActions empty.`;
+Generate the 12-week step-by-step implementation curriculum starting from ${startDate}. Keep the language ultra-simple, practical, and include live YouTube tutorial links for every action.`;
 }
 
 /**
  * Parse the raw LLM output into a structured ActionPlan.
- * Returns null if parsing fails so the caller can retry.
  */
 function parseActionPlan(raw: string): { actionPlan: ActionPlan; aggressivePitch: string } | null {
   try {
-    // Try to extract JSON if the model wrapped it in markdown
-    let jsonStr = raw;
-    const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (jsonMatch) {
-      jsonStr = jsonMatch[1];
-    }
-
-    const parsed = JSON.parse(jsonStr);
+    const parsed = extractJsonFromResponse(raw);
     const aggressivePitch = parsed.aggressivePitch ? String(parsed.aggressivePitch) : '';
 
     const weeklyActions = Array.isArray(parsed.weeklyActions)
@@ -117,10 +113,9 @@ function parseActionPlan(raw: string): { actionPlan: ActionPlan; aggressivePitch
         }))
       : [];
 
-    // CRITICAL CHECK: If we got 0 weeks or all weeks have 0 actions, reject this parse
     const totalActions = weeklyActions.reduce((sum: number, w: { actions: string[] }) => sum + w.actions.length, 0);
     if (weeklyActions.length === 0 || totalActions === 0) {
-      console.error('[Deployer] Parsed JSON but got 0 weeks or 0 total actions. Rejecting.');
+      console.error('[Deployer] Parsed JSON had 0 actions. Retrying.');
       return null;
     }
 
@@ -128,7 +123,7 @@ function parseActionPlan(raw: string): { actionPlan: ActionPlan; aggressivePitch
       weeklyActions,
       habits: Array.isArray(parsed.habits)
         ? parsed.habits.map((h: Record<string, unknown>) => ({
-            name: String(h.name ?? ''),
+            name: String(h.name ?? 'Core Habit'),
             frequency: (['daily', 'weekly', 'monthly'] as const).includes(
               h.frequency as 'daily' | 'weekly' | 'monthly',
             )
@@ -159,53 +154,52 @@ function parseActionPlan(raw: string): { actionPlan: ActionPlan; aggressivePitch
 
     return { actionPlan, aggressivePitch };
   } catch (e) {
-    console.error('[Deployer] JSON parse failed:', e, 'Raw (first 300):', raw.slice(0, 300));
+    console.error('[Deployer] JSON parse failed:', e);
     return null;
   }
 }
 
 /**
- * Generate a hardcoded fallback action plan so the user NEVER sees an empty page.
- * This is the absolute last resort.
+ * Generate a rich, failsafe action plan with YouTube search links.
  */
 function generateFallbackPlan(goals: string): { actionPlan: ActionPlan; aggressivePitch: string } {
-  console.warn('[Deployer] Using hardcoded fallback plan for goal:', goals);
+  console.warn('[Deployer] Using structured fallback plan for goal:', goals);
   const goalKeyword = encodeURIComponent(goals.split(' ').slice(0, 3).join(' '));
 
   const weeks = Array.from({ length: 12 }, (_, i) => ({
     week: i + 1,
     actions: [
-      `Mental Synchronization: Visualize yourself achieving "${goals}" for 10 minutes. [Watch Visualization Guide](https://www.youtube.com/results?search_query=visualization+meditation+for+goals)`,
-      `Research and study the #1 skill needed for your goal this week. [Watch Tutorial](https://www.youtube.com/results?search_query=${goalKeyword}+tutorial+week+${i + 1})`,
-      `Take one concrete action step toward your goal today. Document your progress. [Watch Motivation](https://www.youtube.com/results?search_query=daily+progress+motivation)`,
-      `Connect with one person in your field or community. [Watch Networking Tips](https://www.youtube.com/results?search_query=networking+tips+for+beginners)`,
+      `Mental Synchronization: Sit quietly for 10 minutes and visualize achieving "${goals}". Write down your #1 priority for Week ${i + 1}. [Watch Guided Visualization ⭐](https://www.youtube.com/results?search_query=goal+visualization+meditation+beginner&sp=CAM%253D)`,
+      `Master the Core Skill: Follow a beginner-friendly tutorial on ${goals.slice(0, 30)}. Practice for 45 minutes without distractions. [Watch Step-by-Step Tutorial ⭐](https://www.youtube.com/results?search_query=${goalKeyword}+complete+tutorial+for+beginners&sp=CAM%253D)`,
+      `Hands-On Execution: Create one tangible piece of work or exercise toward your goal and save it in your portfolio. [Watch Practical Exercise Guide ⭐](https://www.youtube.com/results?search_query=${goalKeyword}+practical+project+guide&sp=CAM%253D)`,
+      `Weekly Review & Calibration: Write down 3 wins and 1 obstacle from this week, then set next week's schedule. [Watch Weekly Review Method ⭐](https://www.youtube.com/results?search_query=how+to+do+a+weekly+review+productivity&sp=CAM%253D)`,
     ],
-    milestone: i % 4 === 3 ? `Month ${Math.floor(i / 4) + 1} Checkpoint` : undefined,
+    milestone: i % 4 === 3 ? `Phase ${Math.floor(i / 4) + 1} Mastery Checkpoint` : undefined,
   }));
 
   return {
-    aggressivePitch: `While you're reading this, someone with HALF your talent is outworking you. "${goals}" isn't going to achieve itself. Every second you waste is a second your competition gains. Wake up and execute.`,
+    aggressivePitch: `The future belongs to those who execute while others hesitate. "${goals}" will become your reality through consistent, daily steps. Stay focused and conquer every week.`,
     actionPlan: {
       weeklyActions: weeks,
       habits: [
-        { name: 'Morning Goal Review', frequency: 'daily' as const, description: 'Spend 5 minutes reviewing your goals and todays action steps.', targetStreak: 90 },
-        { name: 'Skill Practice', frequency: 'daily' as const, description: 'Dedicate 1 hour to deliberate practice toward your goal.', targetStreak: 90 },
-        { name: 'Weekly Reflection', frequency: 'weekly' as const, description: 'Every Sunday, review what you achieved and plan next week.', targetStreak: 12 },
-        { name: 'Community Engagement', frequency: 'weekly' as const, description: 'Engage with communities related to your goal online or offline.', targetStreak: 12 },
+        { name: 'Daily Focus Hour', frequency: 'daily' as const, description: 'Spend 60 uninterrupted minutes on your core goal.', targetStreak: 90 },
+        { name: 'Skill Immersion', frequency: 'daily' as const, description: 'Watch 1 high-yield tutorial and take notes.', targetStreak: 60 },
+        { name: 'Sunday Strategy', frequency: 'weekly' as const, description: 'Plan the upcoming 7 days on your calendar.', targetStreak: 12 },
+        { name: 'Progress Journal', frequency: 'weekly' as const, description: 'Document your completed milestones and wins.', targetStreak: 12 },
       ],
       calendarEvents: [
-        { title: 'Week 1 Kickoff', description: 'Start your journey.', startDate: new Date().toISOString(), endDate: new Date().toISOString() },
-        { title: 'Month 1 Review', description: 'Review first month progress.', startDate: new Date(Date.now() + 30 * 86400000).toISOString(), endDate: new Date(Date.now() + 30 * 86400000).toISOString() },
-        { title: 'Month 2 Review', description: 'Review second month progress.', startDate: new Date(Date.now() + 60 * 86400000).toISOString(), endDate: new Date(Date.now() + 60 * 86400000).toISOString() },
-        { title: 'Final Review', description: 'Comprehensive 12-week review.', startDate: new Date(Date.now() + 84 * 86400000).toISOString(), endDate: new Date(Date.now() + 84 * 86400000).toISOString() },
+        { title: 'Sprint Kickoff', description: 'Start your journey with full focus.', startDate: new Date().toISOString(), endDate: new Date().toISOString() },
+        { title: 'Month 1 Milestone Checkpoint', description: 'Review your initial progress and recalibrate.', startDate: new Date(Date.now() + 30 * 86400000).toISOString(), endDate: new Date(Date.now() + 30 * 86400000).toISOString() },
+        { title: 'Month 2 Growth Sprint', description: 'Accelerate output and complete advanced projects.', startDate: new Date(Date.now() + 60 * 86400000).toISOString(), endDate: new Date(Date.now() + 60 * 86400000).toISOString() },
+        { title: 'Quarter 1 Mastery Review', description: 'Comprehensive review of your transformed trajectory.', startDate: new Date(Date.now() + 84 * 86400000).toISOString(), endDate: new Date(Date.now() + 84 * 86400000).toISOString() },
       ],
       rival: {
-        name: 'Shadow',
-        bio: `They started with less than you but they never take a day off. Every hour you rest, they are grinding toward "${goals}".`,
+        name: 'The Competitor',
+        bio: `They are striving toward "${goals}" with continuous discipline. Every day you execute puts you further ahead.`,
         taunts: [
-          "I don't need motivation. I have discipline. Do you?",
-          "You checked social media 3 times today. I checked off 3 tasks.",
-          "Sleep well tonight. I'll be working.",
+          "Consistency is my superpower. What is yours?",
+          "I completed today's action plan. Did you?",
+          "No excuses. Just progress.",
         ],
         progressOffset: 7,
       },
@@ -214,7 +208,7 @@ function generateFallbackPlan(goals: string): { actionPlan: ActionPlan; aggressi
 }
 
 /**
- * Expands 12 core weeks into the target number of weeks (e.g. 60 or 120).
+ * Expands core weeks into the target number of weeks (e.g. 12, 36, 60, or 120).
  */
 function expandWeeks(coreWeeks: WeeklyAction[], targetWeeks: number): WeeklyAction[] {
   if (targetWeeks <= coreWeeks.length) return coreWeeks.slice(0, targetWeeks);
@@ -236,45 +230,43 @@ function expandWeeks(coreWeeks: WeeklyAction[], targetWeeks: number): WeeklyActi
 }
 
 /**
- * Deployer node — uses OpenRouter Llama 3.1 8B to create an executable action plan.
- * Includes retry logic and a guaranteed hardcoded fallback.
+ * Deployer node — uses dual-key OpenRouter failover to generate the execution plan.
  */
 export async function deployerNode(
   state: typeof SimulationAnnotation.State,
 ): Promise<Partial<typeof SimulationAnnotation.State>> {
   const MAX_RETRIES = 2;
-  const timeHorizonMonths = {
+  const timeHorizonWeeks: Record<string, number> = {
     '1_year': 12,
     '3_years': 36,
     '5_years': 60,
     '10_years': 120,
   };
-  const targetWeeks = timeHorizonMonths[state.userInput.timeHorizon] || 12;
+  const targetWeeks = timeHorizonWeeks[state.userInput.timeHorizon] || 12;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
       console.log(`[Deployer] Attempt ${attempt + 1}/${MAX_RETRIES + 1}`);
 
-      const openai = new OpenAI({
-        baseURL: 'https://openrouter.ai/api/v1',
-        apiKey: process.env.OPENROUTER_API_KEY,
-      });
-
-      const completion = await openai.chat.completions.create({
-        model: 'meta-llama/llama-3.1-8b-instruct',
+      const { content, modelUsed, keyIndexUsed } = await callOpenRouterWithFallback({
         messages: [
           { role: 'system', content: DEPLOYER_SYSTEM_PROMPT },
           { role: 'user', content: buildUserPrompt(state) },
         ],
-        temperature: 0.6,
-        max_tokens: 16384,
-        response_format: { type: 'json_object' },
+        preferredModels: [
+          'anthropic/claude-opus-5',
+          'x-ai/grok-4.6',
+          'meta-llama/llama-3.3-70b-instruct',
+          'openai/gpt-4o-mini',
+        ],
+        temperature: 0.65,
+        maxTokens: 16384,
+        responseFormatJson: true,
       });
 
-      const raw = completion.choices[0]?.message?.content ?? '{}';
-      console.log(`[Deployer] Got ${raw.length} chars from LLM`);
+      console.log(`[Deployer] Generated ${content.length} chars using model '${modelUsed}' on API Key #${keyIndexUsed}`);
 
-      const result = parseActionPlan(raw);
+      const result = parseActionPlan(content);
       if (result) {
         console.log(`[Deployer] Successfully parsed ${result.actionPlan.weeklyActions.length} weeks. Expanding to ${targetWeeks} weeks.`);
         result.actionPlan.weeklyActions = expandWeeks(result.actionPlan.weeklyActions, targetWeeks);
@@ -285,16 +277,15 @@ export async function deployerNode(
         };
       }
 
-      // If parse returned null, continue to retry
-      console.warn(`[Deployer] Attempt ${attempt + 1} failed: parse returned null. Retrying...`);
+      console.warn(`[Deployer] Attempt ${attempt + 1} parse failed. Retrying...`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`[Deployer] Attempt ${attempt + 1} error:`, message);
     }
   }
 
-  // ALL retries failed. Use the hardcoded fallback so the user NEVER sees an empty plan.
-  console.error('[Deployer] All retries exhausted. Using hardcoded fallback plan.');
+  // Failsafe fallback plan
+  console.warn('[Deployer] Retries exhausted. Using structured fallback plan.');
   const fallback = generateFallbackPlan(state.userInput.goals);
   fallback.actionPlan.weeklyActions = expandWeeks(fallback.actionPlan.weeklyActions, targetWeeks);
   return {

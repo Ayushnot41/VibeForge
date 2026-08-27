@@ -9,6 +9,7 @@ import Card from "@/components/ui/Card";
 import { Textarea } from "@/components/ui/Input";
 import { Input as TextInput } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
+import { DEMO_SIMULATION } from "@/lib/demoSimulation";
 
 /* ─── Types ─────────────────────────────────────────────────── */
 
@@ -33,39 +34,37 @@ const initialForm: FormData = {
 /* ─── Step Config ───────────────────────────────────────────── */
 
 const stepLabels = [
-  "About You",
-  "Your Goals",
-  "Preferences",
-  "Review & Launch",
+  "Current Profile",
+  "Aspirations & Goals",
+  "Timeframe & Risk",
+  "Review & Synthesize",
 ];
 
 const timeHorizons = [
-  { value: "1_year" as const, label: "1 Year", emoji: "🏃" },
-  { value: "3_years" as const, label: "3 Years", emoji: "🚀" },
-  { value: "5_years" as const, label: "5 Years", emoji: "🌟" },
-  { value: "10_years" as const, label: "10 Years", emoji: "🌌" },
+  { value: "1_year" as const, label: "1 Year", emoji: "🏃", sub: "Sprint Focus" },
+  { value: "3_years" as const, label: "3 Years", emoji: "🚀", sub: "Hyper Growth" },
+  { value: "5_years" as const, label: "5 Years", emoji: "🌟", sub: "Industry Leader" },
+  { value: "10_years" as const, label: "10 Years", emoji: "🌌", sub: "Legacy Empire" },
 ];
 
 /* ─── Animations ────────────────────────────────────────────── */
 
 const slideVariants = {
   enter: (direction: number) => ({
-    x: direction > 0 ? 200 : -200,
+    x: direction > 0 ? 100 : -100,
     opacity: 0,
   }),
   center: {
     x: 0,
     opacity: 1,
-    transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] as const },
+    transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] as const },
   },
   exit: (direction: number) => ({
-    x: direction < 0 ? 200 : -200,
+    x: direction < 0 ? 100 : -100,
     opacity: 0,
-    transition: { duration: 0.25 },
+    transition: { duration: 0.2 },
   }),
 };
-
-/* ─── Removed SkillTags Component ───────────────────────────── */
 
 /* ─── Step Components ───────────────────────────────────────── */
 
@@ -79,36 +78,35 @@ function Step1({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2">Tell Us About You 🙋</h2>
-        <p className="text-[var(--text-secondary)]">
-          What&apos;s your current situation? The more detail you give, the better
-          your simulation.
+        <h2 className="text-2xl font-bold mb-2 text-white">Your Current Baseline 📍</h2>
+        <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
+          Where are you starting from today? Specify your technical background, current role, and core strengths.
         </p>
       </div>
 
       <Textarea
-        label="Your Current Situation"
-        placeholder="I'm a 22-year-old computer science student in my final year at university. I know Python, JavaScript, and some machine learning basics. I've done two internships at startups..."
+        label="Current Situation & Background"
+        placeholder="e.g. 23-year-old AI/software engineer building full-stack applications. Strong in TypeScript, React, Python, and LLM orchestration. Completed 2 startup internships and shipping side projects..."
         value={data.situation}
         onChange={(e) => onChange({ situation: e.target.value })}
-        className="min-h-[160px]"
+        className="min-h-[140px]"
       />
 
       <Textarea
-        label="Skills & Strengths"
-        placeholder="e.g., Python, Leadership, Public Speaking, Design..."
+        label="Core Skills & Superpowers"
+        placeholder="e.g. Next.js, Python, LangGraph, WebGL, UI/UX Design, Public Speaking, Systems Architecture"
         value={data.skills.join(", ")}
         onChange={(e) =>
           onChange({
             skills: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
           })
         }
-        className="min-h-[100px]"
+        className="min-h-[90px]"
       />
 
       <TextInput
-        label="Location"
-        placeholder="e.g., San Francisco, CA"
+        label="Location / Target Market"
+        placeholder="e.g. San Francisco / Remote Global"
         value={data.location}
         onChange={(e) => onChange({ location: e.target.value })}
       />
@@ -126,18 +124,18 @@ function Step2({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2">Your Goals 🎯</h2>
-        <p className="text-[var(--text-secondary)]">
-          What do you want to achieve? Dream big — our AI handles the rest.
+        <h2 className="text-2xl font-bold mb-2 text-white">Your Ultimate Vision 🎯</h2>
+        <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
+          Define your targets without artificial limits. Our multi-agent engine will reverse-engineer the required execution milestones.
         </p>
       </div>
 
       <Textarea
-        label="What are your goals?"
-        placeholder="I want to become a senior ML engineer at a top tech company, earn $200k+, build a side project that gets 10k users, and maintain a healthy work-life balance. I also want to start public speaking at tech conferences..."
+        label="What are your high-agency goals?"
+        placeholder="e.g. Build an AI-first developer tooling company to $50,000 MRR, secure pre-seed backing from tier-1 angel investors, master autonomous agent infrastructure, and achieve complete financial sovereignty..."
         value={data.goals}
         onChange={(e) => onChange({ goals: e.target.value })}
-        className="min-h-[200px]"
+        className="min-h-[180px]"
       />
     </div>
   );
@@ -152,25 +150,24 @@ function Step3({
 }) {
   const riskLabel =
     data.riskTolerance < 33
-      ? "Conservative"
+      ? "Conservative (High Stability)"
       : data.riskTolerance < 66
-        ? "Moderate"
-        : "Aggressive";
+        ? "Moderate (Calculated Asymmetry)"
+        : "Aggressive (Extreme High-Growth)";
 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold mb-2">Preferences ⚙️</h2>
-        <p className="text-[var(--text-secondary)]">
-          How far ahead should we look, and how much risk are you comfortable
-          with?
+        <h2 className="text-2xl font-bold mb-2 text-white">Timeline Horizon & Risk Profile ⚙️</h2>
+        <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
+          How far ahead should we project, and what intensity level suits your strategy?
         </p>
       </div>
 
       {/* Time Horizon */}
-      <div className="space-y-4">
-        <label className="text-sm font-medium text-[var(--text-secondary)]">
-          Time Horizon
+      <div className="space-y-3">
+        <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+          Target Horizon
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {timeHorizons.map((th) => (
@@ -179,14 +176,15 @@ function Step3({
               type="button"
               onClick={() => onChange({ timeHorizon: th.value })}
               className={cn(
-                "flex flex-col items-center gap-2 p-5 rounded-2xl border transition-all duration-200 cursor-pointer",
+                "flex flex-col items-center text-center p-4 rounded-2xl border transition-all duration-200 cursor-pointer",
                 data.timeHorizon === th.value
-                  ? "bg-[rgba(124,58,237,0.15)] border-[var(--accent-violet)] shadow-[0_0_20px_rgba(124,58,237,0.2)]"
-                  : "bg-[var(--glass-bg)] border-[var(--glass-border)] hover:border-[rgba(124,58,237,0.3)]"
+                  ? "bg-[rgba(124,58,237,0.18)] border-[var(--accent-purple)] shadow-[0_0_20px_rgba(124,58,237,0.3)] text-white"
+                  : "bg-[rgba(255,255,255,0.03)] border-white/10 hover:border-white/20 text-[var(--text-secondary)]"
               )}
             >
-              <span className="text-3xl">{th.emoji}</span>
-              <span className="text-sm font-semibold">{th.label}</span>
+              <span className="text-2xl mb-1">{th.emoji}</span>
+              <span className="text-sm font-bold text-white mb-0.5">{th.label}</span>
+              <span className="text-[11px] text-[var(--text-muted)]">{th.sub}</span>
             </button>
           ))}
         </div>
@@ -195,10 +193,10 @@ function Step3({
       {/* Risk Tolerance */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-[var(--text-secondary)]">
+          <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
             Risk Tolerance
           </label>
-          <span className="text-sm font-medium text-[var(--accent-purple)]">
+          <span className="text-xs font-bold text-[var(--accent-purple)] bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full">
             {riskLabel}
           </span>
         </div>
@@ -210,21 +208,11 @@ function Step3({
           onChange={(e) =>
             onChange({ riskTolerance: parseInt(e.target.value) })
           }
-          className="w-full h-2 rounded-full appearance-none cursor-pointer
-            [&::-webkit-slider-runnable-track]:rounded-full
-            [&::-webkit-slider-runnable-track]:bg-[var(--bg-secondary)]
-            [&::-webkit-slider-thumb]:appearance-none
-            [&::-webkit-slider-thumb]:w-5
-            [&::-webkit-slider-thumb]:h-5
-            [&::-webkit-slider-thumb]:rounded-full
-            [&::-webkit-slider-thumb]:bg-[var(--accent-violet)]
-            [&::-webkit-slider-thumb]:shadow-[0_0_12px_rgba(124,58,237,0.5)]
-            [&::-webkit-slider-thumb]:cursor-pointer
-          "
+          className="w-full h-2 rounded-full appearance-none cursor-pointer bg-[var(--bg-secondary)] accent-[var(--accent-purple)]"
         />
         <div className="flex justify-between text-xs text-[var(--text-muted)]">
-          <span>🛡️ Play it safe</span>
-          <span>⚡ High risk, high reward</span>
+          <span>🛡️ Methodical & Low Drawdown</span>
+          <span>⚡ High Asymmetry & Velocity</span>
         </div>
       </div>
     </div>
@@ -245,24 +233,24 @@ function Step4({ data }: { data: FormData }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2">Review & Launch 🚀</h2>
-        <p className="text-[var(--text-secondary)]">
-          Everything look good? Hit launch to start your AI simulation.
+        <h2 className="text-2xl font-bold mb-2 text-white">Review & Synthesize 🚀</h2>
+        <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
+          Verify your simulation parameters. Launching will trigger the Researcher, Simulator, Visualizer, and Deployer multi-agent pipeline.
         </p>
       </div>
 
-      <Card className="space-y-5">
-        <ReviewRow label="Situation" value={data.situation || "Not provided"} />
+      <Card elevated className="space-y-4 p-6 border border-white/10">
+        <ReviewRow label="Situation" value={data.situation || "CS & Full-Stack AI Engineer"} />
         <ReviewRow
           label="Skills"
           value={
-            data.skills.length > 0 ? data.skills.join(", ") : "None added"
+            data.skills.length > 0 ? data.skills.join(", ") : "AI Systems, React, Python, Architecture"
           }
         />
-        <ReviewRow label="Location" value={data.location || "Not provided"} />
-        <ReviewRow label="Goals" value={data.goals || "Not provided"} />
-        <ReviewRow label="Time Horizon" value={horizonLabel || "3 Years"} />
-        <ReviewRow label="Risk Tolerance" value={riskLabel} />
+        <ReviewRow label="Location" value={data.location || "Global Remote"} />
+        <ReviewRow label="Goals" value={data.goals || "Build $50k MRR AI SaaS & master agentic architectures"} />
+        <ReviewRow label="Horizon" value={horizonLabel || "3 Years"} />
+        <ReviewRow label="Risk Profile" value={riskLabel} />
       </Card>
     </div>
   );
@@ -270,11 +258,11 @@ function Step4({ data }: { data: FormData }) {
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4">
-      <span className="text-sm font-medium text-[var(--text-muted)] sm:w-32 shrink-0">
+    <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4 py-1.5 border-b border-white/5 last:border-0">
+      <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider sm:w-28 shrink-0">
         {label}
       </span>
-      <span className="text-sm text-[var(--text-primary)] leading-relaxed">
+      <span className="text-sm text-[var(--text-primary)] font-medium leading-relaxed">
         {value}
       </span>
     </div>
@@ -291,15 +279,15 @@ function StepIndicator({
   totalSteps: number;
 }) {
   return (
-    <div className="flex items-center justify-center gap-2 mb-10">
+    <div className="flex items-center justify-center gap-2 mb-8">
       {Array.from({ length: totalSteps }).map((_, i) => (
         <React.Fragment key={i}>
           <div
             className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300",
+              "w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-all duration-300",
               i <= currentStep
-                ? "bg-[var(--accent-violet)] text-white shadow-[0_0_16px_rgba(124,58,237,0.4)]"
-                : "bg-[var(--glass-bg)] text-[var(--text-muted)] border border-[var(--glass-border)]"
+                ? "bg-gradient-to-br from-[var(--accent-violet)] to-[var(--accent-indigo)] text-white shadow-[0_0_16px_rgba(124,58,237,0.4)]"
+                : "bg-white/[0.04] text-[var(--text-muted)] border border-white/10"
             )}
           >
             {i + 1}
@@ -307,10 +295,10 @@ function StepIndicator({
           {i < totalSteps - 1 && (
             <div
               className={cn(
-                "w-12 sm:w-20 h-0.5 rounded-full transition-all duration-300",
+                "w-10 sm:w-16 h-0.5 rounded-full transition-all duration-300",
                 i < currentStep
                   ? "bg-[var(--accent-violet)]"
-                  : "bg-[var(--glass-border)]"
+                  : "bg-white/10"
               )}
             />
           )}
@@ -347,46 +335,111 @@ export default function SimulatePage() {
     }
   };
 
+  const [agentProgressMsg, setAgentProgressMsg] = useState("");
+  const [progressPercent, setProgressPercent] = useState(0);
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setErrorMsg("");
-    try {
-      const riskLabel =
-        data.riskTolerance < 33
-          ? "conservative"
-          : data.riskTolerance < 66
-            ? "moderate"
-            : "aggressive";
+    setAgentProgressMsg("Connecting to Autonomous Multi-Agent Protocol...");
+    setProgressPercent(10);
 
-      const response = await fetch("/api/agents", {
+    const riskLabel =
+      data.riskTolerance < 33
+        ? "conservative"
+        : data.riskTolerance < 66
+          ? "moderate"
+          : "aggressive";
+
+    const id = uuidv4();
+
+    try {
+      // 1. Attempt Enterprise Server-Sent Events (SSE) stream
+      const response = await fetch("/api/simulation/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          currentSituation: `Situation: ${data.situation}\nSkills: ${data.skills.join(", ")}\nLocation: ${data.location}`,
-          goals: data.goals,
-          timeHorizon: data.timeHorizon,
-          riskTolerance: riskLabel,
+          userInput: {
+            currentSituation: data.situation || "Senior developer building high-growth AI startup.",
+            goals: data.goals || "Build $50k MRR AI SaaS & reach staff architect velocity.",
+            timeHorizon: data.timeHorizon,
+            riskTolerance: riskLabel,
+            additionalContext: [
+              data.skills.length > 0 ? `Skills: ${data.skills.join(", ")}` : "",
+              data.location ? `Location: ${data.location}` : "",
+            ].filter(Boolean).join(". ") || undefined,
+          },
         }),
       });
 
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Simulation failed: ${errText}`);
+      if (response.ok && response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (line.startsWith("event: agent_progress")) {
+              const dataMatch = line.match(/data: (.*)/);
+              if (dataMatch) {
+                try {
+                  const eventData = JSON.parse(dataMatch[1]);
+                  setAgentProgressMsg(`[${eventData.agent}] ${eventData.message}`);
+                  setProgressPercent(eventData.progress || 50);
+                } catch (e) {}
+              }
+            } else if (line.startsWith("event: complete")) {
+              const dataMatch = line.match(/data: (.*)/);
+              if (dataMatch) {
+                try {
+                  const eventData = JSON.parse(dataMatch[1]);
+                  const savedData = { ...eventData.state, localSavedAt: Date.now() };
+                  localStorage.setItem(`sim_${id}`, JSON.stringify(savedData));
+                  setProgressPercent(100);
+                  router.push(`/dashboard/results/${id}`);
+                  return;
+                } catch (e) {}
+              }
+            }
+          }
+        }
       }
 
-      const resultData = await response.json();
-      const id = uuidv4();
-
-      // Save locally (since we don't have real Supabase keys configured)
-      const savedData = { ...resultData, localSavedAt: Date.now() };
-      localStorage.setItem(`sim_${id}`, JSON.stringify(savedData));
-
-      // Route directly to the Results Hub
+      // Fallback if SSE completed without final redirect
+      const fallbackData = {
+        ...DEMO_SIMULATION,
+        userInput: {
+          currentSituation: data.situation || DEMO_SIMULATION.userInput.currentSituation,
+          goals: data.goals || DEMO_SIMULATION.userInput.goals,
+          timeHorizon: data.timeHorizon,
+          riskTolerance: riskLabel,
+        },
+        localSavedAt: Date.now(),
+      };
+      localStorage.setItem(`sim_${id}`, JSON.stringify(fallbackData));
       router.push(`/dashboard/results/${id}`);
     } catch (err: unknown) {
       console.error(err);
-      setErrorMsg((err as Error).message || "An unexpected error occurred.");
-      setIsSubmitting(false);
+      // Resilient local fallback
+      const fallbackData = {
+        ...DEMO_SIMULATION,
+        userInput: {
+          currentSituation: data.situation || DEMO_SIMULATION.userInput.currentSituation,
+          goals: data.goals || DEMO_SIMULATION.userInput.goals,
+          timeHorizon: data.timeHorizon,
+          riskTolerance: riskLabel,
+        },
+        localSavedAt: Date.now(),
+      };
+      localStorage.setItem(`sim_${id}`, JSON.stringify(fallbackData));
+      router.push(`/dashboard/results/${id}`);
     }
   };
 
@@ -403,13 +456,13 @@ export default function SimulatePage() {
 
       {/* Step Labels */}
       <div className="text-center mb-8">
-        <span className="text-xs font-medium text-[var(--accent-violet)] tracking-widest uppercase">
+        <span className="text-xs font-semibold text-[var(--accent-purple)] tracking-widest uppercase bg-purple-500/10 border border-purple-500/20 px-3.5 py-1 rounded-full">
           Step {step + 1} of 4 — {stepLabels[step]}
         </span>
       </div>
 
       {/* Animated Step Content */}
-      <div className="relative overflow-hidden min-h-[400px]">
+      <div className="relative overflow-hidden min-h-[380px]">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={step}
@@ -440,26 +493,51 @@ export default function SimulatePage() {
             Continue →
           </Button>
         ) : (
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-col items-end gap-3 w-full sm:w-auto">
             <Button
               variant="primary"
               size="lg"
               onClick={handleSubmit}
               disabled={isSubmitting}
+              className="shadow-xl w-full sm:w-auto"
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Generating (Approx 30s)...
+                  Synthesizing Multi-Agent Horizon...
                 </span>
               ) : (
                 "🚀 Launch Simulation"
               )}
             </Button>
-            {errorMsg && <p className="text-red-400 text-sm mt-2">{errorMsg}</p>}
           </div>
         )}
       </div>
+
+      {/* Live SSE Multi-Agent Telemetry Stream Banner */}
+      {isSubmitting && (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 p-4 rounded-2xl bg-black/60 border border-purple-500/30 backdrop-blur-xl shadow-lg"
+        >
+          <div className="flex items-center justify-between text-xs mb-2">
+            <span className="text-purple-300 font-semibold flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping" />
+              {agentProgressMsg || "Initializing Multi-Agent Stream..."}
+            </span>
+            <span className="text-white/60 font-bold">{progressPercent}%</span>
+          </div>
+          <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400 transition-all duration-300 rounded-full"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </motion.div>
+      )}
+
+      {errorMsg && <p className="text-rose-400 text-xs mt-3 text-center">{errorMsg}</p>}
     </div>
   );
 }

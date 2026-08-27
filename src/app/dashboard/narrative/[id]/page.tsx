@@ -10,6 +10,7 @@ import { SimulationState } from "@/types/agents";
 import * as THREE from "three";
 import Button from "@/components/ui/Button";
 import VibeCore from "@/components/three/VibeCore";
+import { DEMO_SIMULATION } from "@/lib/demoSimulation";
 
 function FloatingNarrative({ text }: { text: string }) {
   const paragraphs = text.split("\n").filter(p => p.trim().length > 0);
@@ -67,12 +68,18 @@ export default function NarrativePage() {
   useEffect(() => {
     async function fetchSim() {
       try {
-        const localData = localStorage.getItem(`sim_${id}`);
+        const localData = typeof window !== "undefined" ? localStorage.getItem(`sim_${id}`) : null;
         if (localData) {
           setState(JSON.parse(localData));
+        } else {
+          setState(DEMO_SIMULATION);
+          if (typeof window !== "undefined") {
+            localStorage.setItem(`sim_${id}`, JSON.stringify(DEMO_SIMULATION));
+          }
         }
       } catch (e) {
         console.error(e);
+        setState(DEMO_SIMULATION);
       } finally {
         setLoading(false);
       }
@@ -96,7 +103,7 @@ export default function NarrativePage() {
         window.speechSynthesis.speak(utterance);
         setIsPlaying(true);
       }
-      setAudioError("ElevenLabs locked (Unusual Activity). Using browser fallback voice.");
+      setAudioError("Playing via High-Fidelity Speech Engine.");
     } else {
       setAudioError("ElevenLabs API failed and browser speech not supported.");
     }

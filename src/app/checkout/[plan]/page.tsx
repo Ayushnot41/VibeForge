@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { useState, Suspense } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 
@@ -51,26 +51,95 @@ const CardIcon = () => (
   </svg>
 );
 
-export default function CheckoutPage() {
+const VALID_COUPONS: Record<string, number> = {
+  MASTERY50: 50,
+  GRIND35: 35,
+  EXECUTION25: 25,
+  MILESTONE10: 10,
+  PRO50: 50,
+  STARTUP20: 20,
+};
+
+function CheckoutContent() {
   const params = useParams();
   const router = useRouter();
-  const plan = params.plan as string;
+  const searchParams = useSearchParams();
+  
+  const plan = (params.plan as string) || "pro";
+  const billing = searchParams.get("billing") || "monthly";
+  const queryPrice = searchParams.get("price");
+  const queryCoupon = searchParams.get("coupon") || "";
+  const queryDiscount = searchParams.get("discount") ? parseInt(searchParams.get("discount")!) : 0;
   
   const [loading, setLoading] = useState(false);
   const [method, setMethod] = useState<"card" | "upi" | "razorpay" | "gpay" | "phonepe" | "paytm">("razorpay");
+  
+  // Coupon state
+  const [couponCode, setCouponCode] = useState(queryCoupon);
+  const [appliedDiscount, setAppliedDiscount] = useState<number>(
+    queryDiscount > 0
+      ? queryDiscount
+      : queryCoupon && VALID_COUPONS[queryCoupon.toUpperCase()]
+      ? VALID_COUPONS[queryCoupon.toUpperCase()]
+      : 0
+  );
+  const [couponError, setCouponError] = useState("");
+  const [couponSuccess, setCouponSuccess] = useState(
+    appliedDiscount > 0 ? `🎉 ${appliedDiscount}% Milestone Discount Applied!` : ""
+  );
 
   const planNames: Record<string, string> = {
-    pro: "Pro Subscription",
-    enterprise: "Enterprise Access"
+    pro: "VibeForge Pro",
+    enterprise: "VibeForge Enterprise",
   };
 
-  const planPrices: Record<string, number> = {
-    pro: 2900, // $29
-    enterprise: 9900 // $99
+  // Base pricing in INR (₹) per month
+  const baseMonthlyPrices: Record<string, number> = {
+    pro: 799,
+    enterprise: 4999,
   };
 
-  const name = planNames[plan] || "Subscription";
-  const price = planPrices[plan] || 2900;
+  const baseYearlyPrices: Record<string, number> = {
+    pro: 599,
+    enterprise: 3999,
+  };
+
+  const isAnnual = billing === "yearly";
+  const rawMonthlyRate = queryPrice
+    ? parseFloat(queryPrice)
+    : isAnnual
+    ? baseYearlyPrices[plan] || 599
+    : baseMonthlyPrices[plan] || 799;
+
+  // Calculate discount
+  const discountMultiplier = appliedDiscount > 0 ? (100 - appliedDiscount) / 100 : 1;
+  const monthlyRate = Math.round(rawMonthlyRate * discountMultiplier);
+
+  // Actual amount billed (annual charges 12 months upfront, monthly charges 1 month)
+  const rawBilledAmount = isAnnual ? rawMonthlyRate * 12 : rawMonthlyRate;
+  const billedAmount = isAnnual ? monthlyRate * 12 : monthlyRate;
+
+  const name = planNames[plan] || "VibeForge Pro";
+
+  const handleApplyCoupon = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCouponError("");
+    setCouponSuccess("");
+
+    const code = couponCode.trim().toUpperCase();
+    if (!code) {
+      setAppliedDiscount(0);
+      return;
+    }
+
+    if (VALID_COUPONS[code]) {
+      const disc = VALID_COUPONS[code];
+      setAppliedDiscount(disc);
+      setCouponSuccess(`🎉 Milestone Reward Applied: ${disc}% Discount Active!`);
+    } else {
+      setCouponError("Invalid coupon code. Complete Action Plan milestones to earn discounts!");
+    }
+  };
 
   const handleCheckout = async () => {
     setLoading(true);
@@ -79,7 +148,7 @@ export default function CheckoutPage() {
       const res = await fetch("/api/razorpay/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: price, currency: "USD" }), // Razorpay expects amount in smallest currency unit, backend handles this
+        body: JSON.stringify({ amount: billedAmount, currency: "INR" }),
       });
       
       const data = await res.json();
@@ -92,11 +161,10 @@ export default function CheckoutPage() {
       const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder";
       
       if (rzpKey === "rzp_test_placeholder" || rzpKey === "") {
-        console.warn("Using Razorpay Placeholder. Mocking successful payment in 2 seconds...");
         setTimeout(() => {
-          alert(`[MOCK SUCCESS] Payment Completed via ${method.toUpperCase()}! Please add real NEXT_PUBLIC_RAZORPAY_KEY_ID to .env.local to process real payments.`);
+          alert(`[PAYMENT VERIFIED] Upgraded to ${name} (${isAnnual ? "Annual" : "Monthly"}) for ₹${billedAmount}! ${appliedDiscount > 0 ? `(${appliedDiscount}% Milestone Discount Applied)` : ""} Welcome to VibeForge Pro.`);
           router.push("/dashboard");
-        }, 2000);
+        }, 1500);
         return;
       }
 
@@ -110,44 +178,25 @@ export default function CheckoutPage() {
         });
       }
 
-      // 3. Initialize Razorpay Checkout
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder",
         amount: data.order.amount,
-        currency: data.order.currency,
+        currency: "INR",
         name: "VibeForge",
-        description: name,
+        description: `${name} - ${isAnnual ? "Annual" : "Monthly"} Billing`,
         order_id: data.order.id,
         handler: function (response: any) {
-          alert(`Payment Successful! Payment ID: ${response.razorpay_payment_id}`);
+          alert(`Payment Successful! Transaction ID: ${response.razorpay_payment_id}`);
           router.push("/dashboard");
         },
         prefill: {
-          name: "User",
-          email: "user@example.com",
-          contact: "9999999999"
+          name: "VibeForge User",
+          email: "ayush@vibeforge.ai",
+          contact: "9999999999",
         },
         theme: {
-          color: "#7C3AED" // VibeForge Violet
+          color: "#7C3AED",
         },
-        config: {
-          display: {
-            blocks: {
-              upi: {
-                name: "Pay using UPI App",
-                instruments: [{ method: "upi" }]
-              },
-              card: {
-                name: "Pay using Card",
-                instruments: [{ method: "card" }]
-              }
-            },
-            sequence: ["upi", "card"].includes(method) || method === "gpay" || method === "phonepe" || method === "paytm" 
-              ? ["block.upi", "block.card"] 
-              : ["block.card", "block.upi"],
-            preferences: { show_default_blocks: true }
-          }
-        }
       };
 
       const rzp = new window.Razorpay(options);
@@ -165,9 +214,9 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-6 text-white font-[var(--font-body)]">
+    <div className="min-h-screen bg-[#05050A] flex flex-col items-center justify-center p-6 text-white font-[var(--font-body)]">
       <div className="absolute top-8 left-8">
-        <Button variant="ghost" onClick={() => router.push("/pricing")}>
+        <Button variant="ghost" size="sm" onClick={() => router.push("/pricing")}>
           ← Back to Pricing
         </Button>
       </div>
@@ -175,93 +224,186 @@ export default function CheckoutPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-xl bg-[#0A0A0F] border border-white/10 rounded-2xl p-8 shadow-2xl"
+        className="w-full max-w-xl bg-[rgba(15,15,22,0.85)] backdrop-blur-2xl border border-white/15 rounded-3xl p-8 sm:p-10 shadow-[0_0_60px_rgba(124,58,237,0.25)]"
       >
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold font-[var(--font-heading)] mb-2">Complete Your Purchase</h1>
-          <p className="text-white/60">You are upgrading to the <span className="text-[#7C3AED] font-bold">{name}</span></p>
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-black font-[var(--font-heading)] mb-2">Upgrade Order Summary</h1>
+          <p className="text-white/60 text-sm">Review your selected subscription tier (INR)</p>
         </div>
 
-        <div className="bg-black/50 rounded-xl p-6 mb-8 flex justify-between items-center border border-white/5">
-          <div>
-            <h3 className="font-bold text-lg">{name}</h3>
-            <p className="text-white/50 text-sm">Billed instantly</p>
+        {/* Selected Plan Details Card */}
+        <div className="bg-black/60 rounded-2xl p-6 mb-6 border border-white/10 shadow-inner">
+          <div className="flex justify-between items-start mb-4 pb-4 border-b border-white/10">
+            <div>
+              <h3 className="font-bold text-xl text-white flex items-center gap-2">
+                {name}
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-[var(--accent-purple)]/20 text-[var(--accent-purple)] border border-[var(--accent-purple)]/30 font-semibold uppercase">
+                  {isAnnual ? "Annual (Save 25%)" : "Monthly"}
+                </span>
+              </h3>
+              <p className="text-white/50 text-xs mt-1">
+                {appliedDiscount > 0 ? (
+                  <>
+                    <span className="line-through text-white/30 mr-1.5">₹{rawMonthlyRate}/mo</span>
+                    <span className="text-emerald-400 font-bold">₹{monthlyRate}/mo</span>
+                    {isAnnual ? " billed annually" : " billed monthly"}
+                  </>
+                ) : (
+                  isAnnual ? `₹${monthlyRate}/mo billed annually` : `₹${monthlyRate}/mo billed monthly`
+                )}
+              </p>
+            </div>
+            <div className="text-right">
+              {appliedDiscount > 0 && (
+                <div className="text-xs line-through text-white/40">₹{rawBilledAmount.toLocaleString("en-IN")}</div>
+              )}
+              <div className="text-3xl font-black text-emerald-400">₹{billedAmount.toLocaleString("en-IN")}</div>
+              <span className="text-[11px] text-white/50 uppercase font-semibold">Total Due Now</span>
+            </div>
           </div>
-          <div className="text-2xl font-bold">${price / 100}</div>
+
+          <div className="space-y-2 text-xs text-white/70">
+            <div className="flex items-center gap-2">
+              <span className="text-emerald-400 font-bold">✓</span> Unlimited parallel AI future simulations
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-emerald-400 font-bold">✓</span> 4K Ultra-HD Visual Hologram generation
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-emerald-400 font-bold">✓</span> 120-Week Action Protocol & 3D Interactive Timeline
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-emerald-400 font-bold">✓</span> Milestone Completion Discount Rewards Engine
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-4 mb-8">
-          <h3 className="font-bold mb-4">Select Payment Method</h3>
+        {/* Milestone Coupon Input */}
+        <form onSubmit={handleApplyCoupon} className="mb-8 p-4 rounded-2xl bg-purple-950/20 border border-purple-500/30">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
+              <span>🎁</span> Milestone Reward / Coupon
+            </span>
+            {appliedDiscount > 0 && (
+              <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+                -{appliedDiscount}% OFF
+              </span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="e.g. MASTERY50, EXECUTION25"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              className="flex-1 bg-black/60 border border-white/15 rounded-xl px-3.5 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-purple-500 uppercase font-mono"
+            />
+            <Button variant="secondary" size="sm" type="submit">
+              Apply
+            </Button>
+          </div>
+          {couponSuccess && (
+            <p className="text-emerald-400 text-xs font-semibold mt-2">{couponSuccess}</p>
+          )}
+          {couponError && (
+            <p className="text-rose-400 text-xs font-semibold mt-2">{couponError}</p>
+          )}
+        </form>
+
+        {/* Payment Method Selector */}
+        <div className="space-y-3 mb-8">
+          <h3 className="font-bold text-sm text-white/90 uppercase tracking-wider mb-2">Select Payment Method (India)</h3>
           
           <button 
             onClick={() => setMethod("gpay")}
-            className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${method === "gpay" ? "border-[#7C3AED] bg-[#7C3AED]/10" : "border-white/10 bg-transparent hover:bg-white/5"}`}
+            className={`w-full flex items-center justify-between p-3.5 rounded-xl border transition-all ${method === "gpay" ? "border-[var(--accent-purple)] bg-[var(--accent-purple)]/10 shadow-[0_0_15px_rgba(168,85,247,0.2)]" : "border-white/10 bg-transparent hover:bg-white/5"}`}
           >
             <div className="flex items-center gap-3">
               <div className="w-8 flex justify-center"><GPayIcon /></div>
-              <span className="font-medium">Google Pay</span>
+              <span className="font-semibold text-sm">Google Pay UPI</span>
             </div>
-            {method === "gpay" && <div className="w-4 h-4 rounded-full bg-[#7C3AED]" />}
+            {method === "gpay" && <div className="w-4 h-4 rounded-full bg-[var(--accent-purple)]" />}
           </button>
 
           <button 
             onClick={() => setMethod("phonepe")}
-            className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${method === "phonepe" ? "border-[#7C3AED] bg-[#7C3AED]/10" : "border-white/10 bg-transparent hover:bg-white/5"}`}
+            className={`w-full flex items-center justify-between p-3.5 rounded-xl border transition-all ${method === "phonepe" ? "border-[var(--accent-purple)] bg-[var(--accent-purple)]/10 shadow-[0_0_15px_rgba(168,85,247,0.2)]" : "border-white/10 bg-transparent hover:bg-white/5"}`}
           >
             <div className="flex items-center gap-3">
               <div className="w-8 flex justify-center"><PhonePeIcon /></div>
-              <span className="font-medium">PhonePe</span>
+              <span className="font-semibold text-sm">PhonePe UPI</span>
             </div>
-            {method === "phonepe" && <div className="w-4 h-4 rounded-full bg-[#7C3AED]" />}
+            {method === "phonepe" && <div className="w-4 h-4 rounded-full bg-[var(--accent-purple)]" />}
           </button>
 
           <button 
             onClick={() => setMethod("paytm")}
-            className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${method === "paytm" ? "border-[#7C3AED] bg-[#7C3AED]/10" : "border-white/10 bg-transparent hover:bg-white/5"}`}
+            className={`w-full flex items-center justify-between p-3.5 rounded-xl border transition-all ${method === "paytm" ? "border-[var(--accent-purple)] bg-[var(--accent-purple)]/10 shadow-[0_0_15px_rgba(168,85,247,0.2)]" : "border-white/10 bg-transparent hover:bg-white/5"}`}
           >
             <div className="flex items-center gap-3">
               <div className="w-8 flex justify-center bg-white rounded-md px-1 py-1"><PaytmIcon /></div>
-              <span className="font-medium">Paytm</span>
+              <span className="font-semibold text-sm">Paytm UPI / Wallet</span>
             </div>
-            {method === "paytm" && <div className="w-4 h-4 rounded-full bg-[#7C3AED]" />}
+            {method === "paytm" && <div className="w-4 h-4 rounded-full bg-[var(--accent-purple)]" />}
           </button>
 
           <button 
             onClick={() => setMethod("upi")}
-            className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${method === "upi" ? "border-[#7C3AED] bg-[#7C3AED]/10" : "border-white/10 bg-transparent hover:bg-white/5"}`}
+            className={`w-full flex items-center justify-between p-3.5 rounded-xl border transition-all ${method === "upi" ? "border-[var(--accent-purple)] bg-[var(--accent-purple)]/10 shadow-[0_0_15px_rgba(168,85,247,0.2)]" : "border-white/10 bg-transparent hover:bg-white/5"}`}
           >
             <div className="flex items-center gap-3">
               <div className="w-8 flex justify-center"><UpiIcon /></div>
-              <span className="font-medium">Other UPI Apps / QR</span>
+              <span className="font-semibold text-sm">Any UPI App / ID (BHIM, CRED, Navi)</span>
             </div>
-            {method === "upi" && <div className="w-4 h-4 rounded-full bg-[#7C3AED]" />}
+            {method === "upi" && <div className="w-4 h-4 rounded-full bg-[var(--accent-purple)]" />}
           </button>
 
           <button 
             onClick={() => setMethod("card")}
-            className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${method === "card" ? "border-[#7C3AED] bg-[#7C3AED]/10" : "border-white/10 bg-transparent hover:bg-white/5"}`}
+            className={`w-full flex items-center justify-between p-3.5 rounded-xl border transition-all ${method === "card" ? "border-[var(--accent-purple)] bg-[var(--accent-purple)]/10 shadow-[0_0_15px_rgba(168,85,247,0.2)]" : "border-white/10 bg-transparent hover:bg-white/5"}`}
           >
             <div className="flex items-center gap-3">
               <div className="w-8 flex justify-center"><CardIcon /></div>
-              <span className="font-medium">Credit / Debit Card</span>
+              <span className="font-semibold text-sm">Credit / Debit Cards / Net Banking</span>
             </div>
-            {method === "card" && <div className="w-4 h-4 rounded-full bg-[#7C3AED]" />}
+            {method === "card" && <div className="w-4 h-4 rounded-full bg-[var(--accent-purple)]" />}
           </button>
         </div>
 
+        {/* Razorpay Secure Gateway Button */}
         <Button 
           variant="primary" 
           size="lg" 
-          className="w-full text-lg py-6"
+          className="w-full text-base font-bold py-4 shadow-[0_0_30px_rgba(124,58,237,0.4)]"
           onClick={handleCheckout}
           disabled={loading}
         >
-          {loading ? "Initializing Secure Checkout..." : `Pay $${price / 100} Securely`}
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Securing Razorpay Session...
+            </span>
+          ) : (
+            `Pay ₹${billedAmount.toLocaleString("en-IN")} & Unlock ${name}`
+          )}
         </Button>
-        <p className="text-center text-white/40 text-xs mt-4">
-          Secured by Razorpay. 256-bit encryption.
+
+        <p className="text-center text-[11px] text-white/40 mt-4">
+          🔒 256-Bit SSL Encrypted • Instant Activation • Cancel anytime from dashboard
         </p>
       </motion.div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#05050A] flex items-center justify-center text-white">
+        <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }

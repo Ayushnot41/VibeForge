@@ -29,12 +29,13 @@ const plans = [
     emoji: "🌱",
     monthlyPrice: 0,
     yearlyPrice: 0,
-    description: "Perfect for trying out VibeForge",
+    description: "Perfect for testing out VibeForge simulations",
     featured: false,
     features: [
-      "3 simulations per month",
-      "Basic path analysis",
-      "Text-based action plans",
+      "3 AI simulations per month",
+      "Basic parallel path analysis",
+      "Text-based action protocols",
+      "Standard cloud storage",
     ],
     cta: "Start Free",
     ctaVariant: "secondary" as const,
@@ -42,38 +43,38 @@ const plans = [
   {
     name: "Pro",
     emoji: "🚀",
-    monthlyPrice: 9,
-    yearlyPrice: 7,
-    description: "For serious future planners",
+    monthlyPrice: 799,
+    yearlyPrice: 599,
+    description: "For high-performance architects and founders",
     featured: true,
-    badge: "MOST POPULAR",
+    badge: "MOST POPULAR IN INDIA",
     features: [
       "7 Days Free Trial",
-      "Unlimited simulations",
-      "AI voice narration",
-      "AI-generated visuals",
-      "3D interactive timelines",
-      "Calendar export",
+      "Unlimited parallel simulations",
+      "4K Hologram Visual Generation",
+      "Stochastic Monte Carlo Analysis",
+      "Timeline What-If Branching",
+      "Interactive 3D Timeline & Calendar Sync",
     ],
-    cta: "Get Pro",
+    cta: "Get Pro (₹799/mo)",
     ctaVariant: "primary" as const,
   },
   {
     name: "Enterprise",
     emoji: "🏢",
-    monthlyPrice: 99,
-    yearlyPrice: 79,
-    description: "For teams and organizations",
+    monthlyPrice: 4999,
+    yearlyPrice: 3999,
+    description: "For teams, studios, and accelerating organizations",
     featured: false,
     features: [
       "14 Days Free Trial",
-      "Everything in Pro",
-      "Team workspaces",
-      "API access",
-      "Custom AI models",
-      "Dedicated support",
+      "Everything in Pro Tier",
+      "Team multi-agent workspaces",
+      "High-Priority Background Queue",
+      "Full API & Webhook Access",
+      "Dedicated Technical Architecture Support",
     ],
-    cta: "Contact Sales",
+    cta: "Contact Enterprise",
     ctaVariant: "secondary" as const,
   },
 ];
@@ -150,7 +151,9 @@ export default function PricingPage() {
   const router = useRouter();
 
   const handleSelectPlan = (planName: string) => {
-    router.push(`/checkout/${planName.toLowerCase()}`);
+    const selectedPlan = plans.find((p) => p.name.toLowerCase() === planName.toLowerCase());
+    const selectedPrice = isYearly ? selectedPlan?.yearlyPrice : selectedPlan?.monthlyPrice;
+    router.push(`/checkout/${planName.toLowerCase()}?billing=${isYearly ? "yearly" : "monthly"}&price=${selectedPrice}`);
   };
 
   return (
@@ -197,44 +200,45 @@ export default function PricingPage() {
         {/* Toggle */}
         <motion.div
           variants={fadeIn}
-          className="flex items-center justify-center gap-4 mb-12"
+          className="flex items-center justify-center gap-4 mb-14"
         >
           <span
             className={cn(
-              "text-sm font-medium transition-colors",
-              !isYearly
-                ? "text-white"
-                : "text-[var(--text-muted)]"
+              "text-sm font-semibold transition-colors cursor-pointer",
+              !isYearly ? "text-white" : "text-[var(--text-muted)]"
             )}
+            onClick={() => setIsYearly(false)}
           >
-            Monthly
+            Monthly Billing
           </span>
           <button
             onClick={() => setIsYearly(!isYearly)}
             className={cn(
-              "relative w-14 h-7 rounded-full p-1 transition-colors duration-300 cursor-pointer",
+              "relative w-14 h-8 rounded-full p-1 transition-colors duration-300 cursor-pointer",
               isYearly
-                ? "bg-[var(--accent-violet)]"
-                : "bg-[var(--bg-secondary)] border border-[var(--glass-border)]"
+                ? "bg-[var(--accent-purple)] shadow-[0_0_20px_rgba(168,85,247,0.4)]"
+                : "bg-[var(--bg-secondary)] border border-white/15"
             )}
+            aria-label="Toggle annual billing"
           >
-            <div
+            <motion.div
+              layout
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
               className={cn(
-                "w-5 h-5 rounded-full bg-white transition-transform duration-300",
-                isYearly && "translate-x-7"
+                "w-6 h-6 rounded-full bg-white shadow-md",
+                isYearly && "ml-auto"
               )}
             />
           </button>
           <span
             className={cn(
-              "text-sm font-medium transition-colors",
-              isYearly
-                ? "text-white"
-                : "text-[var(--text-muted)]"
+              "text-sm font-semibold transition-colors cursor-pointer flex items-center gap-2",
+              isYearly ? "text-white" : "text-[var(--text-muted)]"
             )}
+            onClick={() => setIsYearly(true)}
           >
-            Yearly
-            <Badge color="green" className="ml-2">
+            Annual Billing
+            <Badge color="emerald" dot>
               Save 20%
             </Badge>
           </span>
@@ -243,68 +247,76 @@ export default function PricingPage() {
         {/* Pricing Cards */}
         <motion.div
           variants={fadeIn}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-20"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-20 items-stretch"
         >
           {plans.map((plan) => (
             <Card
               key={plan.name}
+              elevated={plan.featured}
               glowColor={plan.featured ? "#7C3AED" : undefined}
               className={cn(
-                "relative flex flex-col",
-                plan.featured &&
-                  "ring-2 ring-[var(--accent-violet)] shadow-[0_0_40px_rgba(124,58,237,0.2)]"
+                "relative flex flex-col justify-between p-8 group transition-all duration-300",
+                plan.featured
+                  ? "border-purple-500/50 shadow-[0_0_40px_rgba(124,58,237,0.25)] md:-translate-y-2"
+                  : "border-white/10 hover:border-white/20"
               )}
             >
               {plan.featured && plan.badge && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge color="violet">{plan.badge}</Badge>
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                  <Badge color="violet" dot className="shadow-lg font-bold">
+                    {plan.badge}
+                  </Badge>
                 </div>
               )}
 
-              <div className="text-center mb-6 pt-2">
-                <div className="text-4xl mb-3">{plan.emoji}</div>
-                <h3 className="text-xl font-bold mb-1">{plan.name}</h3>
-                <p className="text-sm text-[var(--text-secondary)]">
-                  {plan.description}
-                </p>
-              </div>
-
-              {/* Price */}
-              <div className="text-center mb-6">
-                <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-4xl font-bold">
-                    $
-                    {isYearly
-                      ? plan.yearlyPrice
-                      : plan.monthlyPrice}
-                  </span>
-                  <span className="text-[var(--text-muted)]">/mo</span>
-                </div>
-                {isYearly && plan.monthlyPrice > 0 && (
-                  <p className="text-xs text-[var(--text-muted)] mt-1">
-                    Billed annually (${(isYearly ? plan.yearlyPrice : plan.monthlyPrice) * 12}/yr)
+              <div>
+                <div className="text-center mb-6 pt-1">
+                  <div className="text-4xl mb-3">{plan.emoji}</div>
+                  <h3 className="text-2xl font-bold mb-1 text-white">{plan.name}</h3>
+                  <p className="text-xs text-[var(--text-secondary)]">
+                    {plan.description}
                   </p>
-                )}
-              </div>
+                </div>
 
-              {/* Features */}
-              <ul className="space-y-3 mb-8 flex-1">
-                {plan.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-start gap-2 text-sm text-[var(--text-secondary)]"
-                  >
-                    <span className="text-[var(--accent-violet)] mt-0.5">
-                      ✓
+                {/* Price */}
+                <div className="text-center mb-6 py-3 rounded-2xl bg-white/[0.03] border border-white/5">
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-4xl font-black text-white">
+                      ₹
+                      {isYearly
+                        ? plan.yearlyPrice
+                        : plan.monthlyPrice}
                     </span>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
+                    <span className="text-xs font-semibold text-[var(--text-muted)] uppercase">/month</span>
+                  </div>
+                  {isYearly && plan.monthlyPrice > 0 && (
+                    <p className="text-[11px] text-emerald-400 font-medium mt-1">
+                      Billed annually (₹{plan.yearlyPrice * 12}/yr)
+                    </p>
+                  )}
+                </div>
+
+                {/* Features */}
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-start gap-2.5 text-xs sm:text-sm text-[var(--text-secondary)]"
+                    >
+                      <span className="text-emerald-400 shrink-0 mt-0.5">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </span>
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
               {plan.monthlyPrice === 0 ? (
-                <Link href="/dashboard/simulate" className="block w-full">
-                  <Button variant={plan.ctaVariant} size="lg" fullWidth>
+                <Link href="/dashboard/simulate" className="block w-full mt-auto">
+                  <Button variant="secondary" size="lg" fullWidth>
                     {plan.cta}
                   </Button>
                 </Link>
@@ -313,6 +325,7 @@ export default function PricingPage() {
                   variant={plan.ctaVariant}
                   size="lg"
                   fullWidth
+                  className="mt-auto shadow-lg"
                   onClick={() => handleSelectPlan(plan.name)}
                 >
                   {plan.cta}

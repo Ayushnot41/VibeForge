@@ -5,7 +5,7 @@
 
 import { SimulationAnnotation } from './state';
 import type { ImagePrompt, FuturePath, UserInput } from '@/types/agents';
-import OpenAI from 'openai';
+import { callOpenRouterWithFallback } from '@/lib/openrouterClient';
 
 const STYLE_MAP: Record<FuturePath['type'], string> = {
   optimistic:
@@ -162,24 +162,19 @@ export async function visualizerNode(
 
     let narrativeScript = '';
     try {
-      const openai = new OpenAI({
-        baseURL: 'https://openrouter.ai/api/v1',
-        apiKey: process.env.OPENROUTER_API_KEY,
-      });
-
-      const completion = await openai.chat.completions.create({
-        model: 'meta-llama/llama-3.1-8b-instruct',
+      const { content } = await callOpenRouterWithFallback({
         messages: [
-          { role: 'system', content: "You are the user's highly motivational, energetic best friend and brother in arms. Write a short, punchy, dopamine-inducing speech (max 150 words) to hype them up about achieving their specific life goals. Speak directly to them like a brother. Do NOT read action steps. Just pure, hype motivation." },
+          { role: 'system', content: "You are the user's highly motivational, energetic mentor and brother in arms. Write a short, punchy, dopamine-inducing speech (max 150 words) to hype them up about achieving their specific life goals. Speak directly to them like a champion brother. Do NOT read action steps. Just pure, hyper-focused motivation." },
           { role: 'user', content: `Goal: ${state.userInput.goals}. Current situation: ${state.userInput.currentSituation}` },
         ],
-        temperature: 0.8,
-        max_tokens: 300,
+        preferredModels: ['anthropic/claude-opus-5', 'meta-llama/llama-3.3-70b-instruct', 'openai/gpt-4o-mini'],
+        temperature: 0.85,
+        maxTokens: 400,
       });
-      narrativeScript = completion.choices[0]?.message?.content ?? "Let's go get it bro! You've got this.";
+      narrativeScript = content || "Let's go get it! You have everything required to achieve this vision.";
     } catch (e) {
       console.warn("Failed to generate voice narrative:", e);
-      narrativeScript = "Let's go get it bro! You've got this.";
+      narrativeScript = "Let's execute! You have everything required to achieve this vision.";
     }
 
     return {

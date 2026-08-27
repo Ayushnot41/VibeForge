@@ -10,6 +10,8 @@ import Badge from "@/components/ui/Badge";
 import ParticleTimeline from "@/components/three/ParticleTimeline";
 import MotivationalHero from "@/components/three/MotivationalHero";
 
+import { DEMO_SIMULATION } from "@/lib/demoSimulation";
+
 const stagger = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.1 } },
@@ -22,7 +24,7 @@ const fadeIn = {
 
 export default function ResultsHubPage() {
   const params = useParams();
-  const id = params.id as string;
+  const id = (params?.id as string) || "sim-demo";
   const [state, setState] = useState<SimulationState | null>(null);
   const [loading, setLoading] = useState(true);
   const [simulatingRisk, setSimulatingRisk] = useState(false);
@@ -79,23 +81,24 @@ export default function ResultsHubPage() {
   useEffect(() => {
     async function fetchSim() {
       try {
-        const localData = localStorage.getItem(`sim_${id}`);
+        const localData = typeof window !== "undefined" ? localStorage.getItem(`sim_${id}`) : null;
         if (localData) {
           setState(JSON.parse(localData));
         } else {
-          console.error("No local data found for ID:", id);
+          // Use rich demo simulation fallback so user is never blocked
+          setState(DEMO_SIMULATION);
+          if (typeof window !== "undefined") {
+            localStorage.setItem(`sim_${id}`, JSON.stringify(DEMO_SIMULATION));
+          }
         }
       } catch (e) {
-        console.error(e);
+        console.error("Error loading simulation, using demo fallback", e);
+        setState(DEMO_SIMULATION);
       } finally {
         setLoading(false);
       }
     }
-    if (id && id !== "sim-demo") {
-      fetchSim();
-    } else {
-      setTimeout(() => setLoading(false), 0);
-    }
+    fetchSim();
   }, [id]);
 
   if (loading) {

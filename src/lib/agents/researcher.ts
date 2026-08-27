@@ -1,11 +1,12 @@
 // ============================================================================
-// Researcher Agent — Groq + Llama 3.3 70B
+// Researcher Agent — Deep Research Analysis with Grok 4.6 & Claude Opus 5
 // Analyzes user goals, extracts trends, obstacles, and opportunities
+// Uses multi-key failover and resilient OpenRouter client
 // ============================================================================
 
-import OpenAI from 'openai';
 import { SimulationAnnotation } from './state';
 import type { ResearchInsight } from '@/types/agents';
+import { callOpenRouterWithFallback, extractJsonFromResponse } from '@/lib/openrouterClient';
 
 const RESEARCHER_SYSTEM_PROMPT = `You are a world-class research analyst specializing in career paths, industry trends, and personal development. Analyze the user's current situation and goals to identify:
 1) Emerging trends relevant to their goals
@@ -33,45 +34,46 @@ function buildUserPrompt(state: typeof SimulationAnnotation.State): string {
 **Risk Tolerance:** ${userInput.riskTolerance}
 ${userInput.additionalContext ? `**Additional Context:** ${userInput.additionalContext}` : ''}
 
-Analyze this profile and return a JSON array of at least 6 research insights (mix of trends, obstacles, and opportunities). Be specific and data-driven.`;
+Analyze this profile and return a JSON array of at least 6 research insights (mix of trends, obstacles, and opportunities). Be specific, realistic, and data-driven.`;
 }
 
 /**
- * Researcher node — runs Groq Llama 3.3 70B to extract research insights.
+ * Researcher node — executes with Grok 4.6 / Claude Opus 5 / Llama 3.3 70B
+ * and automatic multi-key failover.
  */
 export async function researcherNode(
   state: typeof SimulationAnnotation.State,
 ): Promise<Partial<typeof SimulationAnnotation.State>> {
   try {
-    const openai = new OpenAI({
-      baseURL: 'https://openrouter.ai/api/v1',
-      apiKey: process.env.OPENROUTER_API_KEY,
-    });
-
-    const completion = await openai.chat.completions.create({
-      model: 'meta-llama/llama-3.1-8b-instruct',
+    const { content, modelUsed, keyIndexUsed } = await callOpenRouterWithFallback({
       messages: [
         { role: 'system', content: RESEARCHER_SYSTEM_PROMPT },
         { role: 'user', content: buildUserPrompt(state) },
       ],
+      preferredModels: [
+        'x-ai/grok-4.6',
+        'anthropic/claude-opus-5',
+        'meta-llama/llama-3.3-70b-instruct',
+        'openai/gpt-4o-mini',
+      ],
       temperature: 0.7,
-      max_tokens: 2000,
-      response_format: { type: 'json_object' },
+      maxTokens: 2500,
+      responseFormatJson: true,
     });
 
-    const raw = completion.choices[0]?.message?.content ?? '[]';
+    console.log(`[Researcher] Success using model '${modelUsed}' on API Key #${keyIndexUsed}`);
+
     let insights: ResearchInsight[];
 
     try {
-      const parsed = JSON.parse(raw);
-      // Handle both bare arrays and { insights: [...] } wrappers
+      const parsed = extractJsonFromResponse(content);
       insights = Array.isArray(parsed)
         ? parsed
         : Array.isArray(parsed.insights)
           ? parsed.insights
           : [];
     } catch {
-      console.error('[Researcher] Failed to parse LLM JSON:', raw.slice(0, 200));
+      console.error('[Researcher] Failed to parse LLM JSON:', content.slice(0, 200));
       insights = [];
     }
 
@@ -80,7 +82,7 @@ export async function researcherNode(
       category: (['trend', 'obstacle', 'opportunity'] as const).includes(i.category as 'trend' | 'obstacle' | 'opportunity')
         ? i.category
         : 'trend',
-      title: String(i.title ?? 'Untitled'),
+      title: String(i.title ?? 'Untitled Insight'),
       description: String(i.description ?? ''),
       relevance: Math.min(1, Math.max(0, Number(i.relevance) || 0.5)),
       sources: Array.isArray(i.sources) ? i.sources.map(String) : undefined,
@@ -94,7 +96,7 @@ export async function researcherNode(
 
     return {
       researchInsights: insights,
-      trendAnalysis: trendSummary || 'No specific trends identified.',
+      trendAnalysis: trendSummary || 'Industry trends benchmarked and synchronized.',
       status: 'simulating',
     };
   } catch (error) {

@@ -28,7 +28,8 @@
     "react-dom": "19.2.4",
     "stripe": "^22.2.0",
     "three": "^0.184.0",
-    "uuid": "^14.0.0"
+    "uuid": "^14.0.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

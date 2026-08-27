@@ -19,6 +19,8 @@ const inter = Inter({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
   themeColor: "#0A0A0F",
 };
 
@@ -34,6 +36,12 @@ export const metadata: Metadata = {
     "life planning",
     "AI predictions",
   ],
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "VibeForge",
+  },
   openGraph: {
     title: "VibeForge — AI Future Self Simulator",
     description:

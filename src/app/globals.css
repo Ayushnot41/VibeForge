@@ -6,50 +6,64 @@
 @import "tailwindcss";
 
 /* ============================================================
-   Design Tokens
+   Design Tokens & 24-Depth System
    ============================================================ */
 :root {
   /* Backgrounds */
   --bg-primary: #0A0A0F;
-  --bg-secondary: #1E1B2E;
-  --bg-tertiary: #151520;
+  --bg-secondary: #12111E;
+  --bg-tertiary: #181628;
+  --bg-elevated: #1F1D33;
 
   /* Accents */
   --accent-violet: #7C3AED;
   --accent-indigo: #6366F1;
   --accent-purple: #A855F7;
+  --accent-cyan: #06B6D4;
+  --accent-emerald: #10B981;
+  --accent-amber: #F59E0B;
+  --accent-rose: #F43F5E;
 
   /* Text */
   --text-primary: #FFFFFF;
-  --text-secondary: #A1A1AA;
-  --text-muted: #71717A;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
 
-  /* Glass */
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  /* Glassmorphism & Depth Layers */
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-bg-elevated: rgba(255, 255, 255, 0.07);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-border-glow: rgba(124, 58, 237, 0.35);
   --glass-hover: rgba(255, 255, 255, 0.08);
 
   /* Gradients */
   --gradient-violet: linear-gradient(135deg, #7C3AED 0%, #6366F1 100%);
   --gradient-glow: linear-gradient(135deg, #7C3AED 0%, #A855F7 50%, #6366F1 100%);
   --gradient-card: linear-gradient(180deg, rgba(124, 58, 237, 0.08) 0%, rgba(99, 102, 241, 0.02) 100%);
+  --gradient-accent-radial: radial-gradient(circle at top center, rgba(124, 58, 237, 0.18) 0%, transparent 70%);
 
   /* Fonts */
   --font-heading: 'Space Grotesk', var(--font-space-grotesk), sans-serif;
   --font-body: 'Inter', var(--font-inter), sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Borders */
+  /* Borders & 24-Depth Radii */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
   --radius-full: 9999px;
 
-  /* Shadows */
-  --shadow-glow: 0 0 20px rgba(124, 58, 237, 0.3);
-  --shadow-glow-lg: 0 0 40px rgba(124, 58, 237, 0.4);
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+  /* 24-Depth Shadows */
+  --shadow-depth-1: 0 2px 8px -1px rgba(0, 0, 0, 0.4), 0 1px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-depth-2: 0 8px 24px -4px rgba(0, 0, 0, 0.5), 0 2px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-depth-3: 0 16px 36px -6px rgba(0, 0, 0, 0.6), 0 4px 12px -2px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 25px rgba(124, 58, 237, 0.35);
+  --shadow-glow-lg: 0 0 50px rgba(124, 58, 237, 0.45);
+  --shadow-glow-cyan: 0 0 30px rgba(6, 182, 212, 0.35);
+  --shadow-glow-emerald: 0 0 30px rgba(16, 185, 129, 0.35);
+  --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
 /* ============================================================
@@ -61,6 +75,8 @@
   --color-violet: var(--accent-violet);
   --color-indigo: var(--accent-indigo);
   --color-purple: var(--accent-purple);
+  --color-cyan: var(--accent-cyan);
+  --color-emerald: var(--accent-emerald);
   --font-sans: var(--font-body);
   --font-mono: var(--font-mono);
 }
@@ -116,23 +132,41 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ============================================================
-   Glassmorphism Card
+   Glassmorphism Card & 24-Depth System
    ============================================================ */
 .glass-card {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transform: translateZ(0); /* Hardware acceleration */
-  will-change: transform;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius-2xl);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-depth-1);
+  transform: translateZ(0);
+  will-change: transform, box-shadow, border-color;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-card:hover {
   background: var(--glass-hover);
-  border-color: rgba(124, 58, 237, 0.3);
-  box-shadow: var(--shadow-glow);
+  border-color: rgba(124, 58, 237, 0.4);
+  box-shadow: var(--shadow-depth-2), var(--shadow-glow);
+  transform: translateY(-2px);
+}
+
+.glass-card-elevated {
+  background: var(--glass-bg-elevated);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-2xl);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-depth-2);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card-elevated:hover {
+  border-color: rgba(168, 85, 247, 0.5);
+  box-shadow: var(--shadow-depth-3), var(--shadow-glow-lg);
+  transform: translateY(-3px);
 }
 
 /* ============================================================
@@ -145,10 +179,11 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-body);
   font-weight: 600;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xl);
   cursor: pointer;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-depth-1), 0 0 20px rgba(124, 58, 237, 0.3);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glow-btn::before {
@@ -159,13 +194,13 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: inherit;
   z-index: -1;
   opacity: 0;
-  filter: blur(12px);
+  filter: blur(14px);
   transition: opacity 0.3s ease;
 }
 
 .glow-btn:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-glow-lg);
+  box-shadow: var(--shadow-depth-2), var(--shadow-glow-lg);
 }
 
 .glow-btn:hover::before {
@@ -177,7 +212,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ============================================================
-   Shimmer Animation
+   Shimmer & Micro-Animations
    ============================================================ */
 @keyframes shimmer {
   0% {
@@ -192,22 +227,19 @@ h1, h2, h3, h4, h5, h6 {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(124, 58, 237, 0.1) 50%,
+    rgba(124, 58, 237, 0.15) 50%,
     transparent 100%
   );
   background-size: 200% 100%;
   animation: shimmer 2.5s ease-in-out infinite;
 }
 
-/* ============================================================
-   Floating Animation
-   ============================================================ */
 @keyframes float {
   0%, 100% {
     transform: translateY(0px);
   }
   50% {
-    transform: translateY(-8px);
+    transform: translateY(-6px);
   }
 }
 
@@ -215,15 +247,12 @@ h1, h2, h3, h4, h5, h6 {
   animation: float 4s ease-in-out infinite;
 }
 
-/* ============================================================
-   Pulse Glow
-   ============================================================ */
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.25);
   }
   50% {
-    box-shadow: 0 0 40px rgba(124, 58, 237, 0.5);
+    box-shadow: 0 0 45px rgba(124, 58, 237, 0.55);
   }
 }
 
@@ -241,15 +270,41 @@ h1, h2, h3, h4, h5, h6 {
   background-clip: text;
 }
 
+.gradient-text-cyan {
+  background: linear-gradient(135deg, #06B6D4 0%, #3B82F6 50%, #8B5CF6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 /* ============================================================
    Background Mesh Gradient
    ============================================================ */
 .bg-mesh {
   background:
-    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(124, 58, 237, 0.15) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 80% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 40% at 20% 80%, rgba(168, 85, 247, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(124, 58, 237, 0.2) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 40% at 85% 45%, rgba(99, 102, 241, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 15% 75%, rgba(168, 85, 247, 0.1) 0%, transparent 55%),
     var(--bg-primary);
+}
+
+/* ============================================================
+   Accessible Focus & Reduced Motion
+   ============================================================ */
+:focus-visible {
+  outline: 2px solid var(--accent-purple);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ============================================================
