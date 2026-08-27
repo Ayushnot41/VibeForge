@@ -117,6 +117,8 @@ function PremiumBackground({ progress }: { progress: number }) {
   );
 }
 
+import { generateDynamicProfessionCurriculum } from "@/lib/agents/deployer";
+
 // Milestone Rewards Config
 interface RewardTier {
   threshold: number;
@@ -167,6 +169,7 @@ export default function ActionPlanPage() {
   const id = params?.id as string;
   const router = useRouter();
 
+  const [mounted, setMounted] = useState(false);
   const [state, setState] = useState<SimulationState | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
@@ -187,6 +190,10 @@ export default function ActionPlanPage() {
   const [rivalTauntIndex, setRivalTauntIndex] = useState(0);
   const [rivalDrawerOpen, setRivalDrawerOpen] = useState(false);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Ego sprint timer tick
   useEffect(() => {
     let timer: any = null;
@@ -204,21 +211,70 @@ export default function ActionPlanPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const localData = typeof window !== "undefined" ? localStorage.getItem(`sim_${id}`) : null;
-        if (localData) {
-          const parsed = JSON.parse(localData);
-          setState(parsed);
-          if (parsed.checkedActions) {
-            setCheckedItems(new Set(parsed.checkedActions));
+        let loadedState: SimulationState | null = null;
+        if (typeof window !== "undefined") {
+          const localData = localStorage.getItem(`sim_${id}`);
+          if (localData) {
+            try {
+              loadedState = JSON.parse(localData);
+            } catch (e) {}
           }
-          if (parsed.equippedSkin) {
-            setEquippedSkin(parsed.equippedSkin);
+
+          if (!loadedState) {
+            // Search other simulations in localStorage
+            for (let i = 0; i < localStorage.length; i++) {
+              const k = localStorage.key(i);
+              if (k && k.startsWith("sim_") && k !== "sim_sim-demo") {
+                const raw = localStorage.getItem(k);
+                if (raw) {
+                  try {
+                    loadedState = JSON.parse(raw);
+                    break;
+                  } catch (e) {}
+                }
+              }
+            }
           }
-        } else {
-          setState(DEMO_SIMULATION);
+        }
+
+        if (!loadedState) {
+          loadedState = DEMO_SIMULATION;
+        }
+
+        // Guarantee actionPlan is ALWAYS present
+        if (!loadedState.actionPlan || !loadedState.actionPlan.weeklyActions || loadedState.actionPlan.weeklyActions.length === 0) {
+          const goals = loadedState.userInput?.goals || "Elite Professional";
+          const situation = loadedState.userInput?.currentSituation || "Student";
+          const timeHorizon = loadedState.userInput?.timeHorizon || "3_years";
+          const horizonMap: Record<string, number> = {
+            "6_weeks": 6,
+            "12_weeks": 12,
+            "24_weeks": 24,
+            "36_weeks": 36,
+            "1_year": 48,
+            "2_years": 96,
+            "3_years": 144,
+            "5_years": 240,
+            "10_years": 480,
+          };
+          const targetWeeks = horizonMap[timeHorizon] || 144;
+          const fallbackCurriculum = generateDynamicProfessionCurriculum(goals, situation, targetWeeks);
+          loadedState.actionPlan = fallbackCurriculum.actionPlan;
+          if (!loadedState.aggressivePitch) {
+            loadedState.aggressivePitch = fallbackCurriculum.aggressivePitch;
+          }
+        }
+
+        setState(loadedState);
+
+        if (loadedState.checkedActions) {
+          setCheckedItems(new Set(loadedState.checkedActions));
+        }
+        if (loadedState.equippedSkin) {
+          setEquippedSkin(loadedState.equippedSkin);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Action plan load notice:", err);
         setState(DEMO_SIMULATION);
       } finally {
         setLoading(false);
@@ -792,7 +848,7 @@ export default function ActionPlanPage() {
     }
   };
 
-  if (loading) {
+  if (loading || !mounted) {
     return (
       <div className="flex flex-col items-center justify-center py-20 min-h-screen bg-black">
         <div className="w-10 h-10 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mb-4" />
@@ -801,16 +857,7 @@ export default function ActionPlanPage() {
     );
   }
 
-  if (!state || !state.actionPlan) {
-    return (
-      <div className="text-center py-20 min-h-screen bg-black flex flex-col items-center justify-center">
-        <h2 className="text-2xl font-bold text-rose-400 mb-2">Execution Protocol Not Found</h2>
-        <Button onClick={() => router.push(`/dashboard/results/${id}`)}>
-          ← Back to Command Center
-        </Button>
-      </div>
-    );
-  }
+  const effectiveState = (state && state.actionPlan) ? state : DEMO_SIMULATION;
 
   return (
     <motion.div

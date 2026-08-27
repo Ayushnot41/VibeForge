@@ -167,7 +167,7 @@ function parseActionPlan(raw: string): { actionPlan: ActionPlan; aggressivePitch
  * Universal Dynamic Profession Roadmap Generator
  * Creates an authentic, progressive roadmap for ANY career input across ANY number of weeks.
  */
-function generateDynamicProfessionCurriculum(
+export function generateDynamicProfessionCurriculum(
   goals: string,
   situation: string,
   targetWeeks: number,
