@@ -1,10 +1,19 @@
 // ============================================================================
-// POST /api/chat — Universal AI Intelligence & VibeForge Oracle Copilot
-// Powers universal multi-domain knowledge (like ChatGPT) + deep simulation awareness
+// POST /api/chat — Anthropic Claude 3.5 Sonnet & Opus Universal AI Copilot
 // ============================================================================
 
 import { NextRequest, NextResponse } from "next/server";
 import { callOpenRouterWithFallback } from "@/lib/openrouterClient";
+
+function cleanOutputFormatting(text: string): string {
+  if (!text) return "";
+  return text
+    // Strip leading markdown headers (#, ##, ###) from lines
+    .replace(/^#{1,6}\s+/gm, "")
+    // Clean redundant decorative asterisk wrappers on leading lines
+    .replace(/^\*\*([A-Za-z0-9\s—–:-]+)\*\*\s*$/gm, "$1")
+    .trim();
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,31 +27,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const currentSituation = simulationState?.userInput?.currentSituation || "Baseline Learner";
-    const goals = simulationState?.userInput?.goals || "Career & Life Mastery";
+    const currentSituation = simulationState?.userInput?.currentSituation || "Baseline Student";
+    const goals = simulationState?.userInput?.goals || "Career Mastery";
     const timeHorizon = simulationState?.userInput?.timeHorizon?.replace("_", " ") || "Custom Timeline";
     const totalWeeks = simulationState?.actionPlan?.weeklyActions?.length || 12;
     const rivalName = simulationState?.actionPlan?.rival?.name || "The Disciplined Rival";
     const rivalLead = simulationState?.actionPlan?.rival?.progressOffset || 7;
 
-    const systemPrompt = `You are the VibeForge Oracle — an omniscient, universal AI Intelligence and Career Copilot (operating with the full depth, knowledge, and capabilities of ChatGPT, Claude, and Grok).
+    const systemPrompt = `You are the VibeForge Oracle — powered by Anthropic Claude 3.5 Sonnet and Opus intelligence.
+You are a universal AI assistant capable of answering ANY question across all subjects (programming, finance, trading, business, math, science, writing, health, psychology, and personal growth).
 
-UNIVERSAL KNOWLEDGE BASE & SCOPE:
-- You have expert mastery across EVERY field of human knowledge: Programming & Software Engineering (Fullstack, Next.js, Python, TypeScript, AI/ML, Rust, DevOps), Trading & Financial Markets (Price Action, Options, Risk Management, Macroeconomics), Business & Freelancing, Sciences, Mathematics, Psychology, Philosophy, Creative Writing, and General Problem Solving.
-- You can answer ANY question the user asks on ANY subject without arbitrary limitations.
+CRITICAL FORMATTING RULES:
+1. NEVER start the first line or headings with hashtags (#, ##, ###).
+2. DO NOT use excessive asterisk decorators (*** or ***) on the first lines. Write clean, natural sentences.
+3. Use simple, clean, and engaging language that a common person or a 10-year-old child can understand easily.
+4. Maintain a polite, professional, high-clarity tone without unnecessary jargon.
+5. Use clean numbers (1., 2., 3.) or simple bullet points (-) for step-by-step guidance.
+6. When recommending YouTube tutorials, use verified search links formatted as: [Watch Recommended Guide](https://www.youtube.com/results?search_query=topic+tutorial&sp=CAM%253D)
 
-CONTEXT INTEGRATION:
-- When the user refers to their roadmap, weekly tasks, or career goal, leverage their active simulation context:
-  * Current Baseline: "${currentSituation}"
-  * Target Career: "${goals}"
-  * Timeline: ${timeHorizon} (${totalWeeks} total weekly sprints)
-  * Adversary Rival: ${rivalName} (+${rivalLead}d lead)
-
-OUTPUT EXCELLENCE GUIDELINES:
-1. Explain every concept with crystal-clear, intuitive language that anyone or even a 10-year-old can easily understand.
-2. Structure your answers with clean formatting: bold titles, crisp bullet points, clean markdown code blocks with syntax tags when applicable.
-3. If tutorials are relevant, provide verified high-view YouTube search links: [Watch Tutorial Guide ⭐](https://www.youtube.com/results?search_query=topic+tutorial&sp=CAM%253D)
-4. Keep the tone professional, inspiring, razor-sharp, and highly actionable.`;
+USER CONTEXT (If they ask about their career simulation):
+- Starting Baseline: "${currentSituation}"
+- Target Goal: "${goals}"
+- Timeline Horizon: ${timeHorizon} (${totalWeeks} weekly sprints)
+- Adversary Rival: ${rivalName} (+${rivalLead} days lead)`;
 
     const fullMessages = [
       { role: "system", content: systemPrompt },
@@ -52,30 +59,34 @@ OUTPUT EXCELLENCE GUIDELINES:
     const { content, modelUsed } = await callOpenRouterWithFallback({
       messages: fullMessages,
       preferredModels: [
-        "meta-llama/llama-3.3-70b-instruct",
+        "anthropic/claude-3.5-sonnet",
+        "anthropic/claude-3-opus",
+        "anthropic/claude-3.5-sonnet:beta",
+        "anthropic/claude-3-haiku",
         "openai/gpt-4o-mini",
-        "x-ai/grok-4.6",
       ],
-      temperature: 0.7,
+      temperature: 0.65,
       maxTokens: 2500,
     });
+
+    const cleanedContent = cleanOutputFormatting(content || "");
 
     return NextResponse.json({
       message: {
         role: "assistant",
-        content: content || "I am ready to assist you on any topic. What shall we conquer next?",
+        content: cleanedContent || "I am ready to help you. What would you like to explore or solve today?",
       },
-      modelUsed: modelUsed || "meta-llama/llama-3.3-70b-instruct",
+      modelUsed: modelUsed || "anthropic/claude-3.5-sonnet",
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Universal Copilot error";
+    const message = error instanceof Error ? error.message : "Copilot error";
     console.error("[/api/chat] Error:", message);
     return NextResponse.json(
       {
         message: {
           role: "assistant",
           content:
-            "I am ready. Ask me anything — from coding, trading, and business strategy to step-by-step roadmap execution.",
+            "I am ready to guide you. Ask me any question on coding, trading, business, or your roadmap steps.",
         },
       },
       { status: 200 }

@@ -71,7 +71,7 @@ export default function CopilotDrawer() {
         id: "msg-init",
         role: "assistant",
         content:
-          "👋 Greetings! I am the **VibeForge Oracle** — your universal AI intelligence and career transformation copilot.\n\nI can answer **any question across any domain** (coding, trading, science, business, writing, psychology) or help you execute your roadmap step-by-step. What would you like to explore today?",
+          "Hello! I am your AI Career Mentor, powered by Anthropic Claude 3.5 Sonnet.\n\nI am here to guide you step-by-step in very simple, clear language. You can ask me any question about your career roadmap, programming, trading, business, or daily habits. How can I help you today?",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ]);
@@ -152,7 +152,7 @@ export default function CopilotDrawer() {
       {
         id: `msg-${Date.now()}`,
         role: "assistant",
-        content: "New conversation initiated. Ask me anything on any topic!",
+        content: "New session started. Ask me any question in simple, easy-to-understand language!",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ]);
@@ -192,7 +192,7 @@ export default function CopilotDrawer() {
       const data = await res.json();
       const assistantReply =
         data?.message?.content ||
-        "I am ready. Ask me any question on coding, business, trading, or personal mastery.";
+        "I am ready. Ask me any question on your roadmap, coding, business, or daily strategy.";
 
       const assistantMsg: ChatMessage = {
         id: `assistant-${Date.now()}`,
@@ -210,7 +210,7 @@ export default function CopilotDrawer() {
           id: `err-${Date.now()}`,
           role: "assistant",
           content:
-            "I encountered a momentary connection hiccup. Please re-send your question and I will resolve it immediately.",
+            "I encountered a momentary connection notice. Please ask again and I will explain it immediately.",
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
@@ -220,11 +220,10 @@ export default function CopilotDrawer() {
   };
 
   const quickPrompts = [
-    "Explain Week 1 step-by-step in simple language",
-    "Write a high-performance Python script for data analysis",
-    "How to manage risk and avoid emotional trading errors?",
-    "Explain how transformer neural networks work simply",
-    "Give me 3 daily habits to achieve my goal 2x faster",
+    "Explain Week 1 step-by-step in very simple words",
+    "How can I stay disciplined when I feel lazy?",
+    "Give me 3 simple daily habits for consistent growth",
+    "What is the easiest way to start learning my dream skill?",
   ];
 
   return (
@@ -236,44 +235,46 @@ export default function CopilotDrawer() {
           className="group px-4 py-3 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 text-white font-bold text-xs shadow-[0_0_30px_rgba(147,51,234,0.5)] hover:shadow-[0_0_40px_rgba(6,182,212,0.7)] transition-all duration-300 flex items-center gap-2.5 hover:scale-105"
         >
           <span className="text-base animate-pulse">✨</span>
-          <span className="tracking-wider uppercase font-mono">VibeForge Oracle</span>
+          <span className="tracking-wider uppercase font-mono">Claude AI Copilot</span>
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
         </button>
       </div>
 
-      {/* Slideout Chatbot Drawer */}
+      {/* Auto-Resizable Chatbot Drawer across Mobile, Tablet, Laptop, PC */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, x: 500 }}
+            initial={{ opacity: 0, x: "100%" }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 500 }}
+            exit={{ opacity: 0, x: "100%" }}
             transition={{ duration: 0.28, ease: "easeOut" }}
-            className={`fixed top-0 right-0 bottom-0 ${
-              isExpanded ? "w-full sm:w-[800px]" : "w-full sm:w-[480px]"
-            } bg-zinc-950/95 backdrop-blur-2xl border-l border-zinc-800 shadow-2xl z-50 flex flex-col justify-between font-[var(--font-body)] text-white pointer-events-auto`}
+            className={`fixed inset-y-0 right-0 z-50 flex flex-col justify-between bg-zinc-950/95 backdrop-blur-2xl border-l border-zinc-800 shadow-2xl font-[var(--font-body)] text-white pointer-events-auto transition-all duration-300
+              ${/* Mobile: Full Screen 100vw, Tablet: max-w-[85vw], Laptop: 480px or 760px */ ""}
+              w-full sm:w-[480px] ${isExpanded ? "lg:w-[760px] lg:max-w-[60vw]" : "lg:w-[480px]"}
+            `}
           >
             {/* Header */}
             <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-black/60">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-purple-600 to-cyan-400 flex items-center justify-center text-white font-black shadow-md">
-                  🔮
+                  ✨
                 </div>
                 <div>
                   <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                    VibeForge Oracle
-                    <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950/80 px-2 py-0.5 rounded-full border border-cyan-500/30">
-                      Universal AI (Grok & Llama 3.3)
+                    VibeForge Mentor
+                    <span className="text-[10px] font-mono text-purple-300 bg-purple-950/80 px-2 py-0.5 rounded-full border border-purple-500/30">
+                      Claude 3.5 Sonnet
                     </span>
                   </h2>
-                  <p className="text-[11px] text-zinc-400">Ask any question across any domain or roadmap</p>
+                  <p className="text-[11px] text-zinc-400">Simple, Clear & Professional Guidance</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-1">
+                {/* Expand / Collapse width on desktop */}
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs transition-colors"
+                  className="hidden lg:block p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs transition-colors"
                   title={isExpanded ? "Collapse width" : "Expand width"}
                 >
                   {isExpanded ? "🗗" : "🗖"}
@@ -288,7 +289,7 @@ export default function CopilotDrawer() {
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs transition-colors"
-                  title="Close Oracle"
+                  title="Close Assistant"
                 >
                   ✕
                 </button>
@@ -303,7 +304,7 @@ export default function CopilotDrawer() {
                   className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}
                 >
                   <div
-                    className={`max-w-[90%] p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${
+                    className={`max-w-[92%] p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${
                       m.role === "user"
                         ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-none shadow-md font-medium"
                         : "bg-zinc-900/90 border border-zinc-800 text-zinc-200 rounded-bl-none shadow-sm"
@@ -312,7 +313,7 @@ export default function CopilotDrawer() {
                     <div className="whitespace-pre-wrap">{m.content}</div>
                   </div>
 
-                  <div className="flex items-center gap-3 mt-1 px-1">
+                  <div className="flex items-center gap-3 mt-1.5 px-1">
                     <span className="text-[10px] text-zinc-500 font-mono">{m.timestamp}</span>
                     <button
                       onClick={() => copyMessage(m.id, m.content)}
@@ -325,7 +326,7 @@ export default function CopilotDrawer() {
                         onClick={() => speakMessage(m.id, m.content)}
                         className="text-[10px] text-cyan-400 hover:text-cyan-300 font-mono flex items-center gap-1"
                       >
-                        {speakingMsgId === m.id ? "⏹ Stop Voice" : "🔊 Listen Voice"}
+                        {speakingMsgId === m.id ? "⏹ Stop Voice" : "🔊 Listen"}
                       </button>
                     )}
                   </div>
@@ -334,8 +335,8 @@ export default function CopilotDrawer() {
 
               {loading && (
                 <div className="flex items-center gap-2 p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 w-fit">
-                  <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                  <span className="text-xs text-zinc-400 font-mono">Oracle is synthesizing solution...</span>
+                  <div className="w-2 h-2 rounded-full bg-purple-400 animate-ping" />
+                  <span className="text-xs text-zinc-400 font-mono">Claude is thinking...</span>
                 </div>
               )}
 
@@ -381,10 +382,10 @@ export default function CopilotDrawer() {
 
                 <input
                   type="text"
-                  placeholder="Ask any question on any topic or roadmap..."
+                  placeholder="Ask any question in simple words..."
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-400 font-mono"
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-purple-400 font-mono"
                 />
 
                 <Button
