@@ -29,45 +29,63 @@ function getHologramUrl(prompt: ImagePrompt, index: number, userGoal?: string): 
   return `https://image.pollinations.ai/prompt/${infographicPrompt}?width=1024&height=1024&nologo=true&seed=${index * 179 + 5302}&model=flux`;
 }
 
-// Crisp High-Resolution SVG Infographic Fallback Engine
-function getFallbackInfographicSvg(title: string, desc: string, stepIndex: number): string {
+// Crisp High-Resolution SVG Infographic Engine (Renders in 0ms)
+function getFallbackInfographicSvg(title: string, desc: string, stepIndex: number, userGoal?: string): string {
   const cleanTitle = title.replace(/[<>&"]/g, "");
   const cleanDesc = desc.replace(/[<>&"]/g, "").slice(0, 160);
   const phaseNum = Math.floor(stepIndex / 2) + 1;
+  const goalClean = (userGoal || "Dream Career").replace(/[<>&"]/g, "").slice(0, 30);
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
-    <rect width="600" height="800" fill="#080812" rx="24"/>
-    <rect x="20" y="20" width="560" height="760" fill="#0d0d1e" stroke="#22d3ee" stroke-width="2" stroke-dasharray="6 6" rx="16" opacity="0.5"/>
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="850" viewBox="0 0 600 850">
+    <defs>
+      <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#070714"/>
+        <stop offset="100%" stop-color="#020208"/>
+      </linearGradient>
+      <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#06b6d4"/>
+        <stop offset="100%" stop-color="#8b5cf6"/>
+      </linearGradient>
+    </defs>
     
-    <rect x="35" y="35" width="530" height="75" fill="#111126" rx="14" stroke="#a855f7" stroke-width="1.5"/>
-    <text x="55" y="65" fill="#22d3ee" font-size="13" font-family="monospace" font-weight="bold">📊 STEP-BY-STEP GROWTH BLUEPRINT • PHASE ${phaseNum}</text>
-    <text x="55" y="94" fill="#ffffff" font-size="22" font-family="sans-serif" font-weight="bold">${cleanTitle}</text>
+    <rect width="600" height="850" fill="url(#bgGrad)" rx="28"/>
+    <rect x="16" y="16" width="568" height="818" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="6 6" rx="20" opacity="0.4"/>
     
-    <rect x="35" y="130" width="530" height="310" fill="#04040a" rx="16" stroke="#22d3ee" stroke-width="1.5" stroke-opacity="0.3"/>
+    <!-- Top Header Bar -->
+    <rect x="32" y="32" width="536" height="84" fill="#0f0f26" rx="16" stroke="#8b5cf6" stroke-width="1.5"/>
+    <text x="52" y="62" fill="#06b6d4" font-size="12" font-family="monospace" font-weight="bold" letter-spacing="1">⚡ GROWTH BLUEPRINT • PHASE ${phaseNum}</text>
+    <text x="52" y="94" fill="#ffffff" font-size="22" font-family="sans-serif" font-weight="bold">${cleanTitle}</text>
     
-    <circle cx="85" cy="180" r="18" fill="#22d3ee" fill-opacity="0.2" stroke="#22d3ee" stroke-width="2"/>
-    <text x="85" y="186" fill="#22d3ee" font-size="14" font-family="monospace" font-weight="bold" text-anchor="middle">01</text>
-    <text x="120" y="178" fill="#ffffff" font-size="16" font-family="sans-serif" font-weight="bold">Foundation & Habit Ignition</text>
-    <text x="120" y="198" fill="#9ca3af" font-size="13" font-family="sans-serif">Lock in daily focus blocks & core study routines</text>
+    <!-- 3-Step Flow Diagram -->
+    <rect x="32" y="132" width="536" height="340" fill="#05050f" rx="18" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.3"/>
     
-    <line x1="85" y1="205" x2="85" y2="245" stroke="#a855f7" stroke-width="2" stroke-dasharray="4 4"/>
+    <!-- Step 1 -->
+    <circle cx="78" cy="188" r="20" fill="#06b6d4" fill-opacity="0.2" stroke="#06b6d4" stroke-width="2"/>
+    <text x="78" y="195" fill="#22d3ee" font-size="15" font-family="monospace" font-weight="bold" text-anchor="middle">01</text>
+    <text x="114" y="184" fill="#ffffff" font-size="16" font-family="sans-serif" font-weight="bold">Core Foundation & Rules</text>
+    <text x="114" y="206" fill="#94a3b8" font-size="13" font-family="sans-serif">Daily focus blocks & risk control architecture</text>
     
-    <circle cx="85" cy="270" r="18" fill="#a855f7" fill-opacity="0.2" stroke="#a855f7" stroke-width="2"/>
-    <text x="85" y="276" fill="#c084fc" font-size="14" font-family="monospace" font-weight="bold" text-anchor="middle">02</text>
-    <text x="120" y="268" fill="#ffffff" font-size="16" font-family="sans-serif" font-weight="bold">Practical Execution & Journaling</text>
-    <text x="120" y="288" fill="#9ca3af" font-size="13" font-family="sans-serif">Backtest strategies & eliminate emotional errors</text>
+    <line x1="78" y1="214" x2="78" y2="258" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="4 4"/>
     
-    <line x1="85" y1="295" x2="85" y2="335" stroke="#10b981" stroke-width="2" stroke-dasharray="4 4"/>
+    <!-- Step 2 -->
+    <circle cx="78" cy="286" r="20" fill="#8b5cf6" fill-opacity="0.2" stroke="#8b5cf6" stroke-width="2"/>
+    <text x="78" y="293" fill="#c084fc" font-size="15" font-family="monospace" font-weight="bold" text-anchor="middle">02</text>
+    <text x="114" y="282" fill="#ffffff" font-size="16" font-family="sans-serif" font-weight="bold">Simulated Drills & Edge Testing</text>
+    <text x="114" y="304" fill="#94a3b8" font-size="13" font-family="sans-serif">Execute 50+ backtests & eliminate cognitive lag</text>
     
-    <circle cx="85" cy="360" r="18" fill="#10b981" fill-opacity="0.2" stroke="#10b981" stroke-width="2"/>
-    <text x="85" y="366" fill="#34d399" font-size="14" font-family="monospace" font-weight="bold" text-anchor="middle">03</text>
-    <text x="120" y="358" fill="#ffffff" font-size="16" font-family="sans-serif" font-weight="bold">Milestone Scaling & Edge Mastery</text>
-    <text x="120" y="378" fill="#9ca3af" font-size="13" font-family="sans-serif">Scale position sizing & achieve compounding consistency</text>
-
-    <rect x="35" y="460" width="530" height="290" fill="#0b0b17" rx="16" stroke="#ffffff" stroke-opacity="0.1"/>
-    <text x="60" y="498" fill="#22d3ee" font-size="14" font-family="monospace" font-weight="bold">📝 IMPLEMENTATION PROTOCOL INSTRUCTIONS:</text>
-    <foreignObject x="60" y="520" width="480" height="210">
-      <div xmlns="http://www.w3.org/1999/xhtml" style="color:#e2e8f0;font-size:15px;line-height:1.6;font-family:sans-serif;">
+    <line x1="78" y1="312" x2="78" y2="356" stroke="#10b981" stroke-width="2" stroke-dasharray="4 4"/>
+    
+    <!-- Step 3 -->
+    <circle cx="78" cy="384" r="20" fill="#10b981" fill-opacity="0.2" stroke="#10b981" stroke-width="2"/>
+    <text x="78" y="391" fill="#34d399" font-size="15" font-family="monospace" font-weight="bold" text-anchor="middle">03</text>
+    <text x="114" y="380" fill="#ffffff" font-size="16" font-family="sans-serif" font-weight="bold">Live Staking & Sovereign Scaling</text>
+    <text x="114" y="402" fill="#94a3b8" font-size="13" font-family="sans-serif">Scale capital, authority & compound verified track record</text>
+    
+    <!-- Directive Text Block -->
+    <rect x="32" y="490" width="536" height="316" fill="#0b0b1a" rx="18" stroke="#ffffff" stroke-opacity="0.1"/>
+    <text x="56" y="528" fill="#06b6d4" font-size="13" font-family="monospace" font-weight="bold" letter-spacing="1">📋 ROADMAP DIRECTIVES FOR ${goalClean.toUpperCase()}:</text>
+    <foreignObject x="56" y="546" width="488" height="236">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="color:#cbd5e1;font-size:14.5px;line-height:1.65;font-family:sans-serif;">
         ${cleanDesc}...
       </div>
     </foreignObject>
@@ -85,6 +103,7 @@ function CylinderCard3D({
   onClick,
   index,
   distanceFactor,
+  userGoal,
 }: {
   url: string;
   position: [number, number, number];
@@ -94,13 +113,31 @@ function CylinderCard3D({
   onClick: () => void;
   index: number;
   distanceFactor: number;
+  userGoal?: string;
 }) {
   const meshRef = useRef<THREE.Group>(null);
-  const [imgSrc, setImgSrc] = useState(url);
+  const fallbackSvg = getFallbackInfographicSvg(title, subtitle, index, userGoal);
+  const [imgSrc, setImgSrc] = useState(fallbackSvg);
+  const [isAiLoaded, setIsAiLoaded] = useState(false);
 
+  // Preload AI Image in the background and smoothly swap
+  useEffect(() => {
+    if (!url || url.startsWith("data:")) return;
+    const img = new Image();
+    img.src = url;
+    img.onload = () => {
+      setImgSrc(url);
+      setIsAiLoaded(true);
+    };
+    img.onerror = () => {
+      setImgSrc(fallbackSvg);
+    };
+  }, [url, fallbackSvg]);
+
+  // Silky-Smooth Gentle Float (Frequency reduced to 0.35 for calm, lag-free motion)
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 1.5 + position[0]) * 0.08;
+      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.35 + index * 0.9) * 0.035;
     }
   });
 
@@ -112,16 +149,17 @@ function CylinderCard3D({
             e.stopPropagation();
             onClick();
           }}
-          className="w-[370px] sm:w-[390px] h-[500px] sm:h-[520px] flex flex-col justify-between p-4 rounded-3xl overflow-hidden bg-[#070712]/95 backdrop-blur-2xl border-2 border-cyan-500/40 shadow-[0_0_40px_rgba(6,182,212,0.25)] transition-all duration-300 hover:scale-105 hover:border-cyan-300 cursor-pointer pointer-events-auto group select-none"
+          className="w-[320px] h-[460px] flex flex-col justify-between p-3.5 rounded-3xl overflow-hidden bg-[#070714]/95 backdrop-blur-2xl border-2 border-cyan-500/40 shadow-[0_0_35px_rgba(6,182,212,0.25)] transition-all duration-300 hover:scale-105 hover:border-cyan-300 cursor-pointer pointer-events-auto group select-none"
         >
           <div className="w-full h-full relative rounded-2xl overflow-hidden bg-black flex flex-col justify-between p-4">
             <img
               src={imgSrc}
               alt={title}
-              onError={() => setImgSrc(getFallbackInfographicSvg(title, subtitle, index))}
-              className="absolute inset-0 w-full h-full object-cover rounded-2xl transition-transform duration-700 group-hover:scale-105"
+              className={`absolute inset-0 w-full h-full object-cover rounded-2xl transition-all duration-500 ${
+                isAiLoaded ? "opacity-100 scale-100" : "opacity-95"
+              }`}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-black/50 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-black/40 pointer-events-none" />
 
             <div className="relative z-10 flex items-center justify-between">
               <span className="px-3 py-1 rounded-full bg-cyan-950/90 backdrop-blur-md border border-cyan-400/50 text-[11px] font-black text-cyan-300 tracking-wider uppercase shadow-lg">
@@ -137,7 +175,7 @@ function CylinderCard3D({
                 {subtitle}
               </p>
               <span className="text-cyan-400 text-xs font-bold inline-flex items-center gap-1 group-hover:text-cyan-300">
-                🔍 Click to Inspect Blueprint Notes →
+                🔍 Inspect Blueprint Notes →
               </span>
             </div>
           </div>
@@ -147,7 +185,7 @@ function CylinderCard3D({
   );
 }
 
-// 3D Cylinder Orbit Group
+// 3D Cylinder Orbit Group with Silky-Smooth Inertia Damping
 function HologramCylinder3D({
   prompts,
   rotationY,
@@ -162,14 +200,15 @@ function HologramCylinder3D({
   distanceFactor: number;
 }) {
   const groupRef = useRef<THREE.Group>(null);
-  const radius = Math.max(5.6, prompts.length * 0.92);
+  const radius = Math.max(6.0, prompts.length * 1.02);
 
+  // Silky Smooth Damping Physics (Factor 3.2 for luxurious, zero-jitter gliding)
   useFrame((_, delta) => {
     if (groupRef.current) {
       groupRef.current.rotation.y = THREE.MathUtils.damp(
         groupRef.current.rotation.y,
         rotationY,
-        8,
+        3.2,
         delta
       );
     }
@@ -195,12 +234,13 @@ function HologramCylinder3D({
             onClick={() => onSelect(index)}
             index={index}
             distanceFactor={distanceFactor}
+            userGoal={userGoal}
           />
         );
       })}
 
-      <pointLight position={[0, 0, 0]} color="#06b6d4" intensity={4} distance={15} />
-      <pointLight position={[0, 3, 0]} color="#a855f7" intensity={3} distance={15} />
+      <pointLight position={[0, 0, 0]} color="#06b6d4" intensity={3.5} distance={16} />
+      <pointLight position={[0, 3, 0]} color="#a855f7" intensity={2.8} distance={16} />
     </group>
   );
 }
@@ -214,13 +254,14 @@ export default function GalleryPage() {
   const [viewMode, setViewMode] = useState<"3d" | "grid">("3d");
   const [selectedHologram, setSelectedHologram] = useState<number | null>(null);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
+  const [autoRotate, setAutoRotate] = useState(true);
 
   // Machine & Viewport Auto-Detection
   const [deviceMetrics, setDeviceMetrics] = useState({
     isMobile: false,
-    cameraZ: 9.5,
-    fov: 50,
-    cardDistanceFactor: 5.5,
+    cameraZ: 9.6,
+    fov: 46,
+    cardDistanceFactor: 5.0,
   });
   const [activeMobileCard, setActiveMobileCard] = useState(0);
 
@@ -230,30 +271,23 @@ export default function GalleryPage() {
       if (w < 768) {
         setDeviceMetrics({
           isMobile: true,
-          cameraZ: 12,
-          fov: 60,
-          cardDistanceFactor: 6.5,
+          cameraZ: 11.5,
+          fov: 56,
+          cardDistanceFactor: 6.0,
         });
       } else if (w < 1024) {
         setDeviceMetrics({
           isMobile: false,
-          cameraZ: 10.2,
-          fov: 52,
-          cardDistanceFactor: 5.8,
-        });
-      } else if (w < 1440) {
-        setDeviceMetrics({
-          isMobile: false,
-          cameraZ: 9.2,
-          fov: 50,
-          cardDistanceFactor: 5.5,
+          cameraZ: 10.0,
+          fov: 48,
+          cardDistanceFactor: 5.2,
         });
       } else {
         setDeviceMetrics({
           isMobile: false,
-          cameraZ: 8.8,
-          fov: 48,
-          cardDistanceFactor: 5.2,
+          cameraZ: 9.6,
+          fov: 46,
+          cardDistanceFactor: 5.0,
         });
       }
     };
@@ -288,13 +322,14 @@ export default function GalleryPage() {
 
   const canvasContainerRef = useRef<HTMLDivElement>(null);
 
+  // Gentle Wheel Sensitivity
   useEffect(() => {
     const el = canvasContainerRef.current;
     if (!el || viewMode !== "3d") return;
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      const sensitivity = 0.003;
+      const sensitivity = 0.0012;
       setRotationY((prev) => prev - e.deltaY * sensitivity);
     };
 
@@ -304,6 +339,7 @@ export default function GalleryPage() {
     };
   }, [viewMode]);
 
+  // Gentle Mouse Drag Sensitivity
   const handleMouseDown = (e: React.MouseEvent) => {
     if (viewMode !== "3d") return;
     isDragging.current = true;
@@ -314,11 +350,21 @@ export default function GalleryPage() {
     if (!isDragging.current || viewMode !== "3d") return;
     const deltaX = e.clientX - startX.current;
     startX.current = e.clientX;
-    setRotationY((prev) => prev + deltaX * 0.005);
+    setRotationY((prev) => prev + deltaX * 0.0022);
   };
 
   const handleMouseUp = () => {
     isDragging.current = false;
+  };
+
+  const [activeCenterIndex, setActiveCenterIndex] = useState(0);
+
+  const rotateToCard = (targetIndex: number) => {
+    if (!prompts.length) return;
+    const normalizedIndex = (targetIndex + prompts.length) % prompts.length;
+    setActiveCenterIndex(normalizedIndex);
+    const targetAngle = -(normalizedIndex / prompts.length) * Math.PI * 2;
+    setRotationY(targetAngle);
   };
 
   if (loading) {
@@ -419,12 +465,8 @@ export default function GalleryPage() {
                     >
                       <div className="w-full h-full relative rounded-2xl overflow-hidden bg-black flex flex-col justify-between p-4">
                         <img
-                          src={hologramUrl}
+                          src={getFallbackInfographicSvg(monthTitle, prompt.sceneDescription, activeMobileCard, state?.userInput?.goals)}
                           alt={monthTitle}
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = getFallbackInfographicSvg(monthTitle, prompt.sceneDescription, activeMobileCard);
-                          }}
                           className="absolute inset-0 w-full h-full object-cover rounded-2xl"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-black/50 pointer-events-none" />
@@ -490,10 +532,23 @@ export default function GalleryPage() {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
           >
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-none text-center px-4 w-full max-w-md">
-              <span className="inline-block px-6 py-2 rounded-full bg-black/85 backdrop-blur-md border border-cyan-500/40 text-xs font-bold text-cyan-300 uppercase tracking-wider animate-pulse shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-                ↕ Scroll Wheel / Drag to Rotate 3D Cylinder Left & Right
-              </span>
+            {/* Centered Desktop 3D Navigation Dock */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 pointer-events-auto">
+              <button
+                onClick={() => rotateToCard(activeCenterIndex - 1)}
+                className="px-4 py-2 rounded-2xl bg-black/85 backdrop-blur-md border border-zinc-700 text-xs font-bold text-white hover:border-cyan-400 hover:text-cyan-300 transition-all shadow-xl cursor-pointer"
+              >
+                ‹ Prev Milestone
+              </button>
+              <div className="px-5 py-2 rounded-2xl bg-black/90 backdrop-blur-md border border-cyan-500/50 text-xs font-bold text-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.3)]">
+                Milestone {activeCenterIndex + 1} of {prompts.length} (Drag or Use Arrows)
+              </div>
+              <button
+                onClick={() => rotateToCard(activeCenterIndex + 1)}
+                className="px-4 py-2 rounded-2xl bg-black/85 backdrop-blur-md border border-zinc-700 text-xs font-bold text-white hover:border-cyan-400 hover:text-cyan-300 transition-all shadow-xl cursor-pointer"
+              >
+                Next Milestone ›
+              </button>
             </div>
 
             <Canvas
@@ -537,8 +592,8 @@ export default function GalleryPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {prompts.map((prompt, index) => {
-                const hologramUrl = getHologramUrl(prompt, index, state?.userInput?.goals);
                 const monthTitle = `Month ${prompt.milestoneMonth || (index + 1) * 3}`;
+                const instantSvg = getFallbackInfographicSvg(monthTitle, prompt.sceneDescription, index, state?.userInput?.goals);
                 return (
                   <motion.div
                     key={index}
@@ -553,13 +608,9 @@ export default function GalleryPage() {
                     >
                       <div className="w-full aspect-[4/3] sm:h-72 relative overflow-hidden bg-black">
                         <img
-                          src={hologramUrl}
+                          src={instantSvg}
                           alt={monthTitle}
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = getFallbackInfographicSvg(monthTitle, prompt.sceneDescription, index);
-                          }}
                         />
                         <div className="absolute top-3.5 left-3.5 flex gap-2">
                           <span className="px-3 py-1 rounded-full bg-cyan-950/90 border border-cyan-400/50 text-xs font-black text-cyan-300 tracking-wider">
