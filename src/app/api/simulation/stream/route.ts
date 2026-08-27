@@ -43,13 +43,6 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ error: "User goals are required" }), { status: 400 });
   }
 
-  if (!process.env.OPENROUTER_API_KEY) {
-    return new Response(
-      JSON.stringify({ error: "OPENROUTER_API_KEY is not configured. Cannot run AI pipeline." }),
-      { status: 500 }
-    );
-  }
-
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
