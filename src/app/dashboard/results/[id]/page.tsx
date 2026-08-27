@@ -247,6 +247,20 @@ export default function ResultsHubPage() {
             </Card>
           </Link>
 
+          <Link href={`/dashboard/reality-check/${id}`}>
+            <Card className="h-full group hover:-translate-y-2 transition-all duration-300" glowColor="#3B82F6">
+              <div className="flex flex-col items-center text-center p-4">
+                <div className="w-16 h-16 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                  ⚡
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-white">Reality Check</h3>
+                <p className="text-sm text-[var(--text-secondary)]">
+                  ML-powered career classification with live market demand, salary &amp; skill stats.
+                </p>
+              </div>
+            </Card>
+          </Link>
+
         </div>
       </motion.div>
     </motion.div>

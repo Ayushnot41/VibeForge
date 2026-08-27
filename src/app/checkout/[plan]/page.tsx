@@ -157,14 +157,15 @@ function CheckoutContent() {
         throw new Error(data.error?.description || "Failed to initialize payment");
       }
 
-      // 2. Mock payment if using placeholder keys
-      const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder";
+      // 2. Mock payment if using placeholder keys or demo mode
+      const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      const isDemoMode = data.isMock || !rzpKey || rzpKey === "rzp_test_placeholder";
       
-      if (rzpKey === "rzp_test_placeholder" || rzpKey === "") {
+      if (isDemoMode) {
         setTimeout(() => {
           alert(`[PAYMENT VERIFIED] Upgraded to ${name} (${isAnnual ? "Annual" : "Monthly"}) for ₹${billedAmount}! ${appliedDiscount > 0 ? `(${appliedDiscount}% Milestone Discount Applied)` : ""} Welcome to VibeForge Pro.`);
           router.push("/dashboard");
-        }, 1500);
+        }, 1200);
         return;
       }
 

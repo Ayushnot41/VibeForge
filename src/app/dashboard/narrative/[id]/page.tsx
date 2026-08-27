@@ -1,21 +1,23 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback, Suspense } from "react";
+import React, { useEffect, useState, useRef, useCallback, Suspense, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Float, Stars } from "@react-three/drei";
+import { Float, Stars, Sparkles } from "@react-three/drei";
 import { motion, AnimatePresence } from "framer-motion";
 import { SimulationState } from "@/types/agents";
 import * as THREE from "three";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
+import VibeCore from "@/components/three/VibeCore";
 import { DEMO_SIMULATION } from "@/lib/demoSimulation";
 
-// 3D Audio Visualizer Waveform Sphere
-function AudioWaveformSphere({ isPlaying }: { isPlaying: boolean }) {
+// 3D Audio Visualizer Waveform Sphere & Orbiting Cyber Shards
+function CosmicAudioScene({ isPlaying }: { isPlaying: boolean }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const ringRef = useRef<THREE.Mesh>(null);
+  const groupRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
@@ -29,13 +31,19 @@ function AudioWaveformSphere({ isPlaying }: { isPlaying: boolean }) {
       ringRef.current.rotation.z = -t * (isPlaying ? 1.2 : 0.3);
       ringRef.current.rotation.x = Math.PI / 3;
     }
+    if (groupRef.current) {
+      groupRef.current.rotation.y = t * 0.02;
+    }
   });
 
   return (
-    <group position={[0, 0, 0]}>
+    <group ref={groupRef} position={[0, 0, 0]}>
+      <Stars radius={80} depth={40} count={1600} factor={4} saturation={0.5} fade speed={0.8} />
+      <Sparkles count={100} scale={[18, 18, 18]} size={2} speed={0.4} color="#06b6d4" />
+
       <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
         <mesh ref={meshRef}>
-          <icosahedronGeometry args={[2.2, 3]} />
+          <icosahedronGeometry args={[2.0, 3]} />
           <meshStandardMaterial
             color={isPlaying ? "#06b6d4" : "#4c1d95"}
             emissive={isPlaying ? "#3b82f6" : "#2e1065"}
@@ -44,18 +52,42 @@ function AudioWaveformSphere({ isPlaying }: { isPlaying: boolean }) {
           />
         </mesh>
         <mesh ref={ringRef}>
-          <torusGeometry args={[3.2, 0.04, 16, 100]} />
+          <torusGeometry args={[2.9, 0.04, 16, 100]} />
           <meshBasicMaterial color={isPlaying ? "#38bdf8" : "#8b5cf6"} />
         </mesh>
       </Float>
-      <Stars radius={60} depth={30} count={1200} factor={4} fade speed={1} />
+
+      {/* Floating Cyber Shards */}
+      {Array.from({ length: 8 }).map((_, i) => (
+        <Float
+          key={i}
+          speed={0.8}
+          rotationIntensity={0.6}
+          floatIntensity={1}
+          position={[
+            Math.sin(i * 1.8) * 10,
+            Math.cos(i * 1.5) * 6,
+            -5 - (i % 4) * 2,
+          ]}
+        >
+          <mesh>
+            <octahedronGeometry args={[0.2 + (i % 3) * 0.1, 0]} />
+            <meshStandardMaterial
+              color={i % 2 === 0 ? "#8b5cf6" : "#06b6d4"}
+              emissive={i % 2 === 0 ? "#6d28d9" : "#0891b2"}
+              emissiveIntensity={0.6}
+              wireframe={i % 3 === 0}
+            />
+          </mesh>
+        </Float>
+      ))}
     </group>
   );
 }
 
 export default function NarrativePage() {
   const params = useParams();
-  const id = params.id as string;
+  const id = params?.id as string;
   const router = useRouter();
 
   const [state, setState] = useState<SimulationState | null>(null);
@@ -63,8 +95,16 @@ export default function NarrativePage() {
 
   // Audio Playback State
   const [isPlaying, setIsPlaying] = useState(false);
-  const [activeSpeechText, setActiveSpeechText] = useState<string>("");
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0);
+
+  // Teleprompter & Active Reading
+  const [activeParagraphIndex, setActiveParagraphIndex] = useState(0);
+  const [isAutoScrolling, setIsAutoScrolling] = useState(false);
+  const [scrollSpeed, setScrollSpeed] = useState<1 | 1.5 | 2>(1);
+  const narrativeContainerRef = useRef<HTMLDivElement>(null);
+
+  // Gamification state
+  const [insightsAbsorbed, setInsightsAbsorbed] = useState(0);
 
   // Interactive Voice Q&A State
   const [userQuestion, setUserQuestion] = useState("");
@@ -75,6 +115,7 @@ export default function NarrativePage() {
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const recognitionRef = useRef<any>(null);
 
+  // Load simulation state
   useEffect(() => {
     async function fetchSim() {
       try {
@@ -125,25 +166,42 @@ export default function NarrativePage() {
     }
   }, [id]);
 
-  // High-Definition Human-Like Speech Synthesizer
-  const speakText = useCallback((textToSpeak: string) => {
-    if (!synthRef.current) return;
+  // Clean split paragraphs
+  const paragraphs = useMemo(() => {
+    if (!state?.narrativeScript) return [];
+    return state.narrativeScript
+      .split(/\n\s*\n|\n/)
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
+  }, [state?.narrativeScript]);
 
-    synthRef.current.cancel();
+  const maxInsights = Math.max(1, Math.min(paragraphs.length, 6));
+  const progress = Math.min(1, insightsAbsorbed / maxInsights);
+
+  const absorbInsight = () => {
+    if (insightsAbsorbed < maxInsights) {
+      setInsightsAbsorbed((prev) => prev + 1);
+    }
+  };
+
+  // High-Definition Speech Synthesizer
+  const speakText = useCallback((textToSpeak: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+
+    window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
     utterance.rate = 0.95;
     utterance.pitch = 1.0;
 
-    const voices = synthRef.current.getVoices();
-    // Prefer natural English voices (Google US English, Samantha, Daniel, Natural)
+    const voices = window.speechSynthesis.getVoices();
     const naturalVoice = voices.find(
       (v) =>
         v.name.includes("Natural") ||
         v.name.includes("Google US") ||
         v.name.includes("Daniel") ||
         v.name.includes("Samantha") ||
-        v.lang === "en-US"
+        v.lang.startsWith("en")
     );
     if (naturalVoice) {
       utterance.voice = naturalVoice;
@@ -151,7 +209,6 @@ export default function NarrativePage() {
 
     utterance.onstart = () => {
       setIsPlaying(true);
-      setActiveSpeechText(textToSpeak);
     };
 
     utterance.onend = () => {
@@ -162,12 +219,12 @@ export default function NarrativePage() {
       setIsPlaying(false);
     };
 
-    synthRef.current.speak(utterance);
+    window.speechSynthesis.speak(utterance);
   }, []);
 
   const stopSpeech = () => {
-    if (synthRef.current) {
-      synthRef.current.cancel();
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
     }
     setIsPlaying(false);
   };
@@ -208,12 +265,15 @@ export default function NarrativePage() {
         }),
       });
 
-      const data = await res.json();
-      const answer = data.explanation || "Focus on your daily habits today, and your goal is guaranteed.";
-      setMentorAnswer(answer);
-      speakText(answer);
-    } catch (err) {
-      console.error(err);
+      if (res.ok) {
+        const data = await res.json();
+        const answer = data.explanation || "Focus on your daily habits today, and your goal is guaranteed.";
+        setMentorAnswer(answer);
+        speakText(answer);
+      } else {
+        throw new Error("API call failed");
+      }
+    } catch {
       const fallback = "Take it one step at a time. Conquering today's action item is all that matters!";
       setMentorAnswer(fallback);
       speakText(fallback);
@@ -222,9 +282,28 @@ export default function NarrativePage() {
     }
   };
 
+  // Teleprompter Auto-Scroll Effect
+  useEffect(() => {
+    if (!isAutoScrolling || !narrativeContainerRef.current) return;
+
+    const interval = setInterval(() => {
+      if (narrativeContainerRef.current) {
+        narrativeContainerRef.current.scrollTop += 1.5 * scrollSpeed;
+        const currentScroll = narrativeContainerRef.current.scrollTop;
+        const totalScroll =
+          narrativeContainerRef.current.scrollHeight - narrativeContainerRef.current.clientHeight;
+        if (currentScroll >= totalScroll - 5) {
+          setIsAutoScrolling(false);
+        }
+      }
+    }, 30);
+
+    return () => clearInterval(interval);
+  }, [isAutoScrolling, scrollSpeed]);
+
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#030308]">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#030308] text-white">
         <div className="w-10 h-10 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mb-4" />
         <p className="text-white/60 text-sm font-mono tracking-wider">Tuning Audio Frequencies...</p>
       </div>
@@ -265,15 +344,17 @@ export default function NarrativePage() {
         {/* Hero Section with 3D Waveform */}
         <div className="relative rounded-3xl overflow-hidden bg-gradient-to-b from-[#0b0b18] to-[#04040a] border border-cyan-500/30 shadow-[0_0_80px_rgba(6,182,212,0.15)] p-6 sm:p-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            
             {/* Left: Narrative Script & Main Voice Player */}
             <div className="lg:col-span-7 space-y-6">
               <div>
                 <span className="px-3.5 py-1 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-xs font-black text-cyan-300 uppercase tracking-widest">
-                  Cinematic Overlook & Voice Mentor
+                  Cinematic Overlook &amp; Voice Mentor
                 </span>
                 <h1 className="text-3xl sm:text-5xl font-black text-white mt-3 tracking-tight">
-                  Your Future in <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-purple-400 to-amber-300">Human Voice</span>
+                  Your Future in{" "}
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-purple-400 to-amber-300">
+                    Human Voice
+                  </span>
                 </h1>
                 <p className="text-white/70 text-sm sm:text-base mt-2 leading-relaxed">
                   Listen to the clear, power-basis explanation of your week-by-week career transformation.
@@ -294,7 +375,7 @@ export default function NarrativePage() {
                   variant="secondary"
                   onClick={() => {
                     if (currentWeek) {
-                      const weekExplanation = `Week ${currentWeek.week}: ${currentWeek.milestone || 'Execution Phase'}. In this week, your main tasks are: ${currentWeek.actions.slice(0, 3).join('. ')}. Focus on completing this step by step.`;
+                      const weekExplanation = `Week ${currentWeek.week}: ${currentWeek.milestone || "Execution Phase"}. In this week, your main tasks are: ${currentWeek.actions.slice(0, 3).join(". ")}. Focus on completing this step by step.`;
                       speakText(weekExplanation);
                     }
                   }}
@@ -322,7 +403,7 @@ export default function NarrativePage() {
                 <pointLight position={[10, 10, 10]} intensity={2} color="#06b6d4" />
                 <pointLight position={[-10, -10, -10]} intensity={1.5} color="#a855f7" />
                 <Suspense fallback={null}>
-                  <AudioWaveformSphere isPlaying={isPlaying} />
+                  <CosmicAudioScene isPlaying={isPlaying} />
                 </Suspense>
               </Canvas>
 
@@ -346,7 +427,7 @@ export default function NarrativePage() {
                 </h2>
               </div>
               <p className="text-white/60 text-xs sm:text-sm mt-1">
-                Have a doubt or need clarity on any week? Ask in voice or text — the mentor explains in simple terms a child can understand!
+                Have a doubt or need clarity on any week? Ask in voice or text — the mentor explains in simple terms!
               </p>
             </div>
 
@@ -366,7 +447,7 @@ export default function NarrativePage() {
           <div className="flex items-center gap-3">
             <input
               type="text"
-              placeholder="e.g. How do I start Week 1 if I have zero prior experience? What is risk-to-reward?"
+              placeholder="e.g. How do I start Week 1 if I have zero prior experience?"
               value={userQuestion}
               onChange={(e) => setUserQuestion(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAskMentor()}
@@ -426,7 +507,7 @@ export default function NarrativePage() {
                   key={idx}
                   onClick={() => {
                     setSelectedWeekIndex(idx);
-                    const speech = `Week ${week.week}: ${week.milestone || 'Execution Step'}. Focus tasks: ${week.actions.slice(0, 2).join('. ')}`;
+                    const speech = `Week ${week.week}: ${week.milestone || "Execution Step"}. Focus tasks: ${week.actions.slice(0, 2).join(". ")}`;
                     speakText(speech);
                   }}
                   className={`p-5 rounded-2xl border transition-all cursor-pointer ${
