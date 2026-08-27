@@ -71,7 +71,7 @@ export default function CopilotDrawer() {
         id: "msg-init",
         role: "assistant",
         content:
-          "Hello! I am your AI Career Mentor, powered by Anthropic Claude 3.5 Sonnet.\n\nI am here to guide you step-by-step in very simple, clear language. You can ask me any question about your career roadmap, programming, trading, business, or daily habits. How can I help you today?",
+          "Greetings! I am the **VibeForge Oracle** — your AI Career & Execution Copilot.\n\nI am here to guide you step-by-step in very simple, clear language. You can ask me any question about your career roadmap, programming, trading, business, or daily habits. How can I help you today?",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ]);
@@ -152,7 +152,7 @@ export default function CopilotDrawer() {
       {
         id: `msg-${Date.now()}`,
         role: "assistant",
-        content: "New session started. Ask me any question in simple, easy-to-understand language!",
+        content: "New conversation initiated with VibeForge Oracle. Ask me anything in simple, clear language!",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ]);
@@ -235,7 +235,7 @@ export default function CopilotDrawer() {
           className="group px-4 py-3 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 text-white font-bold text-xs shadow-[0_0_30px_rgba(147,51,234,0.5)] hover:shadow-[0_0_40px_rgba(6,182,212,0.7)] transition-all duration-300 flex items-center gap-2.5 hover:scale-105"
         >
           <span className="text-base animate-pulse">✨</span>
-          <span className="tracking-wider uppercase font-mono">Claude AI Copilot</span>
+          <span className="tracking-wider uppercase font-mono">VibeForge Oracle</span>
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
         </button>
       </div>
@@ -249,7 +249,6 @@ export default function CopilotDrawer() {
             exit={{ opacity: 0, x: "100%" }}
             transition={{ duration: 0.28, ease: "easeOut" }}
             className={`fixed inset-y-0 right-0 z-50 flex flex-col justify-between bg-zinc-950/95 backdrop-blur-2xl border-l border-zinc-800 shadow-2xl font-[var(--font-body)] text-white pointer-events-auto transition-all duration-300
-              ${/* Mobile: Full Screen 100vw, Tablet: max-w-[85vw], Laptop: 480px or 760px */ ""}
               w-full sm:w-[480px] ${isExpanded ? "lg:w-[760px] lg:max-w-[60vw]" : "lg:w-[480px]"}
             `}
           >
@@ -257,16 +256,16 @@ export default function CopilotDrawer() {
             <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-black/60">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-purple-600 to-cyan-400 flex items-center justify-center text-white font-black shadow-md">
-                  ✨
+                  🔮
                 </div>
                 <div>
                   <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                    VibeForge Mentor
-                    <span className="text-[10px] font-mono text-purple-300 bg-purple-950/80 px-2 py-0.5 rounded-full border border-purple-500/30">
+                    VibeForge Oracle
+                    <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950/80 px-2 py-0.5 rounded-full border border-cyan-500/30">
                       Claude 3.5 Sonnet
                     </span>
                   </h2>
-                  <p className="text-[11px] text-zinc-400">Simple, Clear & Professional Guidance</p>
+                  <p className="text-[11px] text-zinc-400">Universal AI Career Copilot</p>
                 </div>
               </div>
 

@@ -12,7 +12,7 @@ import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import { DEMO_SIMULATION } from "@/lib/demoSimulation";
 
-// Notebook Infographic + Comic Style Prompt Generator
+// Comic Art Panel with Infographic HUD Touch Generator
 function getHologramUrl(prompt: ImagePrompt, index: number): string {
   if (prompt.sceneDescription && prompt.sceneDescription.startsWith("http")) {
     return prompt.sceneDescription;
@@ -21,35 +21,37 @@ function getHologramUrl(prompt: ImagePrompt, index: number): string {
     .replace(/[^\w\s,.-]/g, "")
     .slice(0, 180);
 
-  const notebookInfographicPrompt = encodeURIComponent(
-    `Hand-drawn notebook infographic comic panel, clean illustrated sketch notes, visual roadmap diagram, structured step-by-step milestone annotations, minimalist study guide layout with subtle cyan and purple ink on dark slate paper, highly readable aesthetic infographic (no superheroes, no Avengers): ${cleanDesc}`
+  const comicInfographicPrompt = encodeURIComponent(
+    `Stylized graphic novel comic art panel, real-world career transformation milestone, cinematic character lineart, glowing cyan and violet holographic HUD infographic overlays, detailed ink comic styling with diagrammatic roadmap progress notes, high detail 8k resolution comic art: ${cleanDesc}`
   );
-  return `https://image.pollinations.ai/prompt/${notebookInfographicPrompt}?width=1024&height=1024&nologo=true&seed=${index * 137 + 4201}&model=flux`;
+  return `https://image.pollinations.ai/prompt/${comicInfographicPrompt}?width=1024&height=1024&nologo=true&seed=${index * 137 + 4201}&model=flux`;
 }
 
-// Fallback SVG Generator for guaranteed visual notes display
-function getFallbackInfographicSvg(title: string, desc: string): string {
+// Fallback Comic + Infographic SVG Generator
+function getFallbackComicSvg(title: string, desc: string): string {
   const cleanTitle = title.replace(/[<>&"]/g, "");
   const cleanDesc = desc.replace(/[<>&"]/g, "").slice(0, 140);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
-    <rect width="600" height="800" fill="#090914" rx="24"/>
-    <rect x="20" y="20" width="560" height="760" fill="#0d0d1e" stroke="#22d3ee" stroke-width="2" stroke-dasharray="8 8" rx="16" opacity="0.4"/>
-    <text x="50" y="80" fill="#22d3ee" font-size="22" font-family="monospace" font-weight="bold">📓 NOTEBOOK INFOGRAPHIC</text>
-    <text x="50" y="120" fill="#ffffff" font-size="28" font-family="sans-serif" font-weight="bold">${cleanTitle}</text>
-    <line x1="50" y1="145" x2="550" y2="145" stroke="#a855f7" stroke-width="2"/>
-    <rect x="50" y="180" width="500" height="260" fill="#05050f" rx="16" stroke="#ffffff" stroke-opacity="0.1"/>
-    <circle cx="90" cy="230" r="16" fill="#22d3ee" opacity="0.8"/>
-    <text x="85" y="236" fill="#000000" font-size="16" font-family="monospace" font-weight="bold">1</text>
-    <text x="120" y="235" fill="#ffffff" font-size="18" font-family="sans-serif" font-weight="600">Core Blueprint Step</text>
-    <circle cx="90" cy="300" r="16" fill="#a855f7" opacity="0.8"/>
-    <text x="85" y="306" fill="#000000" font-size="16" font-family="monospace" font-weight="bold">2</text>
-    <text x="120" y="305" fill="#ffffff" font-size="18" font-family="sans-serif" font-weight="600">Daily Execution Track</text>
-    <circle cx="90" cy="370" r="16" fill="#10b981" opacity="0.8"/>
-    <text x="85" y="376" fill="#000000" font-size="16" font-family="monospace" font-weight="bold">3</text>
-    <text x="120" y="375" fill="#ffffff" font-size="18" font-family="sans-serif" font-weight="600">Milestone Mastery</text>
-    <text x="50" y="490" fill="#22d3ee" font-size="16" font-family="monospace" font-weight="bold">📝 ROADMAP NOTES:</text>
-    <foreignObject x="50" y="510" width="500" height="220">
-      <div xmlns="http://www.w3.org/1999/xhtml" style="color:#d1d5db;font-size:16px;line-height:1.6;font-family:sans-serif;">
+    <rect width="600" height="800" fill="#080812" rx="24"/>
+    <rect x="20" y="20" width="560" height="760" fill="#0d0d1e" stroke="#22d3ee" stroke-width="2.5" rx="16" opacity="0.6"/>
+    <rect x="35" y="35" width="530" height="70" fill="#1e1b4b" rx="12" stroke="#a855f7" stroke-width="1.5"/>
+    <text x="55" y="65" fill="#22d3ee" font-size="14" font-family="monospace" font-weight="bold">⚡ COMIC ROADMAP PANEL</text>
+    <text x="55" y="92" fill="#ffffff" font-size="22" font-family="sans-serif" font-weight="bold">${cleanTitle}</text>
+    
+    <rect x="35" y="125" width="530" height="340" fill="#030308" rx="16" stroke="#22d3ee" stroke-width="1.5" stroke-opacity="0.3"/>
+    <circle cx="300" cy="270" r="85" fill="#1e1b4b" stroke="#a855f7" stroke-width="2" opacity="0.6"/>
+    <text x="300" y="275" fill="#22d3ee" font-size="48" font-family="sans-serif" text-anchor="middle">🎯</text>
+    <rect x="60" y="410" width="140" height="36" fill="#22d3ee" fill-opacity="0.2" rx="8" stroke="#22d3ee"/>
+    <text x="130" y="433" fill="#22d3ee" font-size="13" font-family="monospace" font-weight="bold" text-anchor="middle">HUD PHASE 1</text>
+    <rect x="230" y="410" width="140" height="36" fill="#a855f7" fill-opacity="0.2" rx="8" stroke="#a855f7"/>
+    <text x="300" y="433" fill="#c084fc" font-size="13" font-family="monospace" font-weight="bold" text-anchor="middle">EXECUTION</text>
+    <rect x="400" y="410" width="140" height="36" fill="#10b981" fill-opacity="0.2" rx="8" stroke="#10b981"/>
+    <text x="470" y="433" fill="#34d399" font-size="13" font-family="monospace" font-weight="bold" text-anchor="middle">MILESTONE</text>
+    
+    <rect x="35" y="485" width="530" height="265" fill="#0b0b17" rx="16" stroke="#ffffff" stroke-opacity="0.1"/>
+    <text x="60" y="525" fill="#22d3ee" font-size="15" font-family="monospace" font-weight="bold">📖 CHAPTER STORY & BLUEPRINT:</text>
+    <foreignObject x="60" y="545" width="480" height="185">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="color:#e2e8f0;font-size:15px;line-height:1.6;font-family:sans-serif;">
         ${cleanDesc}...
       </div>
     </foreignObject>
@@ -96,17 +98,17 @@ function CylinderCard3D({
             <img
               src={imgSrc}
               alt={title}
-              onError={() => setImgSrc(getFallbackInfographicSvg(title, subtitle))}
+              onError={() => setImgSrc(getFallbackComicSvg(title, subtitle))}
               className="absolute inset-0 w-full h-full object-cover rounded-2xl transition-transform duration-700 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-black/50 pointer-events-none" />
 
             <div className="relative z-10 flex items-center justify-between">
               <span className="px-3 py-1 rounded-full bg-cyan-950/90 backdrop-blur-md border border-cyan-400/50 text-[11px] font-black text-cyan-300 tracking-wider uppercase shadow-lg">
-                📓 {title}
+                ⚡ {title}
               </span>
               <span className="px-2.5 py-0.5 rounded-full bg-purple-950/90 border border-purple-400/50 text-[10px] font-bold text-purple-300 uppercase">
-                Infographic
+                Comic Hologram
               </span>
             </div>
 
@@ -115,7 +117,7 @@ function CylinderCard3D({
                 {subtitle}
               </p>
               <span className="text-cyan-400 text-xs font-bold inline-flex items-center gap-1 group-hover:text-cyan-300">
-                🔍 Click to Inspect Notes →
+                🔍 Click to Inspect Blueprint →
               </span>
             </div>
           </div>
@@ -254,7 +256,7 @@ export default function GalleryPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#030308]">
         <div className="w-10 h-10 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mb-4" />
-        <p className="text-white/60 text-sm font-mono tracking-wider">Generating Notebook Infographic Holograms...</p>
+        <p className="text-white/60 text-sm font-mono tracking-wider">Generating Comic Roadmap Holograms...</p>
       </div>
     );
   }
@@ -312,7 +314,7 @@ export default function GalleryPage() {
                 : "text-zinc-400 hover:text-white hover:bg-zinc-900"
             }`}
           >
-            📖 Notebook Grid
+            📖 Comic Roadmap Panels
           </button>
         </div>
       </header>
@@ -324,9 +326,9 @@ export default function GalleryPage() {
           <div className="flex-1 w-full flex flex-col justify-between items-center px-4 py-6 overflow-hidden">
             <div className="text-center space-y-1">
               <span className="px-3 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-[10px] font-mono font-bold text-cyan-300 uppercase">
-                Card {activeMobileCard + 1} of {prompts.length}
+                Panel {activeMobileCard + 1} of {prompts.length}
               </span>
-              <p className="text-xs text-zinc-400">Swipe or tap arrows to navigate timeline</p>
+              <p className="text-xs text-zinc-400">Swipe or tap arrows to navigate roadmap</p>
             </div>
 
             {/* Active Card with Smooth 3D Perspective */}
@@ -353,7 +355,7 @@ export default function GalleryPage() {
                           alt={monthTitle}
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            target.src = getFallbackInfographicSvg(monthTitle, prompt.sceneDescription);
+                            target.src = getFallbackComicSvg(monthTitle, prompt.sceneDescription);
                           }}
                           className="absolute inset-0 w-full h-full object-cover rounded-2xl"
                         />
@@ -361,10 +363,10 @@ export default function GalleryPage() {
 
                         <div className="relative z-10 flex items-center justify-between">
                           <span className="px-3 py-1 rounded-full bg-cyan-950/90 border border-cyan-400/50 text-[11px] font-black text-cyan-300 uppercase shadow-lg">
-                            📓 {monthTitle}
+                            ⚡ {monthTitle}
                           </span>
                           <span className="px-2 py-0.5 rounded-full bg-purple-950/90 border border-purple-400/50 text-[10px] font-bold text-purple-300 uppercase">
-                            Infographic
+                            Comic Hologram
                           </span>
                         </div>
 
@@ -373,7 +375,7 @@ export default function GalleryPage() {
                             {prompt.sceneDescription}
                           </p>
                           <span className="text-cyan-400 text-xs font-bold inline-flex items-center gap-1">
-                            🔍 Tap to Open Full Notes →
+                            🔍 Tap to Open Full Blueprint →
                           </span>
                         </div>
                       </div>
@@ -444,20 +446,20 @@ export default function GalleryPage() {
           </div>
         )
       ) : (
-        /* 2D Notebook Infographics View */
+        /* 2D Comic Roadmap Panels View */
         <div className="flex-1 w-full overflow-y-auto px-4 sm:px-6 py-8 sm:py-10">
           <div className="max-w-7xl mx-auto space-y-8">
             <div className="text-center space-y-2">
               <Badge color="cyan" dot className="mb-2">
-                Illustrated Notebook Infographics
+                Graphic Novel Roadmap Visualizer
               </Badge>
               <h1 className="text-2xl sm:text-5xl font-black text-white tracking-tight">
-                Notebook Roadmap <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-purple-400 to-amber-300">Infographics</span>
+                Comic Roadmap <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-purple-400 to-amber-300">Panels</span>
               </h1>
               <p className="text-zinc-400 text-xs sm:text-sm max-w-2xl mx-auto">
-                Hand-drawn visual study guides illustrating your transformation from{" "}
+                Stylized graphic novel comic art panels depicting your career transformation from{" "}
                 <strong className="text-white">{state?.userInput?.currentSituation || "baseline"}</strong> to{" "}
-                <strong className="text-cyan-300">{state?.userInput?.goals || "dream profession"}</strong>.
+                <strong className="text-cyan-300">{state?.userInput?.goals || "dream profession"}</strong> with holographic infographic milestones.
               </p>
             </div>
 
@@ -484,7 +486,7 @@ export default function GalleryPage() {
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            target.src = getFallbackInfographicSvg(monthTitle, prompt.sceneDescription);
+                            target.src = getFallbackComicSvg(monthTitle, prompt.sceneDescription);
                           }}
                         />
                         <div className="absolute top-3.5 left-3.5 flex gap-2">
@@ -497,7 +499,7 @@ export default function GalleryPage() {
                       <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between">
                         <div>
                           <span className="text-[11px] text-cyan-400 font-mono font-bold uppercase tracking-wider block mb-1">
-                            📓 Visual Infographic Note
+                            ⚡ Comic Blueprint
                           </span>
                           <p className="text-white text-xs sm:text-sm font-semibold leading-relaxed line-clamp-3">
                             {prompt.sceneDescription}
@@ -506,10 +508,10 @@ export default function GalleryPage() {
 
                         <div className="mt-4 pt-4 border-t border-zinc-800 flex items-center justify-between">
                           <span className="text-xs text-purple-300 font-bold">
-                            Inspect Notes →
+                            Inspect Blueprint →
                           </span>
                           <span className="text-xs text-zinc-500 font-mono">
-                            Notebook Visual
+                            8K Comic
                           </span>
                         </div>
                       </div>
@@ -551,7 +553,7 @@ export default function GalleryPage() {
                   Chapter {selectedHologram + 1} • Month {currentHologram.milestoneMonth || (selectedHologram + 1) * 3}
                 </span>
                 <span className="text-xs text-purple-300 font-mono font-bold">
-                  Notebook Infographic
+                  Comic Roadmap Hologram
                 </span>
               </div>
 
@@ -562,7 +564,7 @@ export default function GalleryPage() {
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = getFallbackInfographicSvg(`Chapter ${selectedHologram + 1}`, currentHologram.sceneDescription);
+                    target.src = getFallbackComicSvg(`Chapter ${selectedHologram + 1}`, currentHologram.sceneDescription);
                   }}
                 />
               </div>
@@ -570,7 +572,7 @@ export default function GalleryPage() {
               <div className="space-y-4">
                 <div>
                   <h3 className="text-xs uppercase font-bold text-cyan-400 tracking-wider mb-1">
-                    Illustrated Roadmap Blueprint
+                    Roadmap Milestone Blueprint
                   </h3>
                   <p className="text-white text-sm sm:text-base font-semibold leading-relaxed">
                     {currentHologram.sceneDescription}
@@ -584,7 +586,7 @@ export default function GalleryPage() {
                     onClick={() => handleDownloadImage(currentImageUrl, `vibeforge_chapter_${selectedHologram + 1}`)}
                     className="bg-cyan-600 hover:bg-cyan-500 text-xs font-bold"
                   >
-                    💾 Download Infographic
+                    💾 Download 4K Hologram
                   </Button>
                   <Button
                     variant="secondary"
@@ -592,7 +594,7 @@ export default function GalleryPage() {
                     onClick={() => handleCopyPrompt(currentHologram.sceneDescription)}
                     className="text-xs border-zinc-700"
                   >
-                    {copiedPrompt ? "✓ Notes Copied" : "📋 Copy Prompt"}
+                    {copiedPrompt ? "✓ Blueprint Copied" : "📋 Copy Prompt"}
                   </Button>
                 </div>
               </div>
