@@ -345,196 +345,318 @@ export default function ActionPlanPage() {
     if (!state || !state.actionPlan) return;
     setIsExportingPDF(true);
 
-    const situation = state.userInput?.currentSituation || "Baseline Background";
-    const goals = state.userInput?.goals || "Dream Career";
-    const weeksList = state.actionPlan.weeklyActions || [];
-    const totalW = weeksList.length;
-    const habits = state.actionPlan.habits || [];
-    const rival = state.actionPlan.rival || {
-      name: "The Disciplined Competitor",
-      bio: "Relentless execution every single day without excuses.",
-      taunts: ["I practiced today without hesitation. Did you?"],
-      progressOffset: 7,
-    };
-
-    // Create a temporary container for rendering high-res PDF pages
-    const reportContainer = document.createElement("div");
-    reportContainer.id = "temp-pdf-export-container";
-    reportContainer.style.position = "fixed";
-    reportContainer.style.left = "-9999px";
-    reportContainer.style.top = "0";
-    reportContainer.style.width = "850px";
-    reportContainer.style.backgroundColor = "#06060c";
-    reportContainer.style.color = "#f1f5f9";
-    reportContainer.style.fontFamily = "'Inter', -apple-system, BlinkMacSystemFont, sans-serif";
-    reportContainer.style.padding = "32px 28px";
-    reportContainer.style.zIndex = "-1000";
-
-    reportContainer.innerHTML = `
-      <div style="background: linear-gradient(135deg, #0d0d1e 0%, #16122d 100%); border: 1px solid rgba(124, 58, 237, 0.4); border-radius: 20px; padding: 24px; margin-bottom: 20px;">
-        <div style="display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; background: rgba(6, 182, 212, 0.2); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.4); margin-bottom: 10px;">
-          ⚡ VibeForge Autonomous Platform
-        </div>
-        <h1 style="font-size: 26px; font-weight: 800; color: #ffffff; margin-bottom: 6px;">Career Execution Protocol</h1>
-        <p style="font-size: 14px; color: #94a3b8; margin-bottom: 14px;">Complete Step-by-Step Transition Protocol: <strong style="color: #fff;">${situation}</strong> ➔ <strong style="color: #38bdf8;">${goals}</strong></p>
-        
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px;">
-          <div>
-            <div style="color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 10px;">Starting Baseline</div>
-            <div style="color: #f8fafc; font-weight: 700; font-size: 12px; margin-top: 2px;">${situation}</div>
-          </div>
-          <div>
-            <div style="color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 10px;">Target Profession</div>
-            <div style="color: #38bdf8; font-weight: 700; font-size: 12px; margin-top: 2px;">${goals}</div>
-          </div>
-          <div>
-            <div style="color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 10px;">Timeline Horizon</div>
-            <div style="color: #a855f7; font-weight: 700; font-size: 12px; margin-top: 2px;">${totalW} Sprints</div>
-          </div>
-          <div>
-            <div style="color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 10px;">Execution Strategy</div>
-            <div style="color: #34d399; font-weight: 700; font-size: 12px; margin-top: 2px;">Asymmetric Growth</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 4-Phase Color Progression Diagram -->
-      <h2 style="font-size: 16px; font-weight: 800; color: #f8fafc; margin: 18px 0 10px;">📊 4-Phase Progression Architecture</h2>
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px;">
-        <div style="background: #0f0f1c; border-radius: 12px; padding: 12px; border-top: 4px solid #06b6d4;">
-          <div style="font-size: 10px; font-weight: 800; color: #06b6d4; text-transform: uppercase;">Phase 1 (W1 - ${Math.round(totalW * 0.25)})</div>
-          <div style="font-size: 13px; font-weight: 700; color: #fff; margin: 3px 0;">Foundational Setup</div>
-          <div style="font-size: 10px; color: #94a3b8; line-height: 1.3;">Chart literacy, environment setup, baseline risk mitigation rules.</div>
-        </div>
-        <div style="background: #0f0f1c; border-radius: 12px; padding: 12px; border-top: 4px solid #8b5cf6;">
-          <div style="font-size: 10px; font-weight: 800; color: #8b5cf6; text-transform: uppercase;">Phase 2 (W${Math.round(totalW * 0.25) + 1} - ${Math.round(totalW * 0.5)})</div>
-          <div style="font-size: 13px; font-weight: 700; color: #fff; margin: 3px 0;">Competency & Simulation</div>
-          <div style="font-size: 10px; color: #94a3b8; line-height: 1.3;">Hands-on drills, backtesting 50+ setups, and habit tracking.</div>
-        </div>
-        <div style="background: #0f0f1c; border-radius: 12px; padding: 12px; border-top: 4px solid #ec4899;">
-          <div style="font-size: 10px; font-weight: 800; color: #ec4899; text-transform: uppercase;">Phase 3 (W${Math.round(totalW * 0.5) + 1} - ${Math.round(totalW * 0.75)})</div>
-          <div style="font-size: 13px; font-weight: 700; color: #fff; margin: 3px 0;">Live Execution & Proof</div>
-          <div style="font-size: 10px; color: #94a3b8; line-height: 1.3;">Micro-capital deployment, client acquisition, and verified metrics.</div>
-        </div>
-        <div style="background: #0f0f1c; border-radius: 12px; padding: 12px; border-top: 4px solid #10b981;">
-          <div style="font-size: 10px; font-weight: 800; color: #10b981; text-transform: uppercase;">Phase 4 (W${Math.round(totalW * 0.75) + 1} - ${totalW})</div>
-          <div style="font-size: 13px; font-weight: 700; color: #fff; margin: 3px 0;">Scaling & Sovereignty</div>
-          <div style="font-size: 10px; color: #94a3b8; line-height: 1.3;">Capital compounding, authority building, and full professional sovereignty.</div>
-        </div>
-      </div>
-
-      <!-- 4-Quadrant Execution Matrix -->
-      <h2 style="font-size: 16px; font-weight: 800; color: #f8fafc; margin: 18px 0 10px;">🎯 4-Quadrant Execution Matrix</h2>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-        <div style="background: #0f0f1c; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px;">
-          <div style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-bottom: 6px;">🔥 Q1: High Impact Daily Execution</div>
-          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.4;">• Daily skill practice (60 mins focus)<br/>• Strict risk management & stop-loss rules<br/>• Daily journaling with emotional discipline score</div>
-        </div>
-        <div style="background: #0f0f1c; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px;">
-          <div style="font-size: 12px; font-weight: 700; color: #c084fc; margin-bottom: 6px;">🧠 Q2: Skill & Psychology Hardening</div>
-          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.4;">• Historical case study analysis & pattern recognition<br/>• Mental synchronization exercises to destroy hesitation<br/>• Weekly performance metrics audit</div>
-        </div>
-        <div style="background: #0f0f1c; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px;">
-          <div style="font-size: 12px; font-weight: 700; color: #f472b6; margin-bottom: 6px;">💼 Q3: Live Deliverables & Track Record</div>
-          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.4;">• Transition from simulation to real-world capital/client stakes<br/>• Documenting verified track record and portfolio case studies<br/>• Testing execution under high-stakes conditions</div>
-        </div>
-        <div style="background: #0f0f1c; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px;">
-          <div style="font-size: 12px; font-weight: 700; color: #4ade80; margin-bottom: 6px;">👑 Q4: Scaling & Long-Term Sovereignty</div>
-          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.4;">• Systematic scaling based on verified 3-month consistency<br/>• Professional infrastructure, legal/tax compliance<br/>• Full financial and operational independence</div>
-        </div>
-      </div>
-
-      <!-- Adversary Rival Matrix -->
-      <div style="background: linear-gradient(135deg, #18080f 0%, #11050a 100%); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 14px; padding: 16px; margin-bottom: 20px;">
-        <div style="font-size: 14px; font-weight: 800; color: #f87171; margin-bottom: 4px;">⚔️ Active Challenger: ${rival.name}</div>
-        <div style="font-size: 11px; color: #fca5a5; margin-bottom: 8px;">${rival.bio} (${rival.progressOffset} days ahead in disciplined execution)</div>
-        <div style="font-size: 11px; color: #ffffff; font-style: italic; background: rgba(0,0,0,0.4); padding: 8px 12px; border-radius: 8px;">"${rival.taunts?.[0] || 'I executed my daily plan without hesitation. Did you?'}"</div>
-      </div>
-
-      <!-- Habits Tracker -->
-      <h2 style="font-size: 16px; font-weight: 800; color: #f8fafc; margin: 18px 0 10px;">⚡ Core Discipline Habits</h2>
-      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px;">
-        ${habits.map(h => `
-          <div style="background: #0f0f1c; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px;">
-            <div style="font-size: 12px; font-weight: 700; color: #fff;">${h.name} (${h.frequency})</div>
-            <div style="font-size: 10px; color: #94a3b8; margin: 2px 0 4px;">${h.description}</div>
-            <div style="font-size: 10px; font-weight: 700; color: #34d399; font-family: monospace;">Target Streak: ${h.targetStreak} Days</div>
-          </div>
-        `).join('')}
-      </div>
-
-      <!-- Weekly Sprints -->
-      <h2 style="font-size: 16px; font-weight: 800; color: #f8fafc; margin: 18px 0 10px;">📅 Week-by-Week Action Roadmap (${totalW} Weeks)</h2>
-      ${weeksList.map((week) => `
-        <div style="background: #0b0b14; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; margin-bottom: 12px; page-break-inside: avoid;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 6px;">
-            <div style="font-size: 14px; font-weight: 800; color: #ffffff;">Week ${week.week} Implementation</div>
-            ${week.milestone ? `<span style="background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.4); color: #22d3ee; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 700;">🎯 ${week.milestone}</span>` : ''}
-          </div>
-          <div>
-            ${week.actions.map((act: string) => {
-              const linkMatch = act.match(/(.*)\[([^\]]+)\]\((https?:\/\/[^\)]+)\)(.*)/);
-              const textPart = linkMatch ? (linkMatch[1] + (linkMatch[4] || "")) : act;
-              const ytLabel = linkMatch ? linkMatch[2] : "Watch Video Guide ⭐";
-
-              return `
-                <div style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; font-size: 11px; color: #e2e8f0;">
-                  <div style="width: 12px; height: 12px; border: 2px solid #64748b; border-radius: 3px; margin-top: 2px; flex-shrink: 0;"></div>
-                  <div style="flex: 1; line-height: 1.4;">
-                    <div>${textPart.trim()}</div>
-                    <div style="display: inline-block; background: rgba(220, 38, 38, 0.2); border: 1px solid rgba(220, 38, 38, 0.4); color: #f87171; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; margin-top: 3px;">
-                      ▶ ${ytLabel}
-                    </div>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-      `).join('')}
-    `;
-
-    document.body.appendChild(reportContainer);
-
     try {
       const { jsPDF } = await import("jspdf");
-      const html2canvas = (await import("html2canvas")).default;
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 14;
+      const contentWidth = pageWidth - margin * 2;
 
-      const canvas = await html2canvas(reportContainer, {
-        scale: 1.8,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#06060c",
-        logging: false,
+      const situation = state.userInput?.currentSituation || "Baseline Background";
+      const goals = state.userInput?.goals || "Dream Career";
+      const weeksList = state.actionPlan.weeklyActions || [];
+      const totalW = weeksList.length;
+      const habits = state.actionPlan.habits || [];
+      const rival = state.actionPlan.rival || {
+        name: "The Disciplined Competitor",
+        bio: "Relentless execution every single day without excuses.",
+        taunts: ["I practiced today without hesitation. Did you?"],
+        progressOffset: 7,
+      };
+
+      let y = margin;
+
+      const checkPageBreak = (spaceNeeded: number) => {
+        if (y + spaceNeeded > pageHeight - margin - 10) {
+          pdf.addPage();
+          y = margin;
+          // Mini header on subsequent pages
+          pdf.setFillColor(15, 15, 28);
+          pdf.rect(0, 0, pageWidth, 8, "F");
+          pdf.setFontSize(8);
+          pdf.setTextColor(148, 163, 184);
+          pdf.text(`VibeForge Execution Protocol — ${goals}`, margin, 5.5);
+          y = 14;
+        }
+      };
+
+      // ─── PAGE 1: EXECUTIVE COVER & ARCHITECTURE ───────────────────
+      // Background Header Card
+      pdf.setFillColor(13, 13, 30);
+      pdf.roundedRect(margin, y, contentWidth, 38, 4, 4, "F");
+      pdf.setDrawColor(124, 58, 237);
+      pdf.setLineWidth(0.5);
+      pdf.roundedRect(margin, y, contentWidth, 38, 4, 4, "D");
+
+      // Badge
+      pdf.setFillColor(6, 182, 212);
+      pdf.roundedRect(margin + 6, y + 5, 52, 5, 2, 2, "F");
+      pdf.setFontSize(7.5);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(255, 255, 255);
+      pdf.text("⚡ VIBEFORGE PROTOCOL", margin + 8, y + 8.5);
+
+      // Title
+      pdf.setFontSize(16);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(255, 255, 255);
+      pdf.text("Career Execution Protocol", margin + 6, y + 18);
+
+      // Subtitle
+      pdf.setFontSize(9.5);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(148, 163, 184);
+      pdf.text(`Transition: ${situation}  ➔  ${goals}`, margin + 6, y + 24);
+
+      // Meta Stats Bar
+      pdf.setFillColor(6, 6, 14);
+      pdf.roundedRect(margin + 6, y + 27, contentWidth - 12, 8, 2, 2, "F");
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(34, 211, 238);
+      pdf.text(`TOTAL HORIZON: ${totalW} WEEKS`, margin + 10, y + 32);
+      pdf.setTextColor(168, 85, 247);
+      pdf.text(`STRATEGY: ASYMMETRIC SPRINT`, margin + 65, y + 32);
+      pdf.setTextColor(52, 211, 153);
+      pdf.text(`STATUS: ACTIVE PROTOCOL`, margin + 130, y + 32);
+
+      y += 44;
+
+      // ─── 4-PHASE PROGRESSION FLOWCHART ───────────────────────────
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(248, 250, 252);
+      pdf.text("📊 4-Phase Progression Architecture", margin, y);
+      y += 5;
+
+      const phaseBoxWidth = (contentWidth - 9) / 4;
+      const phaseData = [
+        {
+          num: `Phase 1 (W1-${Math.round(totalW * 0.25)})`,
+          title: "Foundational Setup",
+          desc: "Environment setup, basic literacy & risk preservation rules.",
+          color: [6, 182, 212],
+        },
+        {
+          num: `Phase 2 (W${Math.round(totalW * 0.25) + 1}-${Math.round(totalW * 0.5)})`,
+          title: "Simulation & Drills",
+          desc: "Hands-on projects, backtesting 50+ setups & habit tracking.",
+          color: [139, 92, 246],
+        },
+        {
+          num: `Phase 3 (W${Math.round(totalW * 0.5) + 1}-${Math.round(totalW * 0.75)})`,
+          title: "Live Proof & Staking",
+          desc: "Micro-capital / client deployment & verified metrics.",
+          color: [236, 72, 153],
+        },
+        {
+          num: `Phase 4 (W${Math.round(totalW * 0.75) + 1}-${totalW})`,
+          title: "Scaling Sovereignty",
+          desc: "Capital compounding, authority scaling & complete mastery.",
+          color: [16, 185, 129],
+        },
+      ];
+
+      phaseData.forEach((p, idx) => {
+        const px = margin + idx * (phaseBoxWidth + 3);
+        pdf.setFillColor(15, 15, 28);
+        pdf.roundedRect(px, y, phaseBoxWidth, 24, 2, 2, "F");
+        pdf.setFillColor(p.color[0], p.color[1], p.color[2]);
+        pdf.rect(px, y, phaseBoxWidth, 1.8, "F");
+
+        pdf.setFontSize(6.5);
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(p.color[0], p.color[1], p.color[2]);
+        pdf.text(p.num, px + 2.5, y + 5.5);
+
+        pdf.setFontSize(8);
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(255, 255, 255);
+        pdf.text(p.title, px + 2.5, y + 10);
+
+        pdf.setFontSize(6.5);
+        pdf.setFont("helvetica", "normal");
+        pdf.setTextColor(148, 163, 184);
+        const splitDesc = pdf.splitTextToSize(p.desc, phaseBoxWidth - 5);
+        pdf.text(splitDesc, px + 2.5, y + 14);
       });
 
-      document.body.removeChild(reportContainer);
+      y += 30;
 
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-      const pdf = new jsPDF("p", "mm", "a4");
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
+      // ─── 4-QUADRANT EXECUTION MATRIX ─────────────────────────────
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(248, 250, 252);
+      pdf.text("🎯 4-Quadrant Execution Matrix", margin, y);
+      y += 5;
 
-      pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight, undefined, "FAST");
-      heightLeft -= pageHeight;
+      const matrixBoxWidth = (contentWidth - 4) / 2;
+      const matrixData = [
+        {
+          title: "🔥 Q1: High Impact Daily Execution",
+          color: [56, 189, 248],
+          points: [
+            "• Daily skill practice (60 mins uninterrupted focus)",
+            "• Strict risk management & capital preservation rules",
+            "• Daily trade/project journaling with discipline score",
+          ],
+        },
+        {
+          title: "🧠 Q2: Skill & Psychology Hardening",
+          color: [192, 132, 252],
+          points: [
+            "• Historical case study analysis & pattern recognition",
+            "• Mental synchronization drills to destroy hesitation",
+            "• Weekly performance metrics & error review",
+          ],
+        },
+        {
+          title: "💼 Q3: Live Deliverables & Track Record",
+          color: [244, 114, 182],
+          points: [
+            "• Transition from simulation to real-world deployment",
+            "• Documenting verified track record and portfolio studies",
+            "• Testing execution under high-stakes conditions",
+          ],
+        },
+        {
+          title: "👑 Q4: Scaling & Long-Term Sovereignty",
+          color: [74, 222, 128],
+          points: [
+            "• Systematic scaling based on verified 3-month consistency",
+            "• Professional infrastructure, legal/tax compliance",
+            "• Full financial and operational independence",
+          ],
+        },
+      ];
 
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight, undefined, "FAST");
-        heightLeft -= pageHeight;
+      matrixData.forEach((m, idx) => {
+        const mx = margin + (idx % 2) * (matrixBoxWidth + 4);
+        const my = y + Math.floor(idx / 2) * 22;
+        pdf.setFillColor(15, 15, 28);
+        pdf.roundedRect(mx, my, matrixBoxWidth, 20, 2, 2, "F");
+
+        pdf.setFontSize(7.5);
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(m.color[0], m.color[1], m.color[2]);
+        pdf.text(m.title, mx + 3, my + 4.5);
+
+        pdf.setFontSize(6.5);
+        pdf.setFont("helvetica", "normal");
+        pdf.setTextColor(203, 213, 225);
+        m.points.forEach((pt, pIdx) => {
+          pdf.text(pt, mx + 3, my + 9 + pIdx * 3.5);
+        });
+      });
+
+      y += 48;
+
+      // ─── RIVAL & HABITS BOX ──────────────────────────────────────
+      pdf.setFillColor(24, 8, 15);
+      pdf.roundedRect(margin, y, contentWidth, 18, 3, 3, "F");
+      pdf.setDrawColor(239, 68, 68);
+      pdf.setLineWidth(0.4);
+      pdf.roundedRect(margin, y, contentWidth, 18, 3, 3, "D");
+
+      pdf.setFontSize(8.5);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(248, 113, 113);
+      pdf.text(`⚔️ Active Challenger: ${rival.name} (${rival.progressOffset} days ahead)`, margin + 4, y + 5.5);
+
+      pdf.setFontSize(7.5);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(252, 165, 165);
+      pdf.text(rival.bio, margin + 4, y + 10);
+
+      pdf.setFont("helvetica", "italic");
+      pdf.setTextColor(255, 255, 255);
+      pdf.text(`"${rival.taunts?.[0] || 'I practiced today without hesitation. Did you?'}"`, margin + 4, y + 14.5);
+
+      y += 24;
+
+      // ─── WEEKLY SPRINTS TABLE ────────────────────────────────────
+      checkPageBreak(30);
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(248, 250, 252);
+      pdf.text(`📅 Week-by-Week Implementation Roadmap (${totalW} Sprints)`, margin, y);
+      y += 6;
+
+      weeksList.forEach((week) => {
+        const estimatedHeight = 10 + week.actions.length * 10;
+        checkPageBreak(estimatedHeight);
+
+        // Week Card Container
+        pdf.setFillColor(11, 11, 20);
+        pdf.roundedRect(margin, y, contentWidth, estimatedHeight - 2, 2, 2, "F");
+        pdf.setDrawColor(40, 40, 60);
+        pdf.setLineWidth(0.2);
+        pdf.roundedRect(margin, y, contentWidth, estimatedHeight - 2, 2, 2, "D");
+
+        // Header
+        pdf.setFontSize(8.5);
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(255, 255, 255);
+        pdf.text(`Week ${week.week} Implementation`, margin + 4, y + 5);
+
+        if (week.milestone) {
+          pdf.setFillColor(6, 182, 212);
+          pdf.roundedRect(margin + contentWidth - 65, y + 1.5, 60, 4.5, 2, 2, "F");
+          pdf.setFontSize(6);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(255, 255, 255);
+          pdf.text(`🎯 ${week.milestone.slice(0, 32)}`, margin + contentWidth - 63, y + 4.8);
+        }
+
+        let actY = y + 9.5;
+        week.actions.forEach((act: string) => {
+          const linkMatch = act.match(/(.*)\[([^\]]+)\]\((https?:\/\/[^\)]+)\)(.*)/);
+          const textPart = linkMatch ? (linkMatch[1] + (linkMatch[4] || "")) : act;
+          const ytUrl = linkMatch ? linkMatch[3] : `https://www.youtube.com/results?search_query=${encodeURIComponent(textPart.slice(0, 50))}&sp=CAM%253D`;
+          const ytLabel = linkMatch ? linkMatch[2] : "Watch Video Guide ⭐";
+
+          // Checkbox box
+          pdf.setDrawColor(100, 116, 139);
+          pdf.rect(margin + 4, actY - 2.5, 3, 3, "D");
+
+          // Action text
+          pdf.setFontSize(7.2);
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(226, 232, 240);
+          const splitText = pdf.splitTextToSize(textPart.trim(), contentWidth - 16);
+          pdf.text(splitText, margin + 9, actY);
+
+          const textHeight = splitText.length * 3.5;
+
+          // YouTube pill button link
+          pdf.setFillColor(220, 38, 38);
+          pdf.roundedRect(margin + 9, actY + textHeight - 1.5, 48, 3.5, 1, 1, "F");
+          pdf.setFontSize(5.5);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(255, 255, 255);
+          pdf.text(`▶ ${ytLabel.slice(0, 28)} ↗`, margin + 11, actY + textHeight + 1);
+          pdf.link(margin + 9, actY + textHeight - 1.5, 48, 3.5, { url: ytUrl });
+
+          actY += textHeight + 5.5;
+        });
+
+        y += estimatedHeight + 2;
+      });
+
+      // Add Page Numbers
+      const totalPages = (pdf.internal as any).getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(7);
+        pdf.setFont("helvetica", "normal");
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(`Page ${i} of ${totalPages} — VibeForge Autonomous Platform`, margin, pageHeight - 5);
       }
 
       const goalsSafe = goals.replace(/[^a-zA-Z0-9]/g, "_");
       pdf.save(`VibeForge_Execution_Protocol_${goalsSafe}.pdf`);
     } catch (err) {
-      console.warn("Direct PDF render notice, falling back to print dialog:", err);
-      if (document.body.contains(reportContainer)) {
-        document.body.removeChild(reportContainer);
-      }
+      console.error("Vector PDF generation notice:", err);
       window.print();
     } finally {
       setIsExportingPDF(false);
