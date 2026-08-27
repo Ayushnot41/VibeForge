@@ -350,7 +350,7 @@ export default function ActionPlanPage() {
       const pdf = new jsPDF("p", "mm", "a4");
       const pageWidth = 210;
       const pageHeight = 297;
-      const margin = 14;
+      const margin = 12;
       const contentWidth = pageWidth - margin * 2;
 
       const situation = state.userInput?.currentSituation || "Baseline Background";
@@ -365,28 +365,43 @@ export default function ActionPlanPage() {
         progressOffset: 7,
       };
 
+      // Helper to paint pure obsidian dark theme background on any page
+      const paintDarkBackground = () => {
+        pdf.setFillColor(6, 6, 12);
+        pdf.rect(0, 0, pageWidth, pageHeight, "F");
+      };
+
+      // Paint Page 1 Background
+      paintDarkBackground();
       let y = margin;
 
       const checkPageBreak = (spaceNeeded: number) => {
-        if (y + spaceNeeded > pageHeight - margin - 10) {
+        if (y + spaceNeeded > pageHeight - margin - 8) {
           pdf.addPage();
-          y = margin;
-          // Mini header on subsequent pages
+          paintDarkBackground();
+          
+          // Mini top header for subsequent pages
           pdf.setFillColor(15, 15, 28);
-          pdf.rect(0, 0, pageWidth, 8, "F");
+          pdf.roundedRect(margin, 6, contentWidth, 8, 2, 2, "F");
+          pdf.setDrawColor(124, 58, 237);
+          pdf.setLineWidth(0.3);
+          pdf.roundedRect(margin, 6, contentWidth, 8, 2, 2, "D");
           pdf.setFontSize(8);
-          pdf.setTextColor(148, 163, 184);
-          pdf.text(`VibeForge Execution Protocol — ${goals}`, margin, 5.5);
-          y = 14;
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(255, 255, 255);
+          pdf.text(`VibeForge Execution Protocol — ${goals}`, margin + 4, 11.5);
+          pdf.setTextColor(34, 211, 238);
+          pdf.text(`⚡ AUTONOMOUS ROADMAP`, margin + contentWidth - 44, 11.5);
+          y = 18;
         }
       };
 
       // ─── PAGE 1: EXECUTIVE COVER & ARCHITECTURE ───────────────────
-      // Background Header Card
+      // Background Header Card (Obsidian Violet Glass)
       pdf.setFillColor(13, 13, 30);
       pdf.roundedRect(margin, y, contentWidth, 38, 4, 4, "F");
       pdf.setDrawColor(124, 58, 237);
-      pdf.setLineWidth(0.5);
+      pdf.setLineWidth(0.6);
       pdf.roundedRect(margin, y, contentWidth, 38, 4, 4, "D");
 
       // Badge
@@ -413,6 +428,7 @@ export default function ActionPlanPage() {
       pdf.setFillColor(6, 6, 14);
       pdf.roundedRect(margin + 6, y + 27, contentWidth - 12, 8, 2, 2, "F");
       pdf.setFontSize(7.5);
+      pdf.setFont("helvetica", "bold");
       pdf.setTextColor(34, 211, 238);
       pdf.text(`TOTAL HORIZON: ${totalW} WEEKS`, margin + 10, y + 32);
       pdf.setTextColor(168, 85, 247);
@@ -462,7 +478,7 @@ export default function ActionPlanPage() {
         pdf.setFillColor(15, 15, 28);
         pdf.roundedRect(px, y, phaseBoxWidth, 24, 2, 2, "F");
         pdf.setFillColor(p.color[0], p.color[1], p.color[2]);
-        pdf.rect(px, y, phaseBoxWidth, 1.8, "F");
+        pdf.rect(px, y, phaseBoxWidth, 2, "F");
 
         pdf.setFontSize(6.5);
         pdf.setFont("helvetica", "bold");
@@ -574,6 +590,39 @@ export default function ActionPlanPage() {
 
       y += 24;
 
+      // ─── HABITS TRACKER ──────────────────────────────────────────
+      if (habits.length > 0) {
+        checkPageBreak(24);
+        pdf.setFontSize(11);
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(248, 250, 252);
+        pdf.text("⚡ Core Discipline Habits", margin, y);
+        y += 5;
+
+        const habitCardW = (contentWidth - 6) / Math.min(habits.length, 3);
+        habits.slice(0, 3).forEach((h, hIdx) => {
+          const hx = margin + hIdx * (habitCardW + 3);
+          pdf.setFillColor(15, 15, 28);
+          pdf.roundedRect(hx, y, habitCardW, 16, 2, 2, "F");
+          pdf.setFontSize(7.5);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(255, 255, 255);
+          pdf.text(`${h.name} (${h.frequency})`, hx + 2.5, y + 4.5);
+
+          pdf.setFontSize(6.5);
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(148, 163, 184);
+          pdf.text(h.description.slice(0, 35), hx + 2.5, y + 8.5);
+
+          pdf.setFontSize(6.5);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(52, 211, 153);
+          pdf.text(`Target Streak: ${h.targetStreak} Days`, hx + 2.5, y + 13);
+        });
+
+        y += 22;
+      }
+
       // ─── WEEKLY SPRINTS TABLE ────────────────────────────────────
       checkPageBreak(30);
       pdf.setFontSize(12);
@@ -650,7 +699,7 @@ export default function ActionPlanPage() {
         pdf.setFontSize(7);
         pdf.setFont("helvetica", "normal");
         pdf.setTextColor(100, 116, 139);
-        pdf.text(`Page ${i} of ${totalPages} — VibeForge Autonomous Platform`, margin, pageHeight - 5);
+        pdf.text(`Page ${i} of ${totalPages} — VibeForge Autonomous Platform`, margin, pageHeight - 4);
       }
 
       const goalsSafe = goals.replace(/[^a-zA-Z0-9]/g, "_");
