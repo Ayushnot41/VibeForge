@@ -57,7 +57,7 @@ function getFallbackInfographicSvg(title: string, desc: string): string {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-// 3D Card with Auto-Aspect Sizing & Notebook Infographic Rendering
+// 3D Card for Desktop Cylinder
 function CylinderCard3D({
   url,
   position,
@@ -65,7 +65,6 @@ function CylinderCard3D({
   title,
   subtitle,
   onClick,
-  isMobile,
 }: {
   url: string;
   position: [number, number, number];
@@ -73,7 +72,6 @@ function CylinderCard3D({
   title: string;
   subtitle: string;
   onClick: () => void;
-  isMobile: boolean;
 }) {
   const meshRef = useRef<THREE.Group>(null);
   const [imgSrc, setImgSrc] = useState(url);
@@ -84,19 +82,15 @@ function CylinderCard3D({
     }
   });
 
-  const cardWidth = isMobile ? 320 : 400;
-  const cardHeight = isMobile ? 440 : 530;
-
   return (
     <group position={position} rotation={rotation} ref={meshRef}>
-      <Html transform distanceFactor={isMobile ? 7 : 5.5} center className="pointer-events-none">
+      <Html transform distanceFactor={5.5} center className="pointer-events-none">
         <div
           onClick={(e) => {
             e.stopPropagation();
             onClick();
           }}
-          style={{ width: `${cardWidth}px`, height: `${cardHeight}px` }}
-          className="flex flex-col justify-between p-3.5 sm:p-4 rounded-3xl overflow-hidden bg-[#070712]/95 backdrop-blur-2xl border-2 border-cyan-500/40 shadow-[0_0_40px_rgba(6,182,212,0.25)] transition-all duration-300 hover:scale-105 hover:border-cyan-300 cursor-pointer pointer-events-auto group select-none"
+          className="w-[390px] h-[520px] flex flex-col justify-between p-4 rounded-3xl overflow-hidden bg-[#070712]/95 backdrop-blur-2xl border-2 border-cyan-500/40 shadow-[0_0_40px_rgba(6,182,212,0.25)] transition-all duration-300 hover:scale-105 hover:border-cyan-300 cursor-pointer pointer-events-auto group select-none"
         >
           <div className="w-full h-full relative rounded-2xl overflow-hidden bg-black flex flex-col justify-between p-4">
             <img
@@ -117,7 +111,7 @@ function CylinderCard3D({
             </div>
 
             <div className="relative z-10 text-left">
-              <p className="text-white text-xs sm:text-sm font-semibold leading-snug line-clamp-2 drop-shadow-lg mb-1.5">
+              <p className="text-white text-sm font-semibold leading-snug line-clamp-2 drop-shadow-lg mb-1.5">
                 {subtitle}
               </p>
               <span className="text-cyan-400 text-xs font-bold inline-flex items-center gap-1 group-hover:text-cyan-300">
@@ -131,20 +125,18 @@ function CylinderCard3D({
   );
 }
 
-// 3D Cylinder Orbit Group
+// 3D Cylinder Orbit Group for Desktop
 function HologramCylinder3D({
   prompts,
   rotationY,
   onSelect,
-  isMobile,
 }: {
   prompts: ImagePrompt[];
   rotationY: number;
   onSelect: (index: number) => void;
-  isMobile: boolean;
 }) {
   const groupRef = useRef<THREE.Group>(null);
-  const radius = Math.max(isMobile ? 4.5 : 5.8, prompts.length * (isMobile ? 0.8 : 0.95));
+  const radius = Math.max(5.8, prompts.length * 0.95);
 
   useFrame((_, delta) => {
     if (groupRef.current) {
@@ -175,7 +167,6 @@ function HologramCylinder3D({
             title={`Month ${prompt.milestoneMonth || (index + 1) * 3}`}
             subtitle={prompt.sceneDescription}
             onClick={() => onSelect(index)}
-            isMobile={isMobile}
           />
         );
       })}
@@ -196,8 +187,9 @@ export default function GalleryPage() {
   const [selectedHologram, setSelectedHologram] = useState<number | null>(null);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
 
-  // Device Aspect Ratio Sizing
+  // Mobile Detection & Active Card Index for Touch Deck
   const [isMobile, setIsMobile] = useState(false);
+  const [activeMobileCard, setActiveMobileCard] = useState(0);
 
   useEffect(() => {
     const handleResize = () => {
@@ -208,7 +200,7 @@ export default function GalleryPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Wheel / Touch Rotation Physics
+  // Wheel / Touch Rotation Physics for Desktop 3D
   const [rotationY, setRotationY] = useState(0);
   const isDragging = useRef(false);
   const startX = useRef(0);
@@ -258,23 +250,6 @@ export default function GalleryPage() {
     isDragging.current = false;
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (viewMode !== "3d") return;
-    isDragging.current = true;
-    startX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging.current || viewMode !== "3d") return;
-    const deltaX = e.touches[0].clientX - startX.current;
-    startX.current = e.touches[0].clientX;
-    setRotationY((prev) => prev + deltaX * 0.007);
-  };
-
-  const handleTouchEnd = () => {
-    isDragging.current = false;
-  };
-
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#030308]">
@@ -311,14 +286,14 @@ export default function GalleryPage() {
 
   return (
     <div className="w-full min-h-screen relative bg-[#030308] text-white select-none font-[var(--font-body)] flex flex-col">
-      {/* Top Sticky Navigation Bar — 100% Clickable with high z-index */}
+      {/* Top Sticky Navigation Bar — 100% Clickable & Responsive */}
       <header className="sticky top-0 z-50 px-4 sm:px-6 py-3.5 bg-[#030308]/95 backdrop-blur-xl border-b border-zinc-800 flex items-center justify-between pointer-events-auto">
         <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/results/${id}`)}>
           ← Command Center
         </Button>
 
         {/* 3D / 2D View Switcher */}
-        <div className="flex items-center gap-1.5 bg-zinc-950/90 border border-zinc-800 p-1.5 rounded-2xl shadow-xl">
+        <div className="flex items-center gap-1.5 bg-zinc-950/90 border border-zinc-800 p-1 rounded-2xl shadow-xl">
           <button
             onClick={() => setViewMode("3d")}
             className={`px-3 sm:px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -327,7 +302,7 @@ export default function GalleryPage() {
                 : "text-zinc-400 hover:text-white hover:bg-zinc-900"
             }`}
           >
-            🌀 3D Hologram Cylinder
+            🌀 3D Holograms
           </button>
           <button
             onClick={() => setViewMode("grid")}
@@ -337,47 +312,139 @@ export default function GalleryPage() {
                 : "text-zinc-400 hover:text-white hover:bg-zinc-900"
             }`}
           >
-            📖 Notebook Infographics
+            📖 Notebook Grid
           </button>
         </div>
       </header>
 
       {/* Main Content Area */}
       {viewMode === "3d" ? (
-        <div
-          className="flex-1 w-full h-[calc(100vh-65px)] relative overflow-hidden cursor-grab active:cursor-grabbing select-none"
-          onWheel={handleWheel}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {/* Scroll / Drag Interaction Hint */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-none text-center px-4 w-full max-w-md">
-            <span className="inline-block px-4 sm:px-6 py-2 rounded-full bg-black/85 backdrop-blur-md border border-cyan-500/40 text-[11px] sm:text-xs font-bold text-cyan-300 uppercase tracking-wider animate-pulse shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-              ↕ Scroll Wheel / Swipe to Rotate 3D Cylinder Left & Right
-            </span>
+        isMobile ? (
+          /* Mobile Holographic 3D Interactive Card Deck (100% Viewport-Proof) */
+          <div className="flex-1 w-full flex flex-col justify-between items-center px-4 py-6 overflow-hidden">
+            <div className="text-center space-y-1">
+              <span className="px-3 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-[10px] font-mono font-bold text-cyan-300 uppercase">
+                Card {activeMobileCard + 1} of {prompts.length}
+              </span>
+              <p className="text-xs text-zinc-400">Swipe or tap arrows to navigate timeline</p>
+            </div>
+
+            {/* Active Card with Smooth 3D Perspective */}
+            <div className="w-full max-w-sm my-auto relative">
+              <AnimatePresence mode="wait">
+                {(() => {
+                  const prompt = prompts[activeMobileCard];
+                  const monthTitle = `Month ${prompt.milestoneMonth || (activeMobileCard + 1) * 3}`;
+                  const hologramUrl = getHologramUrl(prompt, activeMobileCard);
+
+                  return (
+                    <motion.div
+                      key={activeMobileCard}
+                      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                      transition={{ duration: 0.25 }}
+                      onClick={() => setSelectedHologram(activeMobileCard)}
+                      className="w-full h-[460px] rounded-3xl overflow-hidden bg-[#070712] border-2 border-cyan-500/50 shadow-[0_0_40px_rgba(6,182,212,0.3)] flex flex-col justify-between p-3.5 cursor-pointer relative"
+                    >
+                      <div className="w-full h-full relative rounded-2xl overflow-hidden bg-black flex flex-col justify-between p-4">
+                        <img
+                          src={hologramUrl}
+                          alt={monthTitle}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = getFallbackInfographicSvg(monthTitle, prompt.sceneDescription);
+                          }}
+                          className="absolute inset-0 w-full h-full object-cover rounded-2xl"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-black/50 pointer-events-none" />
+
+                        <div className="relative z-10 flex items-center justify-between">
+                          <span className="px-3 py-1 rounded-full bg-cyan-950/90 border border-cyan-400/50 text-[11px] font-black text-cyan-300 uppercase shadow-lg">
+                            📓 {monthTitle}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full bg-purple-950/90 border border-purple-400/50 text-[10px] font-bold text-purple-300 uppercase">
+                            Infographic
+                          </span>
+                        </div>
+
+                        <div className="relative z-10 text-left">
+                          <p className="text-white text-xs font-semibold leading-relaxed line-clamp-3 mb-2">
+                            {prompt.sceneDescription}
+                          </p>
+                          <span className="text-cyan-400 text-xs font-bold inline-flex items-center gap-1">
+                            🔍 Tap to Open Full Notes →
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })()}
+              </AnimatePresence>
+            </div>
+
+            {/* Mobile Navigation Controls */}
+            <div className="w-full max-w-sm flex items-center justify-between gap-4 pt-2">
+              <button
+                onClick={() => setActiveMobileCard((prev) => (prev > 0 ? prev - 1 : prompts.length - 1))}
+                className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-white text-lg font-bold hover:bg-zinc-800 active:scale-95 transition-all"
+              >
+                ‹
+              </button>
+
+              <div className="flex items-center gap-1.5">
+                {prompts.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveMobileCard(i)}
+                    className={`h-2 rounded-full transition-all ${
+                      activeMobileCard === i ? "w-6 bg-cyan-400" : "w-2 bg-zinc-700"
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={() => setActiveMobileCard((prev) => (prev < prompts.length - 1 ? prev + 1 : 0))}
+                className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-white text-lg font-bold hover:bg-zinc-800 active:scale-95 transition-all"
+              >
+                ›
+              </button>
+            </div>
           </div>
+        ) : (
+          /* Desktop / Laptop 3D Cylinder Orbit View */
+          <div
+            className="flex-1 w-full h-[calc(100vh-65px)] relative overflow-hidden cursor-grab active:cursor-grabbing select-none"
+            onWheel={handleWheel}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+          >
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-none text-center px-4 w-full max-w-md">
+              <span className="inline-block px-6 py-2 rounded-full bg-black/85 backdrop-blur-md border border-cyan-500/40 text-xs font-bold text-cyan-300 uppercase tracking-wider animate-pulse shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+                ↕ Scroll Wheel / Drag to Rotate 3D Cylinder Left & Right
+              </span>
+            </div>
 
-          <Canvas camera={{ position: [0, 0, isMobile ? 12 : 9.5], fov: isMobile ? 60 : 50 }} dpr={[1, 2]}>
-            <color attach="background" args={["#030308"]} />
-            <fog attach="fog" args={["#030308", 4, 30]} />
-            <ambientLight intensity={0.7} />
-            <directionalLight position={[10, 10, 5]} intensity={1.5} />
+            <Canvas camera={{ position: [0, 0, 9.5], fov: 50 }} dpr={[1, 2]}>
+              <color attach="background" args={["#030308"]} />
+              <fog attach="fog" args={["#030308", 4, 30]} />
+              <ambientLight intensity={0.7} />
+              <directionalLight position={[10, 10, 5]} intensity={1.5} />
 
-            <Suspense fallback={null}>
-              <HologramCylinder3D
-                prompts={prompts}
-                rotationY={rotationY}
-                onSelect={(idx) => setSelectedHologram(idx)}
-                isMobile={isMobile}
-              />
-            </Suspense>
-          </Canvas>
-        </div>
+              <Suspense fallback={null}>
+                <HologramCylinder3D
+                  prompts={prompts}
+                  rotationY={rotationY}
+                  onSelect={(idx) => setSelectedHologram(idx)}
+                />
+              </Suspense>
+            </Canvas>
+          </div>
+        )
       ) : (
+        /* 2D Notebook Infographics View */
         <div className="flex-1 w-full overflow-y-auto px-4 sm:px-6 py-8 sm:py-10">
           <div className="max-w-7xl mx-auto space-y-8">
             <div className="text-center space-y-2">
