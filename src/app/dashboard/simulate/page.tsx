@@ -432,8 +432,28 @@ export default function SimulatePage() {
               if (dataMatch) {
                 try {
                   const eventData = JSON.parse(dataMatch[1]);
-                  const savedData = { ...eventData.state, localSavedAt: Date.now() };
+                  const savedData = { ...eventData.state, id, localSavedAt: Date.now() };
                   localStorage.setItem(`sim_${id}`, JSON.stringify(savedData));
+
+                  // Permanently store in master vault index
+                  try {
+                    const vaultRaw = localStorage.getItem("vibeforge_vault_simulations");
+                    const vault = vaultRaw ? JSON.parse(vaultRaw) : [];
+                    const entry = {
+                      id,
+                      title: savedData.userInput?.goals || "Career Transformation",
+                      situation: savedData.userInput?.currentSituation || "",
+                      timeHorizon: savedData.userInput?.timeHorizon || "3_years",
+                      customWeeks: savedData.userInput?.customWeeks,
+                      totalWeeks: savedData.actionPlan?.weeklyActions?.length || 12,
+                      createdAt: Date.now(),
+                    };
+                    const updatedVault = [entry, ...vault.filter((v: any) => v.id !== id)];
+                    localStorage.setItem("vibeforge_vault_simulations", JSON.stringify(updatedVault));
+                  } catch (vErr) {
+                    console.error("Vault save notice:", vErr);
+                  }
+
                   setProgressPercent(100);
                   router.push(`/dashboard/results/${id}`);
                   return;

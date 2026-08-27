@@ -175,6 +175,7 @@ export default function ActionPlanPage() {
   const [egoSprintActive, setEgoSprintActive] = useState(false);
   const [egoSprintSeconds, setEgoSprintSeconds] = useState(1500); // 25 minutes
   const [rivalTauntIndex, setRivalTauntIndex] = useState(0);
+  const [rivalDrawerOpen, setRivalDrawerOpen] = useState(false);
 
   // Ego sprint timer tick
   useEffect(() => {
@@ -559,30 +560,24 @@ export default function ActionPlanPage() {
         )}
       </AnimatePresence>
 
-      {/* AI Adversary Rival & Ego-Hurt Executioner Matrix */}
+      {/* AI Adversary Rival & Ego-Hurt Matrix — Desktop Dock */}
       {state.actionPlan.rival && (
-        <div className="fixed bottom-8 left-8 w-[340px] z-30 pointer-events-auto no-print">
-          <div className="p-4 rounded-3xl bg-black/85 backdrop-blur-2xl border border-red-500/40 shadow-[0_0_50px_rgba(239,68,68,0.25)] relative overflow-hidden">
-            {/* Ambient Red Alert Pulse */}
-            <div className="absolute -top-10 -right-10 w-24 h-24 bg-red-600/20 rounded-full blur-2xl pointer-events-none" />
-
-            <div className="flex justify-between items-center mb-2.5">
+        <div className="hidden md:block fixed bottom-6 left-6 w-[320px] z-30 pointer-events-auto no-print">
+          <div className="p-4 rounded-2xl bg-zinc-950/90 backdrop-blur-xl border border-zinc-800 shadow-2xl relative overflow-hidden">
+            <div className="flex justify-between items-center mb-2">
               <div className="flex items-center gap-2">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
-                </span>
-                <h3 className="text-white font-black text-xs uppercase tracking-widest">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <h3 className="text-white font-bold text-xs uppercase tracking-wider">
                   Adversary Rival Matrix
                 </h3>
               </div>
-              <span className="text-[10px] bg-red-600/90 border border-red-400/50 px-2.5 py-0.5 rounded-full text-white font-black font-mono shadow-md">
+              <span className="text-[10px] bg-red-500/10 border border-red-500/30 px-2 py-0.5 rounded-full text-red-400 font-bold font-mono">
                 +{state.actionPlan.rival.progressOffset || 7}d Lead
               </span>
             </div>
 
-            <p className="text-white/80 text-xs mb-2 leading-relaxed">
-              <strong className="text-red-300">{state.actionPlan.rival.name}</strong> is relentlessly outworking you in your domain.
+            <p className="text-zinc-400 text-xs mb-2 leading-relaxed">
+              <strong className="text-zinc-200">{state.actionPlan.rival.name}</strong> is relentlessly executing.
             </p>
 
             {/* Dynamic Ego-Hurt Psychological Taunt */}
@@ -593,27 +588,27 @@ export default function ActionPlanPage() {
                   setRivalTauntIndex((prev) => (prev + 1) % taunts.length);
                 }
               }}
-              className="bg-black/70 p-3 rounded-2xl border border-red-500/30 mb-3 cursor-pointer hover:border-red-400 transition-all group"
+              className="bg-black/60 p-2.5 rounded-xl border border-zinc-800 mb-2.5 cursor-pointer hover:border-zinc-700 transition-all group"
               title="Click to cycle adversary taunts"
             >
-              <div className="flex items-center justify-between text-[10px] text-red-400 font-mono font-bold mb-1">
-                <span>⚔️ EGO DAMAGE CHECK</span>
-                <span className="opacity-60 group-hover:opacity-100">Tap to Switch ↻</span>
+              <div className="flex items-center justify-between text-[10px] text-red-400 font-mono mb-1">
+                <span>⚔️ EGO CHECK</span>
+                <span className="text-zinc-500 group-hover:text-zinc-300">Tap ↻</span>
               </div>
-              <p className="text-red-300 text-xs italic font-medium leading-snug">
+              <p className="text-zinc-300 text-xs italic font-medium leading-snug">
                 "{state.actionPlan.rival.taunts?.[rivalTauntIndex % (state.actionPlan.rival.taunts.length || 1)] || 'While you make excuses, your competition is executing.'}"
               </p>
             </div>
 
             {/* Estimated Laziness Slippage Loss */}
-            <div className="flex items-center justify-between text-[11px] font-mono text-white/60 bg-white/5 px-3 py-1.5 rounded-xl mb-3 border border-white/5">
-              <span>Estimated Opportunity Loss:</span>
+            <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 bg-white/[0.02] px-2.5 py-1.5 rounded-lg mb-2.5 border border-white/5">
+              <span>Opportunity Loss:</span>
               <span className="text-red-400 font-bold">
                 ₹{((state.actionPlan.rival.progressOffset || 7) * 12500).toLocaleString('en-IN')}
               </span>
             </div>
 
-            {/* Interactive Actions: Focus Sprint & Massive Risk */}
+            {/* Interactive Actions */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
@@ -622,10 +617,10 @@ export default function ActionPlanPage() {
                     setEgoSprintSeconds(1500);
                   }
                 }}
-                className={`flex-1 py-2 px-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-md ${
+                className={`flex-1 py-1.5 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                   egoSprintActive
-                    ? "bg-red-600 text-white animate-pulse shadow-[0_0_20px_rgba(239,68,68,0.5)]"
-                    : "bg-white/10 hover:bg-white/20 text-white border border-white/10"
+                    ? "bg-red-600 text-white animate-pulse"
+                    : "bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700"
                 }`}
               >
                 {egoSprintActive ? (
@@ -639,21 +634,102 @@ export default function ActionPlanPage() {
                 ) : (
                   <>
                     <span>🔥</span>
-                    <span>25m Focus Sprint</span>
+                    <span>25m Sprint</span>
                   </>
                 )}
               </button>
 
               <button
                 onClick={() => setMassiveRiskModal(true)}
-                className="py-2 px-3 rounded-xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-500 hover:to-red-500 text-white shadow-lg transition-all hover:scale-105"
+                className="py-1.5 px-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-500 hover:to-red-500 text-white shadow-md transition-all"
               >
-                ⚡ Take Massive Risk
+                ⚡ Massive Risk
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* AI Adversary Rival — Mobile Pill Button */}
+      {state.actionPlan.rival && (
+        <div className="md:hidden fixed bottom-6 left-6 z-30 pointer-events-auto no-print">
+          <button
+            onClick={() => setRivalDrawerOpen(true)}
+            className="px-3.5 py-2 rounded-full bg-zinc-950/90 backdrop-blur-md border border-red-500/40 text-xs font-bold text-white shadow-xl flex items-center gap-2"
+          >
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+            <span>⚔️ Rival (+{state.actionPlan.rival.progressOffset || 7}d)</span>
+          </button>
+        </div>
+      )}
+
+      {/* AI Adversary Rival — Mobile Bottom Sheet Drawer */}
+      <AnimatePresence>
+        {rivalDrawerOpen && state.actionPlan.rival && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="md:hidden fixed inset-0 z-50 flex items-end bg-black/80 backdrop-blur-sm pointer-events-auto"
+            onClick={() => setRivalDrawerOpen(false)}
+          >
+            <motion.div
+              initial={{ y: 200 }}
+              animate={{ y: 0 }}
+              exit={{ y: 200 }}
+              className="w-full bg-zinc-950 border-t border-zinc-800 p-6 rounded-t-3xl space-y-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <span>⚔️</span> Adversary Rival Matrix
+                </h3>
+                <button
+                  onClick={() => setRivalDrawerOpen(false)}
+                  className="text-zinc-400 hover:text-white text-lg font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <p className="text-zinc-400 text-xs">
+                <strong className="text-zinc-200">{state.actionPlan.rival.name}</strong> is outworking you by +{state.actionPlan.rival.progressOffset || 7} days.
+              </p>
+
+              <div className="bg-black/60 p-3 rounded-xl border border-zinc-800">
+                <p className="text-zinc-300 text-xs italic">
+                  "{state.actionPlan.rival.taunts?.[rivalTauntIndex % (state.actionPlan.rival.taunts.length || 1)] || 'While you make excuses, your competition is executing.'}"
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  onClick={() => {
+                    setEgoSprintActive(!egoSprintActive);
+                    if (!egoSprintActive && egoSprintSeconds === 0) {
+                      setEgoSprintSeconds(1500);
+                    }
+                  }}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                    egoSprintActive ? "bg-red-600 text-white" : "bg-zinc-800 text-zinc-200"
+                  }`}
+                >
+                  {egoSprintActive ? `⏱️ ${Math.floor(egoSprintSeconds / 60)}m Left` : "🔥 25m Focus Sprint"}
+                </button>
+                <button
+                  onClick={() => {
+                    setRivalDrawerOpen(false);
+                    setMassiveRiskModal(true);
+                  }}
+                  className="py-2.5 px-4 rounded-xl text-xs font-bold bg-red-600 text-white"
+                >
+                  ⚡ Massive Risk
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Massive Risk Asymmetric Gauntlet Modal */}
       <AnimatePresence>
