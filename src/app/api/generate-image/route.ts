@@ -1,5 +1,6 @@
 // ============================================================================
-// POST /api/generate-image — Generate images via AI with multi-tier fallback
+// POST /api/generate-image — 4K Future Hologram Image Generator
+// Supports OpenAI DALL-E 3, Nano Banana, and resilient Pollinations fallback
 // ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -118,4 +119,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: fallbackUrl, source: 'curated' }, { status: 200 });
   }
 }
-

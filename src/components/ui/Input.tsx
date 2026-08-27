@@ -8,11 +8,13 @@ import { cn } from "@/lib/utils";
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  hint?: string;
 }
 
 export function Input({
   label,
   error,
+  hint,
   className,
   id,
   ...props
@@ -20,11 +22,11 @@ export function Input({
   const inputId = id || label?.toLowerCase().replace(/\s+/g, "-");
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5 w-full">
       {label && (
         <label
           htmlFor={inputId}
-          className="text-sm font-medium text-[var(--text-secondary)]"
+          className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider"
         >
           {label}
         </label>
@@ -33,19 +35,22 @@ export function Input({
         id={inputId}
         className={cn(
           "w-full px-4 py-3 rounded-xl",
-          "bg-[var(--bg-secondary)] border border-[var(--glass-border)]",
+          "bg-[rgba(18,17,30,0.85)] border border-[var(--glass-border)]",
           "text-[var(--text-primary)] placeholder:text-[var(--text-muted)]",
-          "font-[var(--font-body)] text-base",
-          "outline-none",
+          "font-[var(--font-body)] text-sm md:text-base",
+          "outline-none backdrop-blur-md",
           "transition-all duration-200",
-          "focus:border-[var(--accent-violet)] focus:shadow-[0_0_12px_rgba(124,58,237,0.2)]",
-          error && "border-red-500/50 focus:border-red-500",
+          "focus:border-[var(--accent-purple)] focus:shadow-[0_0_16px_rgba(168,85,247,0.3)] focus:bg-[rgba(25,23,42,0.95)]",
+          error && "border-rose-500/70 focus:border-rose-500 focus:shadow-[0_0_16px_rgba(244,63,94,0.3)]",
           className
         )}
         {...props}
       />
+      {hint && !error && (
+        <p className="text-xs text-[var(--text-muted)]">{hint}</p>
+      )}
       {error && (
-        <p className="text-xs text-red-400">{error}</p>
+        <p className="text-xs text-rose-400 font-medium">{error}</p>
       )}
     </div>
   );
@@ -57,11 +62,13 @@ interface TextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
+  hint?: string;
 }
 
 export function Textarea({
   label,
   error,
+  hint,
   className,
   id,
   ...props
@@ -69,11 +76,11 @@ export function Textarea({
   const textareaId = id || label?.toLowerCase().replace(/\s+/g, "-");
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5 w-full">
       {label && (
         <label
-          htmlFor={textareaId}
-          className="text-sm font-medium text-[var(--text-secondary)]"
+          htmlFor={inputId(label, id)}
+          className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider"
         >
           {label}
         </label>
@@ -81,21 +88,28 @@ export function Textarea({
       <textarea
         id={textareaId}
         className={cn(
-          "w-full px-4 py-3 rounded-xl",
-          "bg-[var(--bg-secondary)] border border-[var(--glass-border)]",
+          "w-full px-4 py-3.5 rounded-2xl",
+          "bg-[rgba(18,17,30,0.85)] border border-[var(--glass-border)]",
           "text-[var(--text-primary)] placeholder:text-[var(--text-muted)]",
-          "font-[var(--font-body)] text-base",
-          "outline-none resize-y min-h-[120px]",
+          "font-[var(--font-body)] text-sm md:text-base",
+          "outline-none resize-y min-h-[120px] backdrop-blur-md leading-relaxed",
           "transition-all duration-200",
-          "focus:border-[var(--accent-violet)] focus:shadow-[0_0_12px_rgba(124,58,237,0.2)]",
-          error && "border-red-500/50 focus:border-red-500",
+          "focus:border-[var(--accent-purple)] focus:shadow-[0_0_16px_rgba(168,85,247,0.3)] focus:bg-[rgba(25,23,42,0.95)]",
+          error && "border-rose-500/70 focus:border-rose-500 focus:shadow-[0_0_16px_rgba(244,63,94,0.3)]",
           className
         )}
         {...props}
       />
+      {hint && !error && (
+        <p className="text-xs text-[var(--text-muted)]">{hint}</p>
+      )}
       {error && (
-        <p className="text-xs text-red-400">{error}</p>
+        <p className="text-xs text-rose-400 font-medium">{error}</p>
       )}
     </div>
   );
+}
+
+function inputId(label?: string, id?: string) {
+  return id || label?.toLowerCase().replace(/\s+/g, "-");
 }

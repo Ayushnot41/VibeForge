@@ -1,17 +1,22 @@
 // ============================================================================
-// Simulator Agent — Anthropic Claude Sonnet
-// Generates 3 parallel future scenarios with feedback loop
+// Simulator Agent — Anthropic Claude Opus 5 & Grok 4.6 Scenario Engine
+// Generates 3 parallel future trajectories with stochastic milestones
+// Uses multi-key failover and resilient OpenRouter client
 // ============================================================================
 
-import OpenAI from 'openai';
 import { SimulationAnnotation } from './state';
 import type { FuturePath, Obstacle } from '@/types/agents';
 import { TIME_HORIZON_MONTHS } from '@/types/agents';
+import { callOpenRouterWithFallback, extractJsonFromResponse } from '@/lib/openrouterClient';
 
-const SIMULATOR_SYSTEM_PROMPT = `You are a master life strategist and future scenario planner. Given research insights about a person's goals and situation, generate three detailed parallel future scenarios. For each scenario, provide:
-- A compelling narrative
+const SIMULATOR_SYSTEM_PROMPT = `You are a master life strategist and personal trajectory planner. Given a person's current situation and specific career goal (e.g. Student in Kolkata transitioning into a Profitable Trader, or any other career), generate three detailed parallel future scenarios tailored 100% to their specific profession.
+
+CRITICAL MANDATE: Never assume tech or software engineering unless requested. For a Trader, describe chart analysis, risk control, trading sessions, profit consistency, account drawdowns, and capital scaling.
+
+For each scenario, provide:
+- A compelling narrative of their life in that field
 - Milestones at 3-month intervals
-- Sample daily routines
+- Sample daily routines relevant to that exact career
 - Potential obstacles with probability scores
 
 Think deeply about cause-and-effect chains.
@@ -72,42 +77,40 @@ Adjust milestones, routines, and narratives accordingly. Lower the probability o
 }
 
 /**
- * Simulator node — runs Anthropic Claude to generate 3 parallel future paths.
+ * Simulator node — runs Claude Opus 5 / Grok 4.6 / Llama 3.3 70B
+ * with multi-key failover.
  */
 export async function simulatorNode(
   state: typeof SimulationAnnotation.State,
 ): Promise<Partial<typeof SimulationAnnotation.State>> {
   try {
-    const openai = new OpenAI({
-      baseURL: 'https://openrouter.ai/api/v1',
-      apiKey: process.env.OPENROUTER_API_KEY,
-    });
-
-    const completion = await openai.chat.completions.create({
-      model: 'meta-llama/llama-3.1-8b-instruct',
+    const { content, modelUsed, keyIndexUsed } = await callOpenRouterWithFallback({
       messages: [
         { role: 'system', content: SIMULATOR_SYSTEM_PROMPT },
         { role: 'user', content: buildUserPrompt(state) },
       ],
+      preferredModels: [
+        'meta-llama/llama-3.3-70b-instruct',
+        'openai/gpt-4o-mini',
+        'x-ai/grok-4.6',
+        'anthropic/claude-opus-5',
+      ],
       temperature: 0.8,
-      max_tokens: 8192,
-      response_format: { type: 'json_object' },
+      maxTokens: 3000,
+      responseFormatJson: true,
     });
 
-    const raw = completion.choices[0]?.message?.content ?? '{}';
+    console.log(`[Simulator] Success using model '${modelUsed}' on API Key #${keyIndexUsed}`);
 
     let futurePaths: FuturePath[] = [];
     let obstacles: Obstacle[] = [];
 
     try {
-      // Strip possible markdown code fences
-      const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-      const parsed = JSON.parse(cleaned);
-
+      const parsed = extractJsonFromResponse(content);
       futurePaths = Array.isArray(parsed.futurePaths) ? parsed.futurePaths : [];
       obstacles = Array.isArray(parsed.obstacles) ? parsed.obstacles : [];
     } catch {
-      console.error('[Simulator] Failed to parse Claude JSON:', raw.slice(0, 200));
+      console.error('[Simulator] Failed to parse Simulator JSON:', content.slice(0, 200));
     }
 
     // Validate future paths

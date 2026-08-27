@@ -8,6 +8,7 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   glowColor?: string;
   noPadding?: boolean;
   noHover?: boolean;
+  elevated?: boolean;
 }
 
 export default function Card({
@@ -15,29 +16,30 @@ export default function Card({
   glowColor,
   noPadding = false,
   noHover = false,
+  elevated = false,
   className,
+  style,
   ...props
 }: CardProps) {
   return (
     <div
       className={cn(
-        "relative rounded-2xl",
-        "bg-[var(--glass-bg)] border border-[var(--glass-border)]",
-        "backdrop-blur-xl",
-        "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-        !noHover && "hover:bg-[var(--glass-hover)] hover:border-[rgba(124,58,237,0.3)]",
-        !noHover && "hover:shadow-[0_0_20px_rgba(124,58,237,0.2)]",
-        !noPadding && "p-6",
+        "relative rounded-2xl md:rounded-3xl",
+        elevated ? "glass-card-elevated" : "glass-card",
+        "transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+        noHover && "hover:transform-none hover:shadow-none hover:border-[var(--glass-border)]",
+        !noPadding && "p-6 sm:p-8",
         className
       )}
-      style={
-        glowColor
+      style={{
+        ...(glowColor
           ? {
               borderColor: `${glowColor}40`,
-              boxShadow: `0 0 24px ${glowColor}20`,
+              boxShadow: `0 8px 32px 0 ${glowColor}18, 0 0 20px 0 ${glowColor}25`,
             }
-          : undefined
-      }
+          : {}),
+        ...style,
+      }}
       {...props}
     >
       {children}

@@ -9,6 +9,7 @@ import { SimulationState } from "@/types/agents";
 import * as THREE from "three";
 import Button from "@/components/ui/Button";
 import VibeCore from "@/components/three/VibeCore";
+import { DEMO_SIMULATION } from "@/lib/demoSimulation";
 
 // PDF styles to inject when printing
 const printStyles = `
@@ -19,7 +20,7 @@ const printStyles = `
     .print-only { display: block !important; }
     .print-container { 
       padding: 20px; 
-      max-width: 800px;
+      max-width: 800px; 
       margin: 0 auto;
     }
     .print-week {
@@ -85,7 +86,7 @@ function PremiumBackground({ progress }: { progress: number }) {
   return (
     <group ref={group}>
       <Stars radius={100} depth={50} count={1000} factor={4} saturation={0} fade speed={0.5} />
-      {/* Ambient floating geometry for atmosphere - Reduced count for performance */}
+      {/* Ambient floating geometry */}
       {Array.from({ length: 8 }).map((_, i) => (
         <Float key={i} speed={0.5} rotationIntensity={0.5} floatIntensity={1} position={[(Math.random() - 0.5) * 20, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 20 - 10]}>
           <mesh>
@@ -94,7 +95,7 @@ function PremiumBackground({ progress }: { progress: number }) {
           </mesh>
         </Float>
       ))}
-      {/* Mindset Alignment Stone (always visible, slowly rotating) */}
+      {/* Mindset Alignment Stone */}
       <Float speed={1.5} rotationIntensity={1} floatIntensity={0.5} position={[0, -2, -6]}>
         <mesh castShadow receiveShadow>
           <icosahedronGeometry args={[1.5, 0]} />
@@ -107,6 +108,51 @@ function PremiumBackground({ progress }: { progress: number }) {
   );
 }
 
+// Milestone Rewards Config
+interface RewardTier {
+  threshold: number; // percentage (0 - 100)
+  name: string;
+  badge: string;
+  coupon: string;
+  discount: number; // percentage off
+  description: string;
+}
+
+const REWARD_TIERS: RewardTier[] = [
+  {
+    threshold: 25,
+    name: "Bronze Executioner",
+    badge: "🥉",
+    coupon: "MILESTONE10",
+    discount: 10,
+    description: "Conquered 25% of your trajectory! Unlocked 10% OFF Pro plan.",
+  },
+  {
+    threshold: 50,
+    name: "Silver Architect",
+    badge: "🥈",
+    coupon: "EXECUTION25",
+    discount: 25,
+    description: "Halfway through your implementation plan! Unlocked 25% OFF Pro plan.",
+  },
+  {
+    threshold: 75,
+    name: "Gold Visionary",
+    badge: "🥇",
+    coupon: "GRIND35",
+    discount: 35,
+    description: "Top 5% execution velocity reached! Unlocked 35% OFF Pro plan.",
+  },
+  {
+    threshold: 100,
+    name: "Galactic Sovereign",
+    badge: "👑",
+    coupon: "MASTERY50",
+    discount: 50,
+    description: "100% roadmap mastery achieved! Maximum 50% LIFETIME Pro discount unlocked.",
+  },
+];
+
 export default function ActionPlanPage() {
   const params = useParams();
   const id = params.id as string;
@@ -118,17 +164,26 @@ export default function ActionPlanPage() {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
   const [glitchModal, setGlitchModal] = useState<{ isOpen: boolean; imageUrl: string | null }>({ isOpen: false, imageUrl: null });
   const [storeModal, setStoreModal] = useState(false);
+  const [rewardModal, setRewardModal] = useState<{ isOpen: boolean; tier: RewardTier | null }>({ isOpen: false, tier: null });
   const [equippedSkin, setEquippedSkin] = useState<"default" | "quantum" | "infernal" | "chronos">("default");
+  const [activeFilter, setActiveFilter] = useState<"all" | "p1" | "p2" | "p3" | "milestones">("all");
+  const [expandedAction, setExpandedAction] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchSim() {
       try {
-        const localData = localStorage.getItem(`sim_${id}`);
+        const localData = typeof window !== "undefined" ? localStorage.getItem(`sim_${id}`) : null;
         if (localData) {
           setState(JSON.parse(localData));
+        } else {
+          setState(DEMO_SIMULATION);
+          if (typeof window !== "undefined") {
+            localStorage.setItem(`sim_${id}`, JSON.stringify(DEMO_SIMULATION));
+          }
         }
       } catch (e) {
         console.error(e);
+        setState(DEMO_SIMULATION);
       } finally {
         setLoading(false);
       }
@@ -139,41 +194,60 @@ export default function ActionPlanPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 min-h-screen bg-black">
-        <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin mb-4" />
-        <p className="text-white/60">Loading Execution Protocol...</p>
+        <div className="w-10 h-10 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mb-4" />
+        <p className="text-white/60 font-mono text-sm tracking-wider">Compiling AI Execution Protocol & Curriculum...</p>
       </div>
     );
   }
 
   if (!state || !state.actionPlan) {
     return (
-      <div className="text-center py-20 min-h-screen bg-black">
-        <h2 className="text-2xl font-bold text-red-400">Execution Protocol not found</h2>
-        <Button onClick={() => router.push(`/dashboard/results/${id}`)} className="mt-4">
-          Back to Command Center
+      <div className="text-center py-20 min-h-screen bg-black flex flex-col items-center justify-center">
+        <h2 className="text-2xl font-bold text-rose-400 mb-2">Execution Protocol Not Found</h2>
+        <p className="text-white/50 text-sm mb-6">The requested simulation roadmap could not be loaded.</p>
+        <Button onClick={() => router.push(`/dashboard/results/${id}`)}>
+          ← Back to Command Center
         </Button>
       </div>
     );
   }
 
   const weeks = state.actionPlan.weeklyActions || [];
-  const pages = Math.max(2, weeks.length / 1.2);
+  const pages = Math.max(2, weeks.length / 1.1);
   
   const totalActions = weeks.reduce((acc: number, w: any) => acc + w.actions.length, 0);
   const progress = totalActions === 0 ? 0 : checkedItems.size / totalActions;
+  const progressPercent = Math.round(progress * 100);
+
+  // Highest unlocked reward tier
+  const highestUnlockedTier = [...REWARD_TIERS].reverse().find((t) => progressPercent >= t.threshold) || null;
 
   const toggleCheck = (actionId: string) => {
     const newSet = new Set(checkedItems);
-    if (newSet.has(actionId)) {
+    const wasChecked = newSet.has(actionId);
+
+    if (wasChecked) {
       newSet.delete(actionId);
     } else {
       newSet.add(actionId);
-      // 10% chance to drop a Reality Glitch when completing an action
+      
+      // Check if newly crossed a reward threshold
+      const newProgress = totalActions === 0 ? 0 : newSet.size / totalActions;
+      const newPct = Math.round(newProgress * 100);
+      const justUnlockedTier = REWARD_TIERS.find(
+        (t) => newPct >= t.threshold && progressPercent < t.threshold
+      );
+
+      if (justUnlockedTier) {
+        setRewardModal({ isOpen: true, tier: justUnlockedTier });
+      }
+
+      // 10% chance to drop a Reality Glitch
       if (Math.random() < 0.1 && !glitchModal.isOpen && state?.userInput?.goals) {
-        const prmpt = `Hyper-realistic, first person POV, success, achieving goal: ${state.userInput.goals}. Award-winning photography, glitch art aesthetics`;
+        const prmpt = `Hyper-realistic first-person POV success achievement of goal: ${state.userInput.goals}. Award-winning cinematography, cinematic 8k`;
         setGlitchModal({ 
           isOpen: true, 
-          imageUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(prmpt)}?width=1024&height=1024&nologo=true&seed=${Math.floor(Math.random() * 10000)}`
+          imageUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(prmpt)}?width=1024&height=1024&nologo=true&seed=${Math.floor(Math.random() * 10000)}&model=flux`
         });
       }
     }
@@ -182,7 +256,7 @@ export default function ActionPlanPage() {
 
   // VibeCore Tamagotchi Health Calculation
   const daysElapsed = state?.localSavedAt ? (Date.now() - state.localSavedAt) / (1000 * 60 * 60 * 24) : 0;
-  const expectedActions = Math.max(0, daysElapsed / 2); // Expect 1 action every 2 days
+  const expectedActions = Math.max(0, daysElapsed / 2);
   const health = expectedActions === 0 ? 1.0 : Math.max(0, 1 - Math.max(0, expectedActions - checkedItems.size) * 0.2);
 
   const exportToICS = () => {
@@ -217,12 +291,22 @@ export default function ActionPlanPage() {
     window.print();
   };
 
+  // Filtered weeks
+  const filteredWeeks = weeks.filter((w) => {
+    if (activeFilter === "all") return true;
+    if (activeFilter === "p1") return w.week <= 4;
+    if (activeFilter === "p2") return w.week >= 5 && w.week <= 8;
+    if (activeFilter === "p3") return w.week >= 9;
+    if (activeFilter === "milestones") return !!w.milestone;
+    return true;
+  });
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="w-full h-screen relative bg-[#030305] overflow-hidden"
+      className="w-full h-screen relative bg-[#030305] overflow-hidden select-none"
     >
       <style>{printStyles}</style>
       
@@ -241,26 +325,75 @@ export default function ActionPlanPage() {
         ))}
       </div>
 
-      {/* Fixed UI Headers */}
-      <div className="absolute top-6 left-6 z-20 flex gap-4 no-print">
-        <Button variant="ghost" onClick={() => router.push(`/dashboard/results/${id}`)}>
-          ← Back to Command Center
+      {/* Top Left Navigation & Export Controls */}
+      <div className="absolute top-6 left-6 z-20 flex flex-wrap items-center gap-3 no-print">
+        <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/results/${id}`)}>
+          ← Command Center
         </Button>
-        <Button variant="secondary" onClick={exportToICS}>
-          📅 ICS
+        <Button variant="secondary" size="sm" onClick={exportToICS}>
+          📅 ICS Export
         </Button>
-        <Button variant="secondary" onClick={exportToPDF}>
+        <Button variant="secondary" size="sm" onClick={exportToPDF}>
           📄 PDF
         </Button>
+
+        {/* Milestone Rewards Trigger Badge */}
+        <button
+          onClick={() => setRewardModal({ isOpen: true, tier: highestUnlockedTier || REWARD_TIERS[0] })}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-indigo-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold hover:scale-105 transition-all shadow-[0_0_20px_rgba(245,158,11,0.2)] cursor-pointer"
+        >
+          <span>🎁</span>
+          <span>
+            {highestUnlockedTier
+              ? `${highestUnlockedTier.badge} Claim ${highestUnlockedTier.discount}% Pro Discount`
+              : `🎯 Earn Up to 50% Pro Discount`}
+          </span>
+        </button>
       </div>
       
+      {/* Top Right Header & Live Sync Progress */}
       <div className="absolute top-6 right-6 z-20 text-right no-print">
-        <h1 className="text-3xl font-bold text-white mb-1 tracking-tight drop-shadow-lg">Execution Protocol ⚡</h1>
-        <p className="text-white/60 text-sm uppercase tracking-wider font-bold">
-          {progress === 1 ? "Protocol Completed" : `${Math.round(progress * 100)}% Synchronized`}
-        </p>
+        <h1 className="text-2xl sm:text-3xl font-black text-white mb-1 tracking-tight drop-shadow-lg flex items-center justify-end gap-2">
+          <span>Execution Protocol</span>
+          <span className="text-amber-400">⚡</span>
+        </h1>
+        <div className="flex items-center justify-end gap-3">
+          <span className="text-white/60 text-xs uppercase tracking-wider font-bold">
+            {progress === 1 ? "Roadmap Completed" : `${progressPercent}% Synchronized (${checkedItems.size}/${totalActions} Actions)`}
+          </span>
+          <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-purple-500 via-indigo-500 to-emerald-400 transition-all duration-300"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
       </div>
 
+      {/* Filter Navigation Bar */}
+      <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 p-1 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 no-print shadow-xl">
+        {[
+          { id: "all", label: "All Sprints" },
+          { id: "p1", label: "Phase 1 (W1-4)" },
+          { id: "p2", label: "Phase 2 (W5-8)" },
+          { id: "p3", label: "Phase 3 (W9+)" },
+          { id: "milestones", label: "🎯 Key Milestones" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveFilter(tab.id as any)}
+            className={`px-3 py-1 text-xs font-semibold rounded-xl transition-all ${
+              activeFilter === tab.id
+                ? "bg-purple-600 text-white shadow-[0_0_12px_rgba(147,51,234,0.5)]"
+                : "text-white/60 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* 100% Interdimensional Store Trigger */}
       {progress === 1 && (
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 text-center pointer-events-auto">
           <Button 
@@ -273,6 +406,93 @@ export default function ActionPlanPage() {
         </div>
       )}
 
+      {/* Milestone Completion Reward Modal */}
+      <AnimatePresence>
+        {rewardModal.isOpen && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xl p-4 pointer-events-auto no-print"
+          >
+            <div className="bg-[#0b0b14] border border-amber-400/40 p-6 sm:p-8 rounded-3xl max-w-lg w-full shadow-[0_0_80px_rgba(245,158,11,0.25)] relative overflow-hidden">
+              <div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <span className="text-xs uppercase font-bold text-amber-400 tracking-widest bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-full">
+                    Roadmap Milestone Rewards
+                  </span>
+                  <h2 className="text-2xl sm:text-3xl font-black text-white mt-2">
+                    Pro Discount Unlocked 🎁
+                  </h2>
+                </div>
+                <button 
+                  onClick={() => setRewardModal({ isOpen: false, tier: null })} 
+                  className="text-white/40 hover:text-white text-xl font-bold w-8 h-8 rounded-full bg-white/5 flex items-center justify-center"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Reward Tiers List */}
+              <div className="space-y-3 mb-6">
+                {REWARD_TIERS.map((tier) => {
+                  const isUnlocked = progressPercent >= tier.threshold;
+                  return (
+                    <div
+                      key={tier.coupon}
+                      className={`p-4 rounded-2xl border transition-all ${
+                        isUnlocked
+                          ? "bg-gradient-to-r from-amber-500/10 to-purple-500/10 border-amber-400/40 shadow-[0_0_15px_rgba(245,158,11,0.15)]"
+                          : "bg-white/[0.02] border-white/10 opacity-50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{tier.badge}</span>
+                          <span className="font-bold text-white text-sm">{tier.name}</span>
+                          <span className="text-[10px] text-white/50">({tier.threshold}% tasks)</span>
+                        </div>
+                        <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-full ${
+                          isUnlocked ? "bg-amber-400/20 text-amber-300 border border-amber-400/30" : "bg-white/5 text-white/40"
+                        }`}>
+                          {tier.discount}% OFF
+                        </span>
+                      </div>
+                      <p className="text-xs text-white/60 mb-2">{tier.description}</p>
+                      
+                      {isUnlocked && (
+                        <div className="flex items-center justify-between bg-black/60 rounded-xl p-2 border border-white/10">
+                          <span className="text-xs font-mono text-amber-300 font-bold tracking-widest pl-2">
+                            {tier.coupon}
+                          </span>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => {
+                              router.push(`/checkout/pro?coupon=${tier.coupon}&discount=${tier.discount}`);
+                            }}
+                            className="text-xs py-1 px-3 shadow-sm bg-gradient-to-r from-amber-500 to-purple-600 border-0"
+                          >
+                            Apply to Pro (₹{Math.round(799 * (100 - tier.discount) / 100)}/mo) →
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="text-center text-xs text-white/40">
+                Complete more weekly actions to unlock higher discount tiers!
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Store Modal */}
       <AnimatePresence>
         {storeModal && (
@@ -280,9 +500,9 @@ export default function ActionPlanPage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.1 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl pointer-events-auto no-print"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl pointer-events-auto no-print p-4"
           >
-            <div className="bg-[#0a0a0f] border border-purple-500/30 p-8 rounded-3xl max-w-4xl w-full mx-4 shadow-[0_0_100px_rgba(139,92,246,0.2)]">
+            <div className="bg-[#0a0a0f] border border-purple-500/30 p-8 rounded-3xl max-w-4xl w-full shadow-[0_0_100px_rgba(139,92,246,0.2)]">
               <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
                 <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 uppercase tracking-widest">
                   Interdimensional Store
@@ -318,15 +538,15 @@ export default function ActionPlanPage() {
         <div className="fixed bottom-10 left-10 w-80 z-30 pointer-events-auto no-print">
           <div className={`p-4 rounded-2xl backdrop-blur-md border ${health < 0.5 ? 'bg-red-900/40 border-red-500/50' : 'bg-black/60 border-white/10'}`}>
             <div className="flex justify-between items-center mb-2">
-              <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                <span>⚠️</span> Rival Detected
+              <h3 className="text-white font-bold text-sm flex items-center gap-2">
+                <span>⚠️</span> Adversary Rival Matrix
               </h3>
-              <span className="text-xs bg-red-600 px-2 py-1 rounded text-white font-bold">
+              <span className="text-xs bg-red-600 px-2 py-0.5 rounded-full text-white font-bold">
                 +{state.actionPlan.rival.progressOffset} Days Ahead
               </span>
             </div>
-            <p className="text-white/80 text-sm mb-3"><strong>{state.actionPlan.rival.name}</strong> - {state.actionPlan.rival.bio}</p>
-            <div className="bg-black/50 p-3 rounded-lg border border-red-500/30">
+            <p className="text-white/80 text-xs mb-2"><strong>{state.actionPlan.rival.name}</strong> - {state.actionPlan.rival.bio}</p>
+            <div className="bg-black/50 p-2.5 rounded-lg border border-red-500/30">
               <p className="text-red-400 text-xs italic font-mono">
                 "{state.actionPlan.rival.taunts?.[0] || 'They are outworking you right now.'}"
               </p>
@@ -342,21 +562,21 @@ export default function ActionPlanPage() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.1 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-auto no-print"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-auto no-print p-4"
             onClick={() => setGlitchModal({ isOpen: false, imageUrl: null })}
           >
-            <div className="relative p-2 bg-gradient-to-br from-purple-600 via-red-500 to-black rounded-xl p-[2px] animate-pulse">
-              <div className="bg-black p-4 rounded-xl relative max-w-2xl w-full">
+            <div className="relative p-2 bg-gradient-to-br from-purple-600 via-red-500 to-black rounded-2xl p-[2px] animate-pulse max-w-lg w-full">
+              <div className="bg-black p-5 rounded-2xl relative">
                 <button 
-                  className="absolute -top-4 -right-4 w-8 h-8 bg-red-600 rounded-full text-white font-bold hover:bg-red-500 shadow-lg"
+                  className="absolute -top-3 -right-3 w-8 h-8 bg-red-600 rounded-full text-white font-bold hover:bg-red-500 shadow-lg flex items-center justify-center"
                   onClick={() => setGlitchModal({ isOpen: false, imageUrl: null })}
                 >✕</button>
-                <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-purple-500 mb-2 font-mono uppercase tracking-widest text-center">
-                  Reality Glitch Found!
+                <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-purple-500 mb-1 font-mono uppercase tracking-widest text-center">
+                  Reality Glitch Manifested!
                 </h3>
-                <p className="text-center text-white/60 mb-4 text-sm">A glimpse of your future just materialized.</p>
+                <p className="text-center text-white/60 mb-4 text-xs">A tangible glimpse of your future timeline materialized.</p>
                 {glitchModal.imageUrl && (
-                  <img src={glitchModal.imageUrl} alt="Future Reality" className="w-full aspect-square object-cover rounded-lg shadow-[0_0_50px_rgba(220,38,38,0.3)]" />
+                  <img src={glitchModal.imageUrl} alt="Future Reality" className="w-full aspect-square object-cover rounded-xl shadow-[0_0_50px_rgba(220,38,38,0.3)]" />
                 )}
               </div>
             </div>
@@ -364,7 +584,7 @@ export default function ActionPlanPage() {
         )}
       </AnimatePresence>
 
-      {/* Mindset Alignment Stone (Cinematic Overlook) linked to Progress and Health */}
+      {/* Mindset Alignment Stone */}
       <div className="fixed bottom-10 right-10 w-48 h-48 md:w-64 md:h-64 z-30 pointer-events-auto no-print transition-all duration-1000 hidden md:block cursor-pointer hover:scale-105" onClick={() => progress === 1 && setStoreModal(true)}>
         <VibeCore progress={progress} health={health} skin={equippedSkin} />
         {health < 0.5 && (
@@ -374,6 +594,7 @@ export default function ActionPlanPage() {
         )}
       </div>
 
+      {/* Main 3D Canvas with Scrollable Weekly Action Staircase */}
       <div className="w-full h-full relative">
         <Canvas shadows camera={{ position: [0, 0, 10], fov: 60 }} dpr={[1, 2]}>
           <color attach="background" args={["#030305"]} />
@@ -389,67 +610,116 @@ export default function ActionPlanPage() {
               
               <Scroll html style={{ width: "100%", height: "100%" }}>
                 {progress < 1 && (
-                  <div className="flex flex-col items-center px-6 pt-32 pb-64 gap-24 pointer-events-none no-print">
-                    {weeks.map((week, index) => (
-                      <div key={index} className="w-full max-w-2xl pointer-events-auto">
+                  <div className="flex flex-col items-center px-4 sm:px-6 pt-36 pb-64 gap-12 sm:gap-16 pointer-events-none no-print max-w-3xl mx-auto">
+                    
+                    {/* Aggressive Motivation Pitch Header */}
+                    {state.aggressivePitch && (
+                      <div className="w-full pointer-events-auto">
+                        <div className="p-6 rounded-3xl bg-gradient-to-r from-red-950/40 via-purple-950/40 to-black border border-red-500/30 backdrop-blur-xl shadow-[0_0_40px_rgba(220,38,38,0.15)]">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-red-400 text-sm">🔥</span>
+                            <span className="text-xs uppercase font-bold text-red-400 tracking-wider">
+                              Executive Mandate
+                            </span>
+                          </div>
+                          <p className="text-sm sm:text-base text-white/90 font-medium leading-relaxed italic">
+                            "{state.aggressivePitch}"
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Weekly Sprints List */}
+                    {filteredWeeks.map((week, index) => (
+                      <div key={index} className="w-full pointer-events-auto">
                         <motion.div
-                          initial={{ scale: 0.9 }}
-                          whileInView={{ scale: 1 }}
+                          initial={{ scale: 0.95, opacity: 0.8 }}
+                          whileInView={{ scale: 1, opacity: 1 }}
                           transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                          whileHover={{ scale: 1.05, y: -8 }}
-                          whileTap={{ scale: 0.98 }}
+                          whileHover={{ scale: 1.02, y: -4 }}
                           className="will-change-transform"
                         >
                           <div
-                            className="bg-black/40 backdrop-blur-xl border border-white/10 p-8 md:p-10 rounded-3xl shadow-2xl relative overflow-hidden group hover:border-purple-500/30 transition-colors duration-500"
+                            className="bg-black/50 backdrop-blur-2xl border border-white/15 p-6 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden group hover:border-purple-500/40 transition-all duration-500"
                           >
-                            {/* Inner glow effect */}
+                            {/* Inner ambient glow */}
                             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             
-                            <div className="flex items-center gap-5 mb-8 relative z-10">
-                              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-900 flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-purple-900/50 border border-white/10 shrink-0">
-                                {week.week}
+                            <div className="flex items-center justify-between gap-4 mb-6 relative z-10">
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-900 flex items-center justify-center text-xl sm:text-2xl font-bold text-white shadow-lg shadow-purple-900/50 border border-white/10 shrink-0">
+                                  {week.week}
+                                </div>
+                                <div>
+                                  <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                                    Week {week.week} Implementation
+                                  </h2>
+                                  {week.milestone && (
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                                      <p className="text-cyan-400 text-xs sm:text-sm font-bold uppercase tracking-wider">
+                                        🎯 {week.milestone}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                              <div>
-                                <h2 className="text-3xl font-bold text-white tracking-tight">Week {week.week}</h2>
-                                {week.milestone && (
-                                  <div className="flex items-center gap-2 mt-2">
-                                    <div className="w-6 h-6 rounded-sm bg-gradient-to-tr from-blue-500 to-cyan-300 animate-spin-slow shadow-[0_0_10px_rgba(59,130,246,0.5)]" style={{ animationDuration: '4s' }} />
-                                    <p className="text-cyan-400 text-sm font-bold uppercase tracking-widest">{week.milestone}</p>
-                                  </div>
-                                )}
-                              </div>
+
+                              <span className="text-xs text-purple-300 font-mono bg-purple-950/40 border border-purple-500/30 px-3 py-1 rounded-full font-bold hidden sm:inline-block">
+                                {week.actions.filter((_, aIdx) => checkedItems.has(`w${week.week}-a${aIdx}`)).length}/{week.actions.length} Completed
+                              </span>
                             </div>
                             
                             <ul className="space-y-4 relative z-10">
                               {week.actions.map((action: string, i: number) => {
                                 const actionId = `w${week.week}-a${i}`;
                                 const isChecked = checkedItems.has(actionId);
+                                const isExpanded = expandedAction === actionId;
                                 
-                                // Parse out YouTube links for a clean button
+                                // Parse out YouTube links for a clean interactive button
                                 const linkMatch = action.match(/(.*)\[([^\]]+)\]\((https?:\/\/[^\)]+)\)(.*)/);
-                                const parsedAction = linkMatch ? (
-                                  <>
-                                    {linkMatch[1]}
-                                    <a href={linkMatch[3]} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 bg-red-600/80 hover:bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2 border border-red-400/30 transition-colors shadow-[0_0_10px_rgba(220,38,38,0.3)]">
-                                      ▶ {linkMatch[2]}
-                                    </a>
-                                    {linkMatch[4]}
-                                  </>
-                                ) : action;
+                                const textPart = linkMatch ? (linkMatch[1] + (linkMatch[4] || "")) : action;
+                                const youtubeUrl = linkMatch ? linkMatch[3] : `https://www.youtube.com/results?search_query=${encodeURIComponent(textPart.slice(0, 50))}&sp=CAM%253D`;
+                                const youtubeLabel = linkMatch ? linkMatch[2] : "Watch Top-Rated Tutorial ⭐";
 
                                 return (
                                   <li 
                                     key={i} 
-                                    className="flex items-start gap-4 cursor-pointer group/item"
+                                    className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-purple-500/30 hover:bg-white/[0.04] transition-all cursor-pointer group/item"
                                     onClick={() => toggleCheck(actionId)}
                                   >
-                                    <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center mt-1 border-2 transition-all duration-300 ${isChecked ? 'bg-purple-600 border-purple-500 shadow-[0_0_15px_rgba(139,92,246,0.5)]' : 'bg-black/50 border-white/20 group-hover/item:border-purple-400'}`}>
-                                      {isChecked && <span className="text-white text-sm font-bold">✓</span>}
+                                    <div className="flex items-start gap-3.5">
+                                      <div className={`flex-shrink-0 w-6 h-6 rounded-lg flex items-center justify-center mt-0.5 border-2 transition-all duration-300 ${isChecked ? 'bg-purple-600 border-purple-500 shadow-[0_0_15px_rgba(139,92,246,0.5)]' : 'bg-black/60 border-white/20 group-hover/item:border-purple-400'}`}>
+                                        {isChecked && <span className="text-white text-xs font-bold">✓</span>}
+                                      </div>
+
+                                      <div className="flex-1">
+                                        <p className={`leading-relaxed text-sm sm:text-base font-medium transition-all duration-300 ${isChecked ? 'text-white/30 line-through' : 'text-white/95'}`}>
+                                          {textPart.trim()}
+                                        </p>
+
+                                        {/* Action Meta & Live YouTube Resource */}
+                                        <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                                          <a 
+                                            href={youtubeUrl} 
+                                            target="_blank" 
+                                            rel="noreferrer" 
+                                            onClick={(e) => e.stopPropagation()} 
+                                            className="inline-flex items-center gap-1.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs px-3 py-1 rounded-full border border-red-400/40 transition-all shadow-[0_0_15px_rgba(220,38,38,0.35)] font-bold tracking-wide"
+                                          >
+                                            <span className="text-xs">▶</span>
+                                            <span>{youtubeLabel}</span>
+                                            <span className="text-[10px] text-white/70 uppercase">↗</span>
+                                          </a>
+
+                                          {i === 0 && (
+                                            <span className="text-[11px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2.5 py-0.5 rounded-full font-bold">
+                                              🧠 Mindset Synchronization
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
                                     </div>
-                                    <span className={`leading-relaxed text-lg transition-all duration-300 ${isChecked ? 'text-white/30 line-through' : 'text-white/90 group-hover/item:text-white'}`}>
-                                      {parsedAction}
-                                    </span>
                                   </li>
                                 );
                               })}
