@@ -12,17 +12,31 @@ import VibeCore from "@/components/three/VibeCore";
 import { DEMO_SIMULATION } from "@/lib/demoSimulation";
 import SuccessForecastCard from "@/components/SuccessForecastCard";
 
-// Clean Professional PDF Print Stylesheet
+// Clean Professional PDF Print Stylesheet with Deep Black Theme
 const printStyles = `
   @media print {
-    body { background: #ffffff !important; color: #000000 !important; }
+    body, html { 
+      background-color: #030308 !important; 
+      color: #f8fafc !important; 
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
     canvas { display: none !important; }
     .no-print { display: none !important; }
-    .print-only { display: block !important; }
+    .print-only { 
+      display: block !important; 
+      background-color: #030308 !important;
+      color: #f8fafc !important;
+      padding: 28px;
+    }
     .print-container { 
       padding: 24px; 
       max-width: 900px; 
       margin: 0 auto;
+      background-color: #030308 !important;
+      color: #f8fafc !important;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
   }
@@ -410,7 +424,7 @@ export default function ActionPlanPage() {
 
       // Helper to paint pure obsidian dark theme background on any page
       const paintDarkBackground = () => {
-        pdf.setFillColor(6, 6, 12);
+        pdf.setFillColor(3, 3, 8);
         pdf.rect(0, 0, pageWidth, pageHeight, "F");
       };
 
